@@ -1,0 +1,69 @@
+/* The date chooser is separate from the reading layout and the applied query. */
+:root.journal-date-open{overflow:hidden;scrollbar-gutter:stable}
+:root .diary-date-dialog{width:min(736px,calc(100vw - 40px));max-height:calc(100dvh - 48px);margin:auto;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);box-shadow:0 24px 90px #17131a38;overflow:auto;overscroll-behavior:contain;font-family:var(--sans)}
+:root .diary-date-dialog[open]{display:flex;flex-direction:column;animation:date-dialog-in .2s var(--ease)}
+:root .diary-date-dialog::backdrop{background:#14121c66;backdrop-filter:blur(3px);animation:date-backdrop-in .16s ease-out}
+:root .range-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 28px 19px}
+:root .range-dialog-heading>div>span{display:block;font:12px/1.8 var(--sans);color:var(--accent);margin-bottom:5px;letter-spacing:.06em}
+:root .range-dialog-heading h2{font:650 24px/1.5 var(--serif)}
+:root .range-dialog-heading>button{display:grid;place-items:center;width:40px;height:40px;align-self:flex-start;border-radius:3px;color:var(--muted)}
+:root .range-dialog-heading>button:hover{background:var(--bg);color:var(--accent)}
+:root .range-boundaries{display:grid;grid-template-columns:1fr 32px 1fr;gap:12px;align-items:center;padding-inline:28px}
+:root .range-boundaries>span{display:grid;place-items:center;color:var(--muted)}
+:root .range-boundaries>button{text-align:left;padding:11px 16px;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;background:var(--bg);min-width:0}
+:root .range-boundaries>button>span{display:block;font:12px/1.7 var(--sans);color:var(--muted);margin-bottom:4px}
+:root .range-boundaries>button>strong{display:block;font:600 20px/1.7 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:.025em}
+:root .range-boundaries>button[aria-pressed=true]{border-bottom-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+:root .range-boundaries>button[aria-pressed=true]>span{color:var(--accent)}
+:root .range-dialog-shortcuts{display:flex;gap:8px;padding:16px 28px 18px}
+:root .range-dialog-shortcuts>button{min-height:36px;padding:7px 14px;border:1px solid var(--line);border-radius:3px;font:500 12px/1.5 var(--sans);color:var(--muted)}
+:root .range-dialog-shortcuts>button:is(:hover,[aria-pressed=true]){border-color:var(--border-hover);color:var(--accent);background:var(--soft)}
+:root .range-calendar-area{position:relative;padding:0 28px 22px;min-height:343px;flex-shrink:0}
+:root .range-calendar-navigation{position:absolute;top:0;left:26px;right:26px;display:flex;justify-content:space-between;pointer-events:none}
+:root .range-calendar-navigation>button{width:36px;height:36px;display:grid;place-items:center;pointer-events:auto;border-radius:3px;color:var(--muted)}
+:root .range-calendar-navigation>button:hover{background:var(--bg);color:var(--accent)}
+:root .range-calendars{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:34px}
+:root .range-month{min-width:0}
+:root .range-month+[data-range-panel]{position:relative}
+:root .range-month+[data-range-panel]:before{content:'';position:absolute;top:12px;bottom:0;left:-17px;border-left:1px solid var(--line)}
+:root [data-range-month-title]{display:flex;align-items:center;justify-content:center;gap:8px;min-height:36px;margin:0 auto 14px;padding:0 9px;border-radius:3px;font:650 15px/1.7 var(--sans);font-variant-numeric:tabular-nums}
+:root [data-range-month-title]:hover{background:var(--bg);color:var(--accent)}
+:root .range-weekdays,:root .range-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px 0;text-align:center}
+:root .range-weekdays{margin-bottom:8px;color:var(--muted);font:12px/1.8 var(--sans)}
+:root .range-days>*{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;height:38px;gap:3px;padding:4px 0;border-radius:3px;font:550 14px/1 var(--sans);font-variant-numeric:tabular-nums}
+:root .range-days small{min-height:9px;font:600 9px/1 var(--sans);color:var(--accent)}
+:root .range-days .other-month{color:var(--muted);opacity:.35}
+:root .range-days button:hover{background:var(--soft)}
+:root .range-days .in-range,:root .range-days .range-preview{border-radius:0;background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+:root .range-days button[aria-current=date]>span:after{content:'';position:absolute;top:4px;right:7px;width:3px;height:3px;border-radius:50%;background:var(--accent)}
+:root .range-days button[aria-pressed=true]{background:var(--accent);color:var(--accent-foreground);font-weight:700}
+:root .range-days button[aria-pressed=true] small{color:var(--accent-foreground)}
+:root .range-days button:focus-visible{outline-offset:-2px}
+:root .range-month-jump{position:absolute;inset:0 28px 10px;background:var(--surface);z-index:2;padding:0 18px 14px;border:1px solid var(--line);border-radius:4px;animation:journal-pop .15s var(--ease)}
+:root .range-year-navigation{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 13px}
+:root .range-year-navigation>button{height:38px;min-width:38px;display:flex;align-items:center;justify-content:center;font:650 16px/1.6 var(--sans);font-variant-numeric:tabular-nums;border-radius:3px}
+:root .range-year-navigation>button:hover{background:var(--bg);color:var(--accent)}
+:root .range-month-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+:root .range-month-options>button{display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;min-height:57px;border:1px solid var(--line);border-radius:3px;font:550 14px/1.7 var(--sans);font-variant-numeric:tabular-nums}
+:root .range-month-options>button small{font:11px/1.5 var(--sans);color:var(--accent)}
+:root .range-month-options>button:is(:hover,[aria-pressed=true]){border-color:var(--border-hover);background:var(--soft);color:var(--accent)}
+:root .range-month-back{display:block;margin:11px auto 0;min-height:36px;padding:5px 10px;font:500 12px/1.7 var(--sans);color:var(--muted)}
+:root .range-dialog-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:17px 28px 20px;border-top:1px solid var(--line);background:var(--bg);position:sticky;bottom:0;z-index:3}
+:root .range-dialog-footer>p{font:12px/1.9 var(--sans);color:var(--muted);text-wrap:pretty}
+:root .range-dialog-footer>div{display:flex;gap:10px;flex-shrink:0}
+:root .range-dialog-footer button{display:flex;align-items:center;justify-content:center;gap:13px;min-height:42px;padding:9px 18px;border:1px solid var(--line);border-radius:3px;background:var(--surface);font:550 13px/1.7 var(--sans)}
+:root .range-dialog-footer [data-range-apply]{background:var(--accent);border-color:var(--accent);color:var(--accent-foreground)}
+:root .range-dialog-footer [data-range-apply]:disabled{opacity:.4;cursor:default}
+@keyframes date-dialog-in{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes date-backdrop-in{from{opacity:0}to{opacity:1}}
+@media(max-width:640px){
+ :root .diary-date-dialog{width:calc(100vw - 28px);max-width:400px;max-height:calc(100dvh - 28px);border-radius:5px}
+ :root .range-dialog-heading{padding:19px 18px 17px}:root .range-dialog-heading h2{font-size:22px}
+ :root .range-boundaries{padding-inline:18px;grid-template-columns:1fr 16px 1fr;gap:7px}:root .range-boundaries>button{padding:9px 10px}:root .range-boundaries>button>strong{font-size:16px;letter-spacing:0}:root .range-boundaries>button>span{font-size:11px}
+ :root .range-dialog-shortcuts{padding:13px 18px 18px;gap:6px}:root .range-dialog-shortcuts>button{flex:1;padding:7px 2px}
+ :root .range-calendar-area{padding:0 18px 15px;min-height:339px}:root .range-calendar-navigation{left:16px;right:16px}:root .range-calendars{display:block}:root [data-range-panel="1"]{display:none}:root .range-days>*{height:39px}
+ :root .range-month-jump{inset-inline:18px;padding:0 12px 10px}:root .range-month-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}:root .range-month-options>button{min-height:44px;font-size:13px}:root .range-month-back{margin-top:5px}:root .range-year-navigation{margin-bottom:9px}
+ :root .range-dialog-footer{flex-wrap:wrap;gap:10px;padding:13px 18px 16px}:root .range-dialog-footer>p{width:100%;font-size:12px}:root .range-dialog-footer>div{margin-left:auto}:root .range-dialog-footer button{min-height:42px;padding-inline:20px}
+}
+@media(prefers-reduced-motion:reduce){:root .diary-date-dialog[open],:root .diary-date-dialog::backdrop,:root .range-month-jump{animation:none}}
+:root[data-motion=off] :is(.diary-date-dialog[open],.range-month-jump),:root[data-motion=off] .diary-date-dialog::backdrop{animation:none}

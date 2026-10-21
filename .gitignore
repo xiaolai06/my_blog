@@ -16,6 +16,12 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+.env.*
+!.env.example
+
+# local browser diagnostics and generated preview screenshots
+.playwright-cli/
+artwork/previews/
 
 # macOS-specific files
 .DS_Store

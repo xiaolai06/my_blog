@@ -1,0 +1,38 @@
+@font-face{font-family:'Sakura Serif';src:url('/fonts/noto-serif-sc.woff2') format('woff2');font-style:normal;font-weight:400 700;font-display:swap}
+@font-face{font-family:'Sakura Sans';src:url('/fonts/noto-sans-sc.woff2') format('woff2');font-style:normal;font-weight:400 700;font-display:swap}
+@font-face{font-family:'Sakura Display';src:url('/fonts/ma-shan-zheng-hero.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Sakura WenKai';src:url('/fonts/lxgw-wenkai-intro.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap}
+:root{--serif:'Sakura Serif','Noto Serif SC','Songti SC','SimSun',serif;--sans:'Sakura Sans','Microsoft YaHei',sans-serif;--brand-font:'KaiTi','Kaiti SC','STKaiti','Sakura WenKai',var(--serif)}
+body{font-size:14px;line-height:1.85}
+.brand{gap:10px}
+.brand>span{font:400 27px/1.25 var(--brand-font);font-synthesis:none;letter-spacing:2px}
+.brand small{font:400 8px/1.5 Georgia,serif;letter-spacing:2.7px;margin-top:5px;padding-left:2px}
+.home-page .header-inner,.hero-content{width:min(1440px,calc(100% - clamp(40px,8vw,112px)))}
+.hero h1{font:400 clamp(58px,5.2vw,78px)/1.35 'Sakura Display',var(--serif);font-synthesis:none;letter-spacing:3px;text-shadow:0 2px 22px #0d162447}
+.hero h1 .hero-title-line{display:block;letter-spacing:.045em}
+.hero-title-line+.hero-title-line{padding-left:.3em}
+.hero-description{max-width:420px;text-align:left}
+.hero-description>span{display:block}
+.hero-content{padding-top:144px}
+/* Keep the introductory copy consistent across home, projects and journal. */
+body :is(.hero-english,.project-hero-english){font:italic 400 17px/1.7 Georgia,serif;letter-spacing:.4px;margin-top:13px;color:#f5e6cf}
+body :is(.hero-description,.project-hero-description){font:400 20px/2 var(--serif);font-synthesis:none;letter-spacing:.06em;margin-top:17px;color:#fff8f0;text-shadow:0 1px 5px #0a132b99}
+body :is(.hero-description,.project-hero-description)>span+span{font-size:1em;color:#f3e9df;margin-top:5px}
+.scenic-footer{--scene-content-gap:clamp(20px,2.5vw,36px);margin-top:var(--scene-content-gap);position:relative;background:var(--bg)}
+.footer-landscape{position:relative;isolation:isolate;overflow:hidden}
+.footer-scenery{position:absolute;max-width:none;z-index:-1}
+@media(max-width:760px){.brand>span{font-size:23px;letter-spacing:1px}.brand small{font-size:7px;letter-spacing:1.8px;margin-top:3px}.brand{gap:8px}.hero-content{padding-top:160px}.hero-description{font-size:15px;max-width:350px;letter-spacing:.35px;line-height:1.9;margin-top:17px}.hero h1{font-size:clamp(40px,11.5vw,56px)}.hero-english{font-size:15px;margin-top:17px}}
+@media(max-width:360px){.brand>span{font-size:21px}}
+@media(max-width:760px){
+ body :is(.hero-english,.project-hero-english){font-size:15px;line-height:1.7;letter-spacing:.4px;margin-top:12px}
+ body :is(.hero-description,.project-hero-description){font-size:17px;line-height:2;letter-spacing:.04em;margin-top:16px}
+}
+@media(max-width:360px){body :is(.hero-description,.project-hero-description){font-size:16px}}
+/* Reading hierarchy: crisp headings and stable, clearly separated dates. */
+:root body :is(.page-heading h1,.section-heading h2,.article-heading h1,.prose h2,.prose h3){font-weight:650}
+:root body .journal-info h3{font-weight:650;color:var(--text)}
+:root body .journal-date strong{font:650 30px/1.1 var(--sans);font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.035em;color:var(--text)}
+:root body .journal-date>span{font:500 11px/1.6 var(--sans);font-variant-numeric:lining-nums tabular-nums;letter-spacing:.02em;display:block;margin-top:8px}
+:root body .journal-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+:root body .journal-meta time{font:550 12px/1.5 var(--sans);font-variant-numeric:lining-nums tabular-nums;color:var(--muted)}
+:root body .journal-kind{font:600 11px/1.5 var(--sans);padding:3px 8px;border-radius:5px;background:var(--soft);color:var(--accent)}

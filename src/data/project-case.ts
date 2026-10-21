@@ -1,0 +1,21 @@
+export interface ProjectCase {
+ slug:string;
+ name:string;
+ chineseName:string;
+ headline:[string,string];
+ introduction:string;
+ tags:string[];
+ award?:{event:string;prize:string};
+ online?:{url:string;label:string;note:string};
+ media?:{kind:'runtime'|'reference'|'sample';caption:string;galleryNote:string;crop?:boolean};
+ opening:{id:string;label:string;alt:string};
+ scenarios:{icon:string;title:string;text:string}[];
+ previews:{id:string;label:string;icon:string;eyebrow:string;title:string;text:string;points:{label:string;text:string}[];note?:string;image?:{id:string;label:string;alt:string}}[];
+ architecture:{icon:string;label:string}[];
+ stack:{category:string;names:string[];usage:string}[];
+ developmentIntro:string;
+ development:{number:string;title:string;text:string;tags:string[]}[];
+ review?:{date:string;limits:string[];sources:string[];takeaway:string};
+ previous?:{name:string;slug:string};
+ next:{name:string;slug:string};
+}

@@ -1,0 +1,52 @@
+---
+import Icon from './Icon.astro';
+import MusicStudy from './MusicStudy.astro';
+import '../styles/music.css';
+import '../styles/music-study.css';
+import '../styles/music-display.css';
+
+---
+<div class="music-shell" id="music-shell" transition:persist="sakura-music" transition:animate="none">
+    <MusicStudy/>
+    <section class="music-glass" id="music-player" aria-label="音乐播放器" data-collapsed="false" data-widget-minimized="true">
+      <header class="music-panel-header">
+        <button id="music-drag" class="music-drag" type="button" aria-label="移动播放器；拖动或使用方向键，Home 归位" title="拖动移动 · 方向键微调"><Icon name="grip" size={16}/><span>音乐空间</span><small>拖动</small></button>
+        <details class="music-settings"><summary aria-label="调整播放器外观" title="通透度与位置"><Icon name="sliders" size={17}/></summary><div class="music-settings-popover"><label for="glass-opacity">玻璃通透度<span id="glass-value">60%</span></label><input id="glass-opacity" type="range" min="20" max="80" value="60"/><button id="music-position-reset" type="button">播放器位置归位</button><p>拖动标题移动，也可用方向键调整</p></div></details>
+        <button class="music-control widget-minimize" id="panel-toggle" data-minimize-widget="player" type="button" aria-label="收起播放器" aria-expanded="true" aria-controls="music-player" title="收起播放器，从右上角音乐按钮展开"><Icon name="down-chevron" size={17}/></button>
+      </header>
+      <div class="music-current"><img class="music-cover" id="music-cover" src="/images/sakura-sunset.webp" width="86" height="86" alt=""/><div><h3 id="now-title">未选择歌曲</h3><p id="now-artist">选择一首喜欢的音乐</p></div></div>
+      <div id="player-content" class="player-content">
+        <section class="music-lyrics" aria-label="歌词"><div class="lyrics-toolbar"><span id="lyrics-kind">歌词</span><button id="open-lyrics" type="button" title="大字歌词与在线匹配"><Icon name="lyrics" size={14}/><span>歌词窗口</span></button></div><div class="lyrics-scroll" id="lyrics-scroll" tabindex="0"><p class="lyrics-empty">选择音乐，歌词将在这里显示</p></div></section>
+        <div class="music-progress"><input id="seek-bar" type="range" min="0" max="1000" value="0" aria-label="播放进度" disabled/><div><span id="current-time">0:00</span><span id="duration">0:00</span></div></div>
+      </div>
+      <div class="music-playback"><button class="music-control" id="shuffle-toggle" type="button" aria-label="随机播放" aria-pressed="false" title="随机播放"><Icon name="shuffle" size={19}/></button><button class="music-control" id="previous-track" type="button" aria-label="上一首" title="上一首"><Icon name="skip-back" size={21}/></button><button id="play-toggle" class="music-main-play" type="button" aria-label="播放" title="播放"><span class="music-icon-play"><Icon name="play" size={23}/></span><span class="music-icon-pause"><Icon name="pause" size={23}/></span></button><button class="music-control" id="next-track" type="button" aria-label="下一首" title="下一首"><Icon name="skip-forward" size={21}/></button><button class="music-control" id="favorite-current" type="button" aria-label="收藏当前歌曲" aria-pressed="false" title="收藏当前歌曲"><Icon name="heart" size={21}/></button></div>
+      <div class="music-secondary">
+        <div class="music-volume"><button class="music-control" id="mute-toggle" type="button" aria-label="静音" title="静音"><Icon name="volume" size={17}/></button><input id="volume-bar" type="range" min="0" max="100" value="70" aria-label="音量"/><span id="volume-value">70%</span></div>
+        <div class="music-library-head"><div class="music-library-tabs" role="group" aria-label="音乐列表"><button type="button" id="discover-tab" aria-pressed="true">精选</button><button type="button" id="radio-tab" aria-pressed="false">电台</button><button type="button" id="playlist-tab" aria-pressed="false">列表</button><button type="button" id="favorites-tab" aria-pressed="false">喜欢</button></div><button class="music-control" id="search-toggle" type="button" aria-label="搜索在线音乐" aria-expanded="false" aria-controls="music-search" title="搜索在线音乐"><Icon name="search" size={18}/></button><button class="music-control" id="import-music" type="button" aria-label="添加本地音乐" title="添加本地音乐"><Icon name="plus" size={20}/></button></div>
+        <form id="music-search" class="music-search" hidden><label class="sr-only" for="music-query">搜索开放音频</label><input id="music-query" type="search" placeholder="曲名、歌手或风格" autocomplete="off" maxlength="100"/><button class="music-control" type="submit" aria-label="搜索"><Icon name="arrow" size={17}/></button></form>
+        <div class="music-discovery-note" id="discovery-note"><span>6 首免费完整音乐</span><button type="button" data-open-resources>音源说明 <Icon name="arrow" size={12}/></button></div>
+        <div class="radio-genres" id="radio-genres" role="group" aria-label="电台风格" hidden>{[{tag:'ambient',label:'氛围'},{tag:'lofi',label:'Lo-fi'},{tag:'classical',label:'古典'},{tag:'jazz',label:'爵士'}].map(({tag,label})=><button type="button" data-radio-tag={tag} aria-pressed={tag==='ambient'}>{label}</button>)}<button type="button" data-open-resources aria-label="查看电台音源说明">?</button></div>
+        <div id="track-list" class="music-track-list" aria-label="歌曲列表"><div class="music-empty"><span class="empty-note"><Icon name="music" size={25}/></span><p>添加音乐，开始聆听</p><button class="music-add-button" data-import type="button"><Icon name="plus" size={16}/>添加本地音乐</button></div></div>
+        <div id="music-credit" class="music-credit" hidden></div><p id="music-status" class="music-status" role="status" aria-live="polite"></p>
+      </div>
+      <input id="music-files" type="file" accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a,.opus,.lrc" multiple hidden aria-label="选择音乐文件"/>
+      <input id="lyric-file" type="file" accept=".lrc,.txt" hidden aria-label="选择歌词文件"/>
+    </section>
+<dialog class="music-dialog resources-dialog" id="resources-dialog" aria-labelledby="resources-title">
+  <header class="music-dialog-head"><div><p class="dialog-eyebrow">听见更广阔的世界</p><h2 id="resources-title">免费的音乐，从这里开始</h2></div><button class="music-control" data-close-dialog type="button" aria-label="关闭音源说明"><Icon name="close" size={20}/></button></header>
+  <p class="dialog-description">精选、公开电台和开放音频，选择适合此刻的声音。</p>
+  <div class="resource-entry"><span class="resource-number">01</span><div><h3>免费精选 <small>完整曲目 · 适合学习</small></h3><p>6 首 Scott Buckley 钢琴、氛围与管弦音乐，点击即可完整收听，无需注册。均为纯音乐，没有人声歌词。</p><a href="https://www.scottbuckley.com.au/library/" target="_blank" rel="noreferrer">作者官方音乐库 ↗</a><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0 · 使用时署名 ↗</a></div></div>
+  <div class="resource-entry"><span class="resource-number">02</span><div><h3>在线电台 <small>免费收听 · 持续直播</small></h3><p>接入 Radio Browser 开源目录，按氛围、Lo-fi、古典和爵士查找电台。直播不能拖动进度；目录不提供逐曲歌词，广播内容和可用性由电台决定。</p><a href="https://github.com/segler-alex/radiobrowser-api-rust" target="_blank" rel="noreferrer">GitHub 项目与迁移说明 ↗</a><a href="https://www.radio-browser.info/" target="_blank" rel="noreferrer">Radio Browser 目录 ↗</a></div></div>
+  <div class="resource-entry"><span class="resource-number">03</span><div><h3>更多音乐，或自己的收藏</h3><p>搜索按钮可查找 Internet Archive 中标明开放授权的音频；每首都保留来源链接。添加本地音乐后，列表和收藏保存在此浏览器，文件不会上传。</p><a href="https://archive.org/details/audio" target="_blank" rel="noreferrer">Internet Archive 音频库 ↗</a></div></div>
+  <p class="resource-footnote">免费收听与素材再利用的授权不同；再利用时请查看曲目来源页。在线资源需要网络，暂时不可用时可切换其他曲目或添加本地音乐。</p>
+</dialog>
+<dialog class="music-dialog lyrics-dialog" id="lyrics-dialog" aria-labelledby="lyrics-dialog-title">
+  <header class="music-dialog-head"><div><p class="dialog-eyebrow" id="lyrics-dialog-track">选择一首音乐</p><h2 id="lyrics-dialog-title">歌词</h2></div><button class="music-control" data-close-dialog type="button" aria-label="关闭歌词窗口"><Icon name="close" size={20}/></button></header>
+  <div class="lyrics-dialog-actions"><button class="dialog-secondary" id="import-lyrics" type="button" disabled><Icon name="plus" size={15}/>导入 LRC</button><button class="dialog-secondary" id="lyric-search-toggle" type="button" aria-expanded="false" aria-controls="lyric-search" disabled><Icon name="search" size={15}/>在线查找</button><span id="lyric-format">等待选曲</span></div>
+  <form class="lyric-search-form" id="lyric-search" hidden><label for="lyric-query">曲名与歌手</label><div><input id="lyric-query" type="search" maxlength="150" placeholder="输入曲名、歌手，查找对应版本" required/><button class="dialog-secondary" type="submit">查找</button></div><p class="dialog-hint">通过 LRCLIB 查找歌词，仅发送查询文字。</p><div id="lyric-results" role="status" aria-live="polite"></div></form>
+  <div id="lyrics-expanded" class="lyrics-expanded" tabindex="0"><p class="lyrics-empty">选择音乐后，可以匹配或导入歌词</p></div>
+  <footer class="lyrics-dialog-footer"><span id="lyric-help">支持逐行同步、点击歌词跳转；纯文本也可阅读</span><div id="lyric-offset" hidden><button type="button" data-lyric-offset="-0.5" aria-label="歌词提前半秒">−</button><button id="lyric-offset-reset" type="button" title="点击重置歌词偏移">同步 0.0s</button><button type="button" data-lyric-offset="0.5" aria-label="歌词延后半秒">+</button></div></footer>
+</dialog>
+<audio id="music-audio" preload="metadata"></audio>
+</div>
+<script>import '../scripts/music-player';</script>

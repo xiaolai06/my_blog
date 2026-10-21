@@ -1,0 +1,19 @@
+---
+import ProjectCase from './ProjectCase.astro';
+import {taskhubAward,taskhubScenarios,taskhubPreviews,taskhubStack,taskhubDevelopment} from '../data/taskhub-case';
+import type {ProjectCase as CaseData} from '../data/project-case';
+import {projects} from '../data/projects';
+const project:CaseData={
+ slug:'taskhub',name:'TaskHub',chineseName:'智汇轻营',
+ headline:['个人工作室的','AI 项目经营工作台'],
+ introduction:'面向独立开发者与个人工作室，将项目交付、任务排期、客户关系和收支记录集中管理。通过 AI 业务工具与周期提醒，把执行工作和日常经营连接起来。',
+ tags:['竞赛获奖作品','全栈 Web 应用','AI 业务助手'],award:taskhubAward,
+ online:projects.find(project=>project.slug==='taskhub')?.online,
+ opening:{id:'dashboard',label:'工作总览',alt:'TaskHub 工作总览实际界面，包含项目进度、任务状态、收支摘要和客户信息'},
+ scenarios:taskhubScenarios,previews:taskhubPreviews,stack:taskhubStack,
+ architecture:[{icon:'layout',label:'Next.js 前端'},{icon:'code',label:'Express API'},{icon:'database',label:'Prisma / SQLite'}],
+ developmentIntro:'项目采用前后端分离结构，将项目、任务、客户、财务和 AI 能力组织为相互关联的业务模块。开发中既关注功能覆盖，也关注操作是否连贯：切换视图保留同一份任务数据，在详情侧栏处理具体事项，用关联记录和执行反馈解释每次操作的结果。',
+ development:taskhubDevelopment,next:{name:'ClothHub',slug:'clotheshub'},
+};
+---
+<ProjectCase project={project}/>

@@ -1,0 +1,21 @@
+/* Geometry, navigation and display type follow the projects chapter. */
+.journal-hero::before{background:linear-gradient(180deg,#11182780,transparent 30%),linear-gradient(90deg,#121a22a6,transparent 73%)}
+.journal-hero .project-hero-title{font-size:clamp(44px,4vw,62px);line-height:1.35;letter-spacing:.04em}
+.journal-hero.project-hero--compact .project-hero-title{font-size:44px}
+.journal-hero .project-hero-description{max-width:680px}
+.journal-intro-phrase{display:inline-block}
+.journal-collection>.breadcrumb{margin-bottom:30px}
+.journal-collection .archive-search{min-height:48px}
+.journal-collection .archive-search input{font-size:14px}
+.journal-page .journal-scenic-footer{margin-top:var(--scene-content-gap)}
+@media(max-width:760px){
+ .journal-hero .project-hero-art{object-position:64% center}
+ .journal-hero::before{background:linear-gradient(180deg,#11182773,transparent 32%),linear-gradient(90deg,#121824d9,#12182460 85%)}
+ .journal-hero .project-hero-title{font-size:clamp(26px,8vw,38px);letter-spacing:.02em}
+ .journal-hero.project-hero--compact .project-hero-title{font-size:clamp(25px,7.3vw,34px)}
+ .journal-hero .project-hero-description{max-width:320px}
+ .journal-hero .project-hero-description>span+span{display:block}
+ .journal-hero .project-hero-description>span{text-wrap:balance}
+ .journal-collection>.breadcrumb{margin-bottom:25px}
+ .journal-collection .archive-search input{font-size:16px}
+}

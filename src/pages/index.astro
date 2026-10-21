@@ -1,59 +1,29 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Hero from '../components/Hero.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import Sidebar from '../components/Sidebar.astro';
+import JournalList from '../components/JournalList.astro';
+import Icon from '../components/Icon.astro';
+import Flower from '../components/Flower.astro';
+import { projects } from '../data/projects';
+import '../styles/home.css';
 ---
-
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to
-				build a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your{' '}
-				<code>astro.config.mjs</code> file. You can customize your setup with{' '}
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like
-				Tailwind, React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>
-					Edit this page in <code>src/pages/index.astro</code>
-				</li>
-				<li>
-					Edit the site header items in <code>src/components/Header.astro</code>
-				</li>
-				<li>
-					Add your name to the footer in <code>src/components/Footer.astro</code>
-				</li>
-				<li>
-					Check out the included blog posts in <code>src/content/blog/</code>
-				</li>
-				<li>
-					Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code>
-				</li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to{' '}
-				<a href="https://docs.astro.build/">read the docs</a> or{' '}
-				<a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out{' '}
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a> by{' '}
-				<a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<SiteLayout hero>
+<Hero/>
+<main id="main-content" class="container home-main">
+<div class="welcome-line"><p>一个记录创造与成长的小小空间。</p><span>Code <i>/</i> Create <i>/</i> Life <Flower size={18}/></span></div>
+<section id="projects" class="projects-section" data-project-section>
+<div class="section-heading"><div><h2>精选项目 <em>Selected works</em></h2><p class="section-intro">把日常里的问题，做成有温度的作品。</p></div><div class="project-filters" aria-label="项目分类">{['全部','校园生活','经营管理'].map((label,i)=><button class:list={['filter-button',{active:i===0}]} data-filter={label} aria-pressed={i===0}>{label}</button>)}</div></div>
+<div class="home-columns">
+<div class="main-column">
+<div class="project-grid">{projects.map((p,i)=><ProjectCard project={p} index={i} showCategory/>)}</div>
+</div>
+<Sidebar/>
+</div>
+<div class="projects-section-footer"><a class="text-link all-projects" href="/projects/">走进作品集<Icon name="arrow" size={16}/></a></div>
+<p class="filter-status sr-only" aria-live="polite"></p>
+</section>
+<section class="journal-section" id="journals"><div class="section-divider"><span></span><Flower size={24}/><span></span></div><div class="section-heading"><div><h2>最新手记 <em>Latest journals</em></h2><p class="section-intro">项目里的思考，和代码之外的片刻。</p></div><a class="text-link" href="/blog/">更多手记<Icon name="arrow" size={18}/></a></div><JournalList limit={3} illustrated/></section>
+</main>
+</SiteLayout>

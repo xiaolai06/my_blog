@@ -1,0 +1,22 @@
+---
+import '../styles/living-scene.css';
+interface Props {
+  kind: 'hero' | 'footer';
+  src: string;
+  width: number;
+  height: number;
+  imageClass?: string;
+  loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  priority?: boolean;
+}
+const { kind, src, width, height, imageClass = '', priority = kind === 'hero', loading = priority ? 'eager' : 'lazy', fetchpriority = priority ? 'high' : 'auto' } = Astro.props;
+---
+<div class="living-scene" data-living-scene data-kind={kind} data-renderer="static" data-running="false" aria-hidden="true">
+  <img class:list={['living-scene-image', imageClass]} src={src} width={width} height={height} alt="" loading={loading} fetchpriority={fetchpriority}/>
+  <canvas class:list={['living-scene-canvas', imageClass]} aria-hidden="true"></canvas>
+</div>
+<script>
+  import { setupLivingScenes } from '../scripts/living-scene';
+  setupLivingScenes();
+</script>

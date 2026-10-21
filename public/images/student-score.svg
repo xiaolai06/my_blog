@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" fill="none">
+ <defs>
+  <linearGradient id="paper" x1="0" y1="0" x2="1200" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#e5eee8"/><stop offset="1" stop-color="#f4eadc"/></linearGradient>
+  <linearGradient id="page" x1="350" y1="180" x2="800" y2="700" gradientUnits="userSpaceOnUse"><stop stop-color="#fffef9"/><stop offset="1" stop-color="#f5f2e9"/></linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="170%" height="180%"><feDropShadow dy="18" stdDeviation="21" flood-color="#32594e" flood-opacity=".13"/></filter>
+ </defs>
+ <rect width="1200" height="800" fill="url(#paper)"/>
+ <circle cx="1044" cy="100" r="250" fill="#fbf6e8" opacity=".65"/>
+ <circle cx="110" cy="720" r="250" fill="#cbdcd0" opacity=".5"/>
+ <g stroke="#719b87" stroke-opacity=".16"><path d="M0 120h1200M0 240h1200M0 360h1200M0 480h1200M0 600h1200M0 720h1200"/><path d="M120 0v800M240 0v800M360 0v800M480 0v800M600 0v800M720 0v800M840 0v800M960 0v800M1080 0v800"/></g>
+ <g transform="rotate(-8 600 400)" filter="url(#shadow)"><rect x="337" y="131" width="510" height="548" rx="26" fill="#b6ccbe"/><rect x="355" y="147" width="510" height="548" rx="26" fill="#dce5d9"/></g>
+ <g filter="url(#shadow)">
+  <rect x="353" y="113" width="510" height="548" rx="26" fill="url(#page)" stroke="#b4c9bb" stroke-width="2"/>
+  <rect x="397" y="156" width="55" height="55" rx="16" fill="#246650"/>
+  <path d="M410 173h30v24h-30zm0 8h30m-20-8v24m10-24v24" stroke="#fffdf3" stroke-width="2.5" stroke-linejoin="round"/>
+  <text x="474" y="184" font-family="Microsoft YaHei,Arial,sans-serif" font-size="30" font-weight="700" fill="#234d3f">学绩</text>
+  <text x="475" y="207" font-family="Arial,sans-serif" font-size="13" letter-spacing="2" fill="#617a6c">STUDENT SCORE</text>
+  <path d="M397 237h421" stroke="#cfd9cc" stroke-width="2"/>
+  <rect x="397" y="267" width="420" height="207" rx="12" fill="#f4f6ee" stroke="#d4ded0"/>
+  <rect x="397" y="267" width="420" height="43" rx="12" fill="#dbe7da"/>
+  <path d="M397 310h420M397 351h420M397 392h420M397 433h420M496 267v207M650 267v207" stroke="#c7d6c7" stroke-width="2"/>
+  <g fill="#617e6d"><rect x="417" y="285" width="58" height="7" rx="3.5"/><rect x="519" y="285" width="81" height="7" rx="3.5"/><rect x="683" y="285" width="87" height="7" rx="3.5"/></g>
+  <g fill="#9eb39f"><rect x="418" y="329" width="49" height="6" rx="3"/><rect x="418" y="370" width="49" height="6" rx="3"/><rect x="418" y="411" width="49" height="6" rx="3"/><rect x="418" y="452" width="49" height="6" rx="3"/></g>
+  <g fill="#b4c7af"><rect x="519" y="324" width="99" height="15" rx="5"/><rect x="519" y="365" width="68" height="15" rx="5"/><rect x="519" y="406" width="109" height="15" rx="5"/><rect x="519" y="447" width="83" height="15" rx="5"/></g>
+  <g stroke="#337e5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m697 330 5 5 10-11m-15 47 5 5 10-11m-15 88 5 5 10-11"/></g>
+  <g fill="#bd8c52"><circle cx="704" cy="413" r="11"/></g><path d="M704 407v6m0 4v1" stroke="#fff9e9" stroke-width="2.5" stroke-linecap="round"/>
+  <g fill="#7b9480"><rect x="728" y="328" width="51" height="6" rx="3"/><rect x="728" y="369" width="51" height="6" rx="3"/><rect x="728" y="410" width="51" height="6" rx="3"/><rect x="728" y="451" width="51" height="6" rx="3"/></g>
+  <text x="400" y="522" font-family="Microsoft YaHei,Arial,sans-serif" font-size="18" font-weight="600" fill="#3b6150">每次更新，都有迹可循</text>
+  <path d="M405 562h404" stroke="#b4cbb9" stroke-width="2" stroke-dasharray="6 7"/>
+  <g fill="#28654d"><circle cx="414" cy="562" r="8"/><circle cx="543" cy="562" r="8"/><circle cx="672" cy="562" r="8"/><circle cx="801" cy="562" r="8"/></g>
+  <g font-family="Microsoft YaHei,Arial,sans-serif" font-size="17" font-weight="600" fill="#456953"><text x="396" y="602">导入</text><text x="525" y="602">核验</text><text x="654" y="602">统计</text><text x="783" y="602">导出</text></g>
+ </g>
+ <g filter="url(#shadow)"><rect x="813" y="478" width="230" height="162" rx="22" fill="#fffcf3" stroke="#c5d1bc" stroke-width="2"/><path d="M843 608h170" stroke="#ced9c6" stroke-width="2"/><rect x="855" y="566" width="27" height="42" rx="5" fill="#a9c3a5"/><rect x="901" y="539" width="27" height="69" rx="5" fill="#6d9d78"/><rect x="947" y="513" width="27" height="95" rx="5" fill="#2f7052"/></g>
+ <g transform="translate(264 284)" filter="url(#shadow)"><circle r="58" fill="#2c7055"/><path d="m-23 0 16 16 32-35" stroke="#fffdf5" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g>
+ <text x="88" y="91" font-family="Arial,sans-serif" font-size="17" letter-spacing="4" font-weight="600" fill="#466958">DATA WITH CLARITY</text>
+ <text x="88" y="731" font-family="Microsoft YaHei,Arial,sans-serif" font-size="17" fill="#5e7868">名单匹配 · 异常核验 · 范围导出</text>
+</svg>

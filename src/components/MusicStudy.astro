@@ -1,0 +1,58 @@
+---
+import Icon from './Icon.astro';
+---
+<div class="room-display-tools" aria-label="音乐空间显示控制">
+  <button class="room-tool room-widget-toggle" id="room-music-toggle" data-toggle-widget="player" type="button" aria-expanded="false" aria-controls="music-player" aria-label="展开音乐播放器" title="展开音乐播放器"><Icon name="music" size={17}/><span>音乐</span></button>
+  <button class="room-tool room-widget-toggle" id="room-focus-toggle" data-toggle-widget="focus" type="button" aria-expanded="false" aria-controls="study-focus" aria-describedby="focus-state" aria-label="展开专注计时" title="展开专注计时"><Icon name="clock" size={17}/><span>计时</span></button>
+</div>
+<section class="study-clock" id="study-clock" aria-label="当前时间">
+  <button class="widget-reopen" data-show-widget="clock" type="button" hidden><Icon name="clock" size={16}/><span>时钟</span><Icon name="plus" size={13}/></button>
+  <div class="clock-heading"><p class="study-eyebrow">静听 · 专注</p><button class="widget-minimize" data-minimize-widget="clock" type="button" aria-label="收起时钟" title="收起时钟"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12h14"/></svg></button></div>
+  <button class="clock-digits" id="clock-settings-button" data-open-focus type="button" title="调整时钟与专注设置"><time id="room-clock"><span id="clock-hours-minutes">--:--</span><span id="clock-seconds">:--</span></time><span id="clock-period" hidden></span></button>
+  <p id="room-date"></p>
+  <div class="study-sound" aria-label="音乐已暂停"><span aria-hidden="true">{Array.from({length:9},(_,i)=><i style={`--bar:${8+(i*7)%20}px;--beat:${.8+(i%4)*.25}s;--lag:-${i*.17}s`}/>)}</span><small id="room-sound-label">让音乐陪你一会儿</small></div>
+</section>
+<section class="study-focus" id="study-focus" aria-label="专注计时" data-widget-minimized="true">
+  <div class="focus-heading"><button class="focus-drag" id="focus-drag" type="button" aria-label="移动专注计时；拖动或使用方向键，Home 归位" title="拖动移动 · 方向键微调"><Icon name="grip" size={13}/><span class="focus-eyebrow">留一段时间，做一件事</span></button><button class="widget-minimize" data-minimize-widget="focus" type="button" aria-label="收起专注计时" title="收起专注计时"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12h14"/></svg></button></div>
+  <div class="focus-main">
+    <div class="focus-ring" id="focus-ring" role="progressbar" aria-label="本轮专注进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/><circle class="focus-ring-value" cx="22" cy="22" r="19"/></svg><Icon name="leaf" size={17}/></div>
+    <button class="focus-copy" id="focus-time-drag" data-open-focus type="button" aria-label="专注时长设置；拖动时间或使用方向键移动，Home 归位" title="点击设置时长 · 拖动移动"><strong id="focus-remaining">25:00</strong><span id="focus-state">准备专注</span></button>
+    <button class="focus-start" id="focus-start" type="button" aria-label="开始专注" title="开始专注"><span data-focus-play><Icon name="play" size={17}/></span><span data-focus-pause hidden><Icon name="pause" size={17}/></span></button>
+    <button class="focus-mobile-settings" data-minimize-widget="focus" type="button" aria-label="收起专注计时" title="收起专注计时"><Icon name="down-chevron" size={17}/></button>
+  </div>
+  <div class="focus-footer"><button data-open-focus type="button"><Icon name="clock" size={13}/><span id="focus-duration-label">25 分钟</span><Icon name="down-chevron" size={12}/></button><button id="focus-position-reset" type="button" title="计时卡片位置归位"><Icon name="layout" size={13}/><span>位置归位</span></button></div>
+</section>
+<dialog class="music-dialog focus-dialog" id="focus-dialog" aria-labelledby="focus-dialog-title">
+  <header class="music-dialog-head"><div><p class="dialog-eyebrow">把空间留给此刻的自己</p><h2 id="focus-dialog-title">显示与专注</h2></div><button class="music-control" data-close-dialog type="button" aria-label="关闭显示与专注设置"><Icon name="close" size={20}/></button></header>
+  <p class="dialog-description">右上角的音乐、计时按钮可分别展开或收起面板。拖动卡片调整位置，收起后音乐和计时仍会继续。</p>
+  <fieldset class="space-section"><legend>画面内容</legend>
+    <div class="space-visibility">
+      <label><input id="player-visible" type="checkbox" checked/><Icon name="music" size={16}/><span>播放器</span></label>
+      <label><input id="clock-visible" type="checkbox" checked/><Icon name="clock" size={16}/><span>时钟</span></label>
+      <label><input id="focus-visible" type="checkbox" checked/><Icon name="leaf" size={16}/><span>专注计时</span></label>
+    </div>
+    <label class="focus-preference"><span>播放时的光点与微光</span><input id="ambience-visible" type="checkbox" checked/></label>
+  </fieldset>
+  <fieldset class="space-section clock-preferences"><legend>时钟样式</legend>
+    <div class="space-field-grid">
+      <label for="clock-format">时间制式<select id="clock-format"><option value="24">24 小时</option><option value="12">12 小时</option></select></label>
+      <label for="clock-size">文字大小<select id="clock-size"><option value="small">小巧</option><option value="normal" selected>舒展</option><option value="large">大字</option></select></label>
+      <label for="clock-position">摆放位置<select id="clock-position"><option value="left">左上</option><option value="center">顶部居中</option><option value="lower-left">左下</option></select></label>
+      <div class="clock-detail-choices">
+        <label for="clock-date-visible"><span>显示日期</span><input id="clock-date-visible" type="checkbox" checked/></label>
+        <label for="clock-seconds-visible"><span>显示秒数</span><input id="clock-seconds-visible" type="checkbox" checked/></label>
+      </div>
+    </div>
+    <p class="dialog-hint">秒数每秒更新；关闭后只显示时分。小屏幕会自动采用紧凑布局。</p>
+  </fieldset>
+  <section class="space-section focus-settings-section" aria-label="专注时长">
+  <fieldset class="focus-durations"><legend>本轮时长</legend>{[25,45,60].map(n=><button data-focus-duration={n} type="button" aria-pressed={n===25}>{n}<span> 分钟</span></button>)}</fieldset>
+  <form id="focus-custom-form" class="focus-custom-form"><label for="focus-custom-minutes">自定义时长</label><div><input id="focus-custom-minutes" type="number" min="1" max="180" step="1" value="25" required inputmode="numeric" aria-describedby="focus-custom-hint"/><span>分钟</span><button class="dialog-secondary" type="submit">应用</button></div><small id="focus-custom-hint">1–180 分钟，适合你自己的节奏</small></form>
+  <p id="focus-duration-hint" class="dialog-hint">选择适合自己的节奏</p>
+  <div class="focus-dialog-controls"><button class="dialog-secondary" id="focus-dialog-start" type="button">开始专注</button><button class="dialog-secondary" id="focus-reset" type="button">重置计时</button></div>
+  <p class="dialog-hint" id="focus-summary">从一小段专注开始</p>
+  <button class="space-reset" id="focus-position-reset-dialog" type="button">计时卡片位置归位</button>
+  </section>
+  <button class="space-reset" id="space-display-reset" type="button">恢复默认显示</button>
+</dialog>
+<p class="sr-only" id="focus-announcement" role="status" aria-live="polite"></p>

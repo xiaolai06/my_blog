@@ -1,0 +1,55 @@
+---
+import '../styles/video-scene.css';
+interface Props {
+  kind: 'hero' | 'footer';
+  src: string;
+  poster: string;
+  width: number;
+  height: number;
+  imageClass?: string;
+  phase?: string;
+  priority?: boolean;
+  clock?: boolean;
+  family?: 'home' | 'projects';
+}
+const { kind, src, poster, width, height, imageClass = '', phase = kind === 'hero' ? 'sunset' : 'dusk', priority = kind === 'hero', clock = true, family = 'home' } = Astro.props;
+---
+<div class="video-scene" data-video-scene data-kind={kind} data-src={src} data-poster={poster} data-phase={phase} data-ready="false" data-running="false" data-transitioning="false" aria-hidden="true">
+  <img class:list={['video-scene-reference', imageClass]} src={poster} width={width} height={height} alt="" loading={priority ? 'eager' : 'lazy'} fetchpriority={priority ? 'high' : 'auto'} />
+  <span class:list={['video-scene-stage', imageClass]}>
+    <img class="video-scene-fallback" src={poster} width={width} height={height} alt="" loading={priority ? 'eager' : 'lazy'} />
+    {[0, 1].map(index => <video class="video-scene-film" data-video-slot={index} muted autoplay loop playsinline disablepictureinpicture disableremoteplayback preload="none" tabindex="-1" aria-hidden="true" width={width} height={height}></video>)}
+  </span>
+</div>
+<script is:inline define:vars={{ kind, clock, family }}>
+  (() => {
+    if (!clock) return;
+    const host = document.currentScript.previousElementSibling;
+    if (!host?.hasAttribute('data-video-scene')) return;
+    const hour = new Date().getHours();
+    let phase = hour >= 5 && hour < 9 ? 'dawn' : hour >= 9 && hour < 16 ? 'day' : hour >= 16 && hour < 19 ? 'dusk' : 'night';
+    try {
+      const saved = JSON.parse(localStorage.getItem(`sakura-scene-${kind}`) ?? localStorage.getItem('sakura-scene-preference') ?? 'null');
+      if (saved && ['dawn','day','dusk','night'].includes(saved.choice) && saved.expiresAt > Date.now()) phase = saved.choice;
+    } catch {}
+    let poster, source;
+    if (family === 'projects') {
+      const name = kind === 'hero' ? 'studio' : 'stream';
+      const suffix = phase === 'dusk' ? '' : `-${phase}-v2`;
+      poster = `/images/projects-${name}${suffix}.webp`;
+      source = `/videos/projects-${name}${phase === 'dusk' ? '-v1' : suffix}.mp4`;
+    } else {
+      if (kind === 'hero') phase = phase === 'night' ? 'night' : 'sunset';
+      poster = kind === 'hero' ? (phase === 'night' ? '/images/sakura-moonlight-v3.webp' : '/images/sakura-sunset.webp') : ({ dawn: '/images/footer-dawn.webp', day: '/images/footer-day.webp', dusk: '/images/sakura-footer.webp', night: '/images/footer-night.webp' })[phase];
+      source = `/videos/${kind}-${phase}-v4.mp4`;
+    }
+    host.dataset.src = source;
+    host.dataset.poster = poster;
+    host.dataset.phase = phase;
+    host.querySelectorAll('img').forEach(image => image.src = poster);
+  })();
+</script>
+<script>
+  import { setupVideoScenes } from '../scripts/video-scene';
+  setupVideoScenes();
+</script>

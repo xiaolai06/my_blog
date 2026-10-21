@@ -1,0 +1,43 @@
+:root{--motion-enter:320ms;--motion-feedback:180ms;--motion-ease:cubic-bezier(.23,1,.32,1)}
+
+/* Short crossfades preserve the landscape; the header has its own stable layer. */
+/* Fade the page snapshot without turning the document into a fixed-position containing block. */
+@keyframes page-leave{to{opacity:0}}
+@keyframes page-enter{from{opacity:0}to{opacity:1}}
+::view-transition-group(site-header){z-index:20}
+::view-transition-group(site-controls){z-index:80}
+::view-transition-group(nav-indicator){z-index:21;animation-duration:var(--motion-enter);animation-timing-function:var(--motion-ease)}
+::view-transition-old(nav-indicator),::view-transition-new(nav-indicator){animation:none;mix-blend-mode:normal;height:100%}
+::view-transition-old(root),::view-transition-new(root){mix-blend-mode:normal}
+
+.site-header .desktop-nav .nav-indicator{position:absolute;left:9px;right:10px;bottom:2px;height:2px;border-radius:2px;background:var(--accent);pointer-events:none}
+.site-header.header-overlay .desktop-nav .nav-indicator{background:#f3c4ad}
+.site-header .desktop-nav a[aria-current=page]::after{opacity:0}
+@media(max-width:1100px){.site-header .desktop-nav .nav-indicator{left:5px;right:6px}}
+
+/* Theme colors settle together, without changing the page's geometry. */
+:root.theme-changing body,:root.theme-changing :is(.site-header,.mobile-nav,.search-dialog,.project-card,.panel,.journal-row,.journal-entry,.archive-search-form,.archive-types button,.reader-toolbar,.reader-summary,.about-resume-card,.about-skill,.about-strength-card){transition:background-color 260ms ease,color 260ms ease,border-color 260ms ease}
+.theme-toggle :is(.theme-sun,.theme-moon){transform-origin:center;animation:theme-icon-in 260ms var(--motion-ease)}
+@keyframes theme-icon-in{from{opacity:0;transform:rotate(-35deg) scale(.75)}to{opacity:1;transform:rotate(0) scale(1)}}
+
+/* The native dialog keeps its focus trap throughout the short exit. */
+.search-dialog[open]{animation:none;transform-origin:50% 0}
+.search-dialog[open]::backdrop{animation:search-backdrop-in 240ms ease-out both}
+.search-dialog[data-closing]::backdrop{animation:search-backdrop-out 160ms ease-in both}
+@keyframes search-backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes search-backdrop-out{from{opacity:1}to{opacity:0}}
+.mobile-nav{transform-origin:calc(100% - 24px) 0}
+.mobile-nav a{transition:background-color var(--motion-feedback) ease,color var(--motion-feedback) ease}
+.mobile-nav a:is(:hover,:focus-visible){background:var(--soft);border-radius:8px}
+
+:root[data-motion=off]{scroll-behavior:auto}
+:root[data-motion=off]::view-transition-group(*),:root[data-motion=off]::view-transition-old(*),:root[data-motion=off]::view-transition-new(*){animation:none!important}
+:root[data-motion=off][data-astro-transition-scope],:root[data-motion=off] [data-astro-transition-scope]{animation:none!important}
+:root[data-motion=off] .search-dialog::backdrop,:root[data-motion=off] .theme-toggle span{animation:none!important}
+:root[data-motion=off] .mobile-nav a{transition:none}
+:root[data-motion=off].theme-changing :is(body,.site-header,.mobile-nav,.search-dialog,.project-card,.panel,.journal-row,.journal-entry,.archive-search-form,.archive-types button,.reader-toolbar,.reader-summary,.about-resume-card,.about-skill,.about-strength-card){transition:none}
+@media(prefers-reduced-motion:reduce){
+ ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+ .search-dialog::backdrop,.theme-toggle span{animation:none!important}
+}
+@media print{::view-transition{display:none}}

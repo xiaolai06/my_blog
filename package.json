@@ -6,6 +6,7 @@
     "node": ">=22.22.0"
   },
   "scripts": {
+    "fonts": "node scripts/update-fonts.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
@@ -16,6 +17,7 @@
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.4.0",
+    "motion": "^14.3.0",
     "sharp": "^0.35.0"
   }
 }

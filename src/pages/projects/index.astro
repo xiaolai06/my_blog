@@ -1,0 +1,17 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { projects } from '../../data/projects';
+import Icon from '../../components/Icon.astro';
+import '../../styles/projects.css';
+const categories = [...new Set(projects.map(p => p.category))];
+---
+<SiteLayout projectPage title="项目作品集" description="ORULINK、TaskHub、ClothHub 与学绩：从软硬件协同、独立经营到教学数据处理，四个项目的功能、架构与实现记录。">
+<main id="main-content" class="container inner-main project-collection" data-project-section>
+<nav class="breadcrumb" aria-label="当前位置"><a href="/">首页</a><Icon name="chevron" size={14}/><span aria-current="page">项目作品集</span></nav>
+<section aria-labelledby="collection-title">
+<div class="section-heading"><h2 id="collection-title">项目一览 <em>Selected projects</em></h2><div class="project-filters" role="group" aria-label="项目分类">{['全部',...categories].map((label,i)=><button class:list={['filter-button',{active:i===0}]} data-filter={label} aria-pressed={i===0}>{label}</button>)}</div></div>
+<div class="project-grid archive-projects">{projects.map((p,i)=><ProjectCard project={p} index={i} showCategory/>)}</div><p class="filter-status sr-only" aria-live="polite"></p>
+</section>
+</main>
+</SiteLayout>

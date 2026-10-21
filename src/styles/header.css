@@ -1,0 +1,52 @@
+/* Keep the brand and navigation at opposite edges, with clear sky between. */
+.site-header{height:104px}
+body .site-header .header-inner{width:calc(100% - clamp(40px,7vw,112px));max-width:none;gap:32px}
+body:is(.home-page,.project-page) .site-header .header-inner{width:calc(100% - clamp(40px,7vw,112px));max-width:none}
+.site-header .brand>span{font-size:30px;letter-spacing:2px}
+.site-header .brand>.sakura-mark{width:42px;height:42px}
+.site-header .brand small{font-size:9px;letter-spacing:2.8px}
+.site-header .desktop-nav{gap:clamp(22px,2.3vw,44px);margin-left:auto;margin-right:36px}
+.site-header .desktop-nav a{font:500 20px/1.5 var(--sans);letter-spacing:1.4px;padding:10px 9px;border-radius:0;white-space:nowrap;transition:color .15s ease}
+.site-header .desktop-nav a::after{display:block;left:9px;right:10px;bottom:2px;height:2px;border-radius:2px;background:var(--accent);transform-origin:center;transition:transform .18s ease}
+.site-header .desktop-nav a[aria-current=page]{color:var(--accent);background:transparent;box-shadow:none}
+.site-header .header-actions{gap:12px}
+.site-header .header-actions .icon-button{width:40px;height:40px}
+.site-header.header-overlay::before{content:'';position:absolute;inset:0 0 -32px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#10182b88,#10182b28 64%,transparent)}
+.site-header.header-overlay .desktop-nav a{color:#fff8f1;font-weight:600;text-shadow:0 1px 8px #10182890}
+.site-header.header-overlay .desktop-nav a::after{background:#f3c4ad}
+.site-header.header-overlay .desktop-nav a[aria-current=page]{color:#fffaf6;background:transparent;box-shadow:none}
+.site-header.header-overlay .header-actions{color:#fff8f1;filter:drop-shadow(0 1px 5px #10182890)}
+@media(hover:hover){.site-header .desktop-nav a:hover{background:transparent;color:var(--accent)}.site-header.header-overlay .desktop-nav a:hover{background:transparent;color:#fff}}
+@media(max-width:1100px){.site-header .desktop-nav{gap:17px;margin-right:15px}.site-header .desktop-nav a{font-size:18px;padding-inline:5px}.site-header .desktop-nav a::after{left:5px;right:6px}.site-header .brand>span{font-size:27px}.site-header .header-inner{gap:20px}}
+.site-header .mobile-nav a{position:relative;font-size:18px;letter-spacing:1px}
+.site-header .mobile-nav a[aria-current=page]{color:var(--accent);font-weight:600}
+.site-header .mobile-nav a[aria-current=page]::after{content:'';position:absolute;left:15px;bottom:7px;width:25px;height:2px;border-radius:2px;background:currentColor}
+@media(max-width:760px){.site-header{height:88px}.site-header .brand>span{font-size:24px;letter-spacing:1px}.site-header .brand>.sakura-mark{width:35px;height:35px}.site-header .brand small{font-size:7px;letter-spacing:1.9px}.site-header .header-actions{gap:3px;margin-left:auto}.site-header .header-actions .icon-button{width:37px;height:42px}.site-header .desktop-nav{display:none}.site-header .mobile-nav{top:78px}.site-header.header-overlay::before{bottom:-24px}}
+@media(max-width:360px){.site-header .brand>span{font-size:21px}.site-header .brand>.sakura-mark{width:29px;height:29px}.site-header .header-actions .icon-button{width:32px}.site-header .header-actions{gap:0}body .site-header .header-inner{gap:8px}}
+@media(prefers-reduced-motion:reduce){.site-header .desktop-nav a,.site-header .desktop-nav a::after{transition:none}}
+
+/* Keep the existing sakura identity, with a clear mark and a compact wordmark. */
+body .site-header a.brand{gap:12px;min-height:48px;letter-spacing:0}
+body .site-header .brand .brand-emblem{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border:1px solid #d9a5a53d;border-radius:50%;background:#f7eae5;line-height:1}
+body .site-header .brand-emblem .sakura-mark{display:block;width:34px;height:34px;filter:none;flex-shrink:0}
+body .site-header .brand .brand-wordmark{display:grid;gap:6px;align-content:center;line-height:1;letter-spacing:0}
+body .site-header .brand .brand-name{display:block;font:400 28px/1.15 var(--brand-font);letter-spacing:2px;white-space:nowrap}
+body .site-header .brand-wordmark small{display:block;margin:0;padding:0 0 0 2px;font:400 8px/1.25 Georgia,serif;letter-spacing:2.9px;color:var(--muted);white-space:nowrap}
+body .site-header .header-inner .desktop-nav{gap:clamp(18px,1.7vw,30px);margin-right:0}
+body .site-header .header-actions{gap:8px;padding-left:18px;border-left:1px solid var(--line)}
+body .site-header .header-actions .icon-button{width:40px;height:40px}
+body .site-header.header-overlay .brand-emblem{background:#fff4eb12;border-color:#fff3e640}
+body .site-header.header-overlay .brand-wordmark small{color:#fff3e6d9}
+body .site-header.header-overlay .header-actions{border-left-color:#fff3e638}
+:root[data-theme=dark] body .site-header:not(.header-overlay) .brand-emblem{background:#392d31;border-color:#cf9caa40}
+@media(max-width:760px){
+ body .site-header a.brand{gap:9px;min-height:42px}
+ body .site-header .brand .brand-emblem{width:38px;height:38px;flex-basis:38px}
+ body .site-header .brand-emblem .sakura-mark{width:29px;height:29px}
+ body .site-header .brand .brand-name{font-size:24px;letter-spacing:1px}
+ body .site-header .brand .brand-wordmark{gap:5px}
+ body .site-header .brand-wordmark small{font-size:7px;letter-spacing:2.2px}
+ body .site-header .header-actions{border:0;padding-left:0;gap:2px}
+ body .site-header .header-actions .icon-button{width:37px;height:42px}
+}
+@media(max-width:360px){body .site-header .brand .brand-name{font-size:22px}body .site-header .header-actions .icon-button{width:32px}}

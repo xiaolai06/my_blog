@@ -1,0 +1,30 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Icon from '../components/Icon.astro';
+import VideoScene from '../components/VideoScene.astro';
+import SceneDock from '../components/SceneDock.astro';
+import { SITE_TITLE } from '../consts';
+import MusicPlayer from '../components/MusicPlayer.astro';
+---
+<!doctype html>
+<html lang="zh-CN">
+<head><BaseHead title={`音乐模式 · ${SITE_TITLE}`} description="樱花风景中的独立音乐空间，支持自己的播放列表、收藏和同步歌词。"/></head>
+<body class="music-mode">
+  <main id="main-content" class="music-room" aria-label="沉浸音乐模式">
+    <h1 class="sr-only">音乐模式</h1>
+    <div class="music-wallpaper" data-scene-region="hero" data-scene-family="home" aria-hidden="true">
+      <VideoScene kind="hero" src="/videos/hero-sunset-v4.mp4" poster="/images/sakura-sunset.webp" phase="sunset" width={1672} height={941} priority/>
+      <div class="music-petals">{Array.from({length:76},(_,i)=><i style={`--x:${(i*37+9)%108-4}%;--delay:-${i*1.37}s;--duration:${13+i%11*1.8}s;--size:${4+i%8}px;--drift:${80+i%6*30}px;--alpha:${.18+i%5*.09}`}/>)}</div>
+      <div class="music-air" aria-hidden="true"><span class="music-halo"/>{Array.from({length:22},(_,i)=><i style={`--x:${(i*43+7)%100}%;--y:${(i*31+16)%90}%;--float:${14+i%7*3}s;--lag:-${i*1.7}s;--dot:${2+i%3}px`}/>)}</div>
+    </div>
+    <a class="room-tool music-exit" id="music-exit" href="/" aria-label="退出音乐模式，返回博客" title="退出音乐模式"><Icon name="back" size={19}/></a>
+    <div class="room-tools" aria-label="壁纸控制">
+      <button class="room-tool" id="wallpaper-toggle" type="button" aria-label="暂停动态壁纸" aria-pressed="false" title="暂停动态壁纸"><span class="wallpaper-pause"><Icon name="pause" size={17}/></span><span class="wallpaper-play"><Icon name="play" size={17}/></span></button>
+      <button class="room-tool" id="room-fullscreen" type="button" aria-label="进入全屏" title="进入全屏"><Icon name="fullscreen" size={18}/></button>
+    </div>
+
+  </main>
+  <MusicPlayer/>
+  <SceneDock/>
+</body>
+</html>

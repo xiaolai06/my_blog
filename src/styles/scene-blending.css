@@ -1,0 +1,21 @@
+/* Shared page-colored dissolves: one continuous edge for artwork and atmosphere. */
+:root body{--scene-dissolve:linear-gradient(180deg,transparent 0%,color-mix(in srgb,var(--bg) 3%,transparent) 12%,color-mix(in srgb,var(--bg) 12%,transparent) 27%,color-mix(in srgb,var(--bg) 30%,transparent) 43%,color-mix(in srgb,var(--bg) 54%,transparent) 60%,color-mix(in srgb,var(--bg) 78%,transparent) 76%,color-mix(in srgb,var(--bg) 94%,transparent) 90%,var(--bg) 100%)}
+:root body.home-page .hero-blend,:root body .project-hero::after{height:clamp(116px,10vw,180px);background:var(--scene-dissolve);bottom:-1px}
+:root body.home-page .hero{height:clamp(640px,37.5vw,940px)}
+:root body .project-hero--compact::after{height:100px}
+:root body .scenic-footer{--footer-edge:clamp(112px,10vw,180px);background:var(--bg)}
+:root body .scenic-footer .footer-landscape{height:clamp(280px,21vw,440px);background:var(--bg);mask-image:linear-gradient(180deg,transparent 0px,#00000008 calc(var(--footer-edge)*.12),#0000001f calc(var(--footer-edge)*.27),#0000004d calc(var(--footer-edge)*.43),#0000008a calc(var(--footer-edge)*.6),#000000c7 calc(var(--footer-edge)*.76),#000000f0 calc(var(--footer-edge)*.9),#000 var(--footer-edge))}
+/* One image across the whole width, rather than repeating its moon/sky. */
+:root body .scenic-footer :is(.image-scene,.footer-atmosphere){mask-image:none}
+:root body .scenic-footer .image-scene-frame::before{content:none}
+:root body .scenic-footer .image-scene .footer-scenery{inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:center 60%;mask-image:none}
+:root body .scenic-footer .footer-landscape[data-scene-family=home] .footer-scenery{object-position:center 65%}
+:root body .scenic-footer .stream-reflections{inset:0;width:100%;height:100%;aspect-ratio:auto}
+@media(max-width:760px){
+ :root body.home-page .hero{height:620px}
+ :root body.home-page .hero-blend,:root body .project-hero::after{height:112px}
+ :root body .project-hero--compact::after{height:90px}
+ :root body .scenic-footer{--footer-edge:104px}
+ :root body .scenic-footer .footer-landscape{height:clamp(260px,68vw,320px)}
+}
+

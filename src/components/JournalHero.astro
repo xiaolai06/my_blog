@@ -1,0 +1,20 @@
+---
+import ImageScene from './ImageScene.astro';
+import WindPetals from './WindPetals.astro';
+import { journalHeading } from '../data/page-copy.json';
+import '../styles/project-scenes.css';
+import '../styles/journal-scenes.css';
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+const Heading = compact ? 'p' : 'h1';
+---
+<section class:list={['project-hero', 'journal-hero', {'project-hero--compact': compact}]} data-scene-region="hero" data-scene-family="journal" aria-label="窗边手记">
+ <div class="project-hero-scene" aria-hidden="true"><ImageScene kind="hero" imageClass="project-hero-art" priority/></div>
+ <WindPetals count={72}/>
+ <div class="project-hero-content container">
+  <Heading class="project-hero-title">{journalHeading}</Heading>
+  <p class="project-hero-english" lang="en">Build. Understand. Write it down.</p>
+  {!compact && <p class="project-hero-description"><span><span class="journal-intro-phrase">从一个问题出发，</span><span class="journal-intro-phrase">走进代码、设计与工程实践。</span></span><span>让每一次理解，都有迹可循。</span></p>}
+  <span class="sr-only" data-scene-status aria-live="polite"></span>
+ </div>
+</section>

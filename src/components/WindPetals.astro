@@ -1,0 +1,12 @@
+---
+import '../styles/wind-petals.css';
+interface Props { zone?:'hero'|'footer'; count?:number }
+const {zone='hero',count=zone==='footer'?76:112}=Astro.props;
+const random=(i:number,salt:number)=>{const n=Math.sin((i+1)*127.1+salt*311.7)*43758.5453;return n-Math.floor(n);};
+---
+<div class:list={['wind-petals',`wind-petals--${zone}`]} aria-hidden="true">
+ {Array.from({length:count},(_,i)=>{
+  const depth=i%3;
+  return <i class="wind-petal" data-shape={i%5} data-tone={Math.floor(random(i,5)*5)} data-depth={depth} style={`--petal-width:${(depth===0?3+random(i,4)*4:7+random(i,4)*7).toFixed(1)}px;--wind-alpha:${(depth===0?.3+random(i,8)*.18:.52+random(i,8)*.3).toFixed(2)}`}/>;
+ })}
+</div>

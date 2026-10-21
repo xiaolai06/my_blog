@@ -1,0 +1,33 @@
+/* One quiet toolbar follows the introduction, leaving the figure unobstructed. */
+@property --petal-light{syntax:"<color>";inherits:true;initial-value:#ffd5b5}
+@property --petal-shade{syntax:"<color>";inherits:true;initial-value:#fc8a87}
+.hero{--petal-light:#ffd5b5;--petal-shade:#fc8a87;transition:--petal-light 2.4s,--petal-shade 2.4s}
+.hero[data-ambience=night]{--petal-light:#d9c4d5;--petal-shade:#a69bae}
+.hero-ambience{position:relative;z-index:6;display:inline-flex;align-items:center;gap:5px;margin-top:25px;padding:4px;border-radius:var(--scene-control-radius)}
+.hero-scene-choices{position:relative;isolation:isolate;display:flex;gap:2px;padding:0;border:0;background:none;backdrop-filter:none}
+.hero-scene-choices button,.hero-ambience .motion-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:5px 12px;color:var(--scene-control-text);font:500 12px/1.6 var(--sans);letter-spacing:.5px;border:0;border-radius:var(--scene-selection-radius);background:transparent;transition:background .25s,color .25s,transform .18s;white-space:nowrap}
+.hero-scene-choices button[aria-pressed=true]{background:var(--scene-control-selection);color:var(--scene-control-active);font-weight:600}
+.hero-scene-choices::before{content:"";position:absolute;inset-block:0;left:0;width:var(--selection-width,0px);transform:translateX(var(--selection-x,0px));border-radius:var(--scene-selection-radius);background:var(--scene-control-selection);box-shadow:var(--scene-selection-shadow);z-index:-1;transition:transform .24s var(--ease),width .24s var(--ease)}
+.hero-scene-choices[data-selection-ready] button[aria-pressed=true]{background:transparent}
+.hero-ambience .motion-toggle{position:static;backdrop-filter:none;box-shadow:none}
+.hero-ambience .motion-toggle[aria-pressed=true]{background:var(--scene-control-selection);color:var(--scene-control-active)}
+.ambience-divider{width:1px;height:17px;background:var(--scene-control-divider);margin:0 2px}
+.hero .button{border-radius:25px}
+.hero .button-coral{background:#ad6050b8;border-color:#edb4a84d;color:#fff8f2;backdrop-filter:blur(10px)}
+.hero .button-coral:hover{background:#ad6050d1}
+.hero .button-glass{background:var(--scene-control-surface);border-color:var(--scene-control-border);color:var(--scene-control-text);box-shadow:none;backdrop-filter:blur(10px)}
+.hero-blend{position:absolute;bottom:-1px;left:0;right:0;height:145px;z-index:4;pointer-events:none;background:linear-gradient(to bottom,transparent 0%,color-mix(in srgb,var(--bg) 5%,transparent) 18%,color-mix(in srgb,var(--bg) 30%,transparent) 49%,color-mix(in srgb,var(--bg) 76%,transparent) 79%,var(--bg) 100%)}
+.hero-clouds{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-2;opacity:.3;mask-image:linear-gradient(90deg,transparent 43%,#000 70%);transition:opacity 2.4s}
+.hero-clouds i{position:absolute;left:40%;top:25%;width:85%;height:31%;border-radius:50%;background:radial-gradient(ellipse at 60% 50%,#e6c4b426,transparent 66%);filter:blur(22px);animation:cloud-veil 26s ease-in-out infinite alternate}
+.hero-clouds i+i{left:55%;top:51%;width:80%;height:22%;animation-duration:33s;animation-delay:-17s;opacity:.7}
+.hero[data-ambience=night] .hero-clouds{opacity:.22}
+.hero .petal,.hero .petal:nth-child(3n){background:linear-gradient(130deg,var(--petal-light),var(--petal-shade))}
+.hero .petal-depth-0{z-index:0;filter:blur(.3px);opacity:.32}
+.hero .petal-depth-2{z-index:1}
+@keyframes cloud-veil{from{transform:translate3d(-40px,0,0) scale(1)}to{transform:translate3d(70px,-10px,0) scale(1.08)}}
+@media(hover:hover) and (pointer:fine){.hero-ambience button:hover{background:var(--scene-control-hover);color:var(--scene-control-active)}.hero .button-glass:hover{background:#ffffff16}}
+@media(max-width:760px){.hero-ambience{margin-top:25px;gap:2px;padding:3px}.hero-scene-choices button,.hero-ambience .motion-toggle{padding:5px 9px;min-height:40px;font-size:11px;gap:5px}.hero-blend{height:110px}.hero-clouds{mask-image:linear-gradient(90deg,transparent,#000 55%)}.hero .petal:nth-child(4n){display:none}}
+@media(max-width:380px){.hero-ambience .motion-label{display:none}.hero-ambience .motion-toggle{width:40px;padding:5px}.hero-scene-choices button{padding-inline:10px}.hero-ambience{margin-top:22px}}
+[data-motion=off] .hero-clouds i,[data-page-hidden] .hero-clouds i,.hero.is-outside .hero-clouds i{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.hero{transition:none}.hero-clouds{display:none}.hero-ambience button,.hero-scene-choices::before{transition:none}}
+@media(scripting:none){.hero-ambience{display:none}}

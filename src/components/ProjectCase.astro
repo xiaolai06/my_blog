@@ -1,0 +1,77 @@
+---
+import Icon from './Icon.astro';
+import type {ProjectCase} from '../data/project-case';
+interface Props {project:ProjectCase}
+const {project:p}=Astro.props;
+import '../styles/taskhub-case.css';
+const asset=(id:string)=>`/images/projects/${p.slug}/${id}.webp`;
+const responsive=(id:string)=>`/images/projects/${p.slug}/${id}-960.webp 960w, ${asset(id)} 1600w`;
+const isReference=p.media?.kind==='reference';
+const mediaLabel=isReference?'设计参考':p.media?.kind==='sample'?'样例界面':'实际界面';
+const mediaCaption=p.media?.caption||'本地实际运行，独立演示数据';
+const previewLabel=isReference?'功能与设计':'功能与界面';
+const sections=[['preview',previewLabel],['stack','技术栈'],['development','开发说明']];
+---
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main-content" class:list={['container','taskhub-case','project-showcase',`${p.slug}-showcase`]} data-project-case>
+ <nav class="breadcrumb" aria-label="当前位置"><a href="/">首页</a><Icon name="chevron" size={14}/><a href="/projects/">项目作品集</a><Icon name="chevron" size={14}/><span aria-current="page">{p.name}</span></nav>
+ <header class="work-intro">
+  <div class="work-intro-copy">
+   {p.award&&<div class="work-award"><Icon name="trophy" size={22}/><span>{p.award.event}<strong>{p.award.prize}</strong></span></div>}
+   <div class="work-brand"><h1>{p.name}</h1><span>{p.chineseName}</span></div>
+   <h2>{p.headline[0]}<br/><em>{p.headline[1]}</em></h2>
+   <p class="work-lead">{p.introduction}</p>
+   <div class="work-project-tags" aria-label="项目标签">{p.tags.map(tag=><span>{tag}</span>)}</div>
+   <div class="work-actions"><a class="work-action" href="#preview">浏览{previewLabel} <Icon name="down" size={16}/></a>{p.online&&<a class="work-action work-online" href={p.online.url} target="_blank" rel="noopener noreferrer">{p.online.label}<Icon name="arrow-up-right" size={17}/></a>}</div>
+   {p.online&&<p class="work-online-note">{p.online.note}</p>}
+  </div>
+  <figure class="work-opening">
+   <div class="work-opening-label"><span class="work-live-dot"></span>{p.opening.label} <span>{isReference?'PRODUCT DESIGN':'THE WORKSPACE'}</span></div>
+   <a href={asset(p.opening.id)} class:list={['work-shot-link',{'work-shot-crop':p.media?.crop}]} data-shot data-caption={`${p.name} · ${p.opening.label} · ${mediaCaption}`} aria-label={`放大查看 ${p.name} ${p.opening.label}`}>
+    <div class="work-window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><span>{p.name} / {p.opening.label}</span><Icon name="fullscreen" size={13}/></div>
+    <img src={asset(p.opening.id)} srcset={responsive(p.opening.id)} sizes="(min-width: 1000px) 620px, 90vw" width="1600" height="960" alt={p.opening.alt} fetchpriority="high" decoding="async"/>
+    <span class="work-enlarge"><Icon name="fullscreen" size={14}/>放大查看</span>
+   </a>
+   <figcaption>{p.media?`${p.name} · ${mediaLabel}`:`${p.name} 实际运行界面`}</figcaption>
+  </figure>
+ </header>
+ <section class="work-scenarios" aria-labelledby="scenario-title"><div class="work-scenario-heading"><p class="work-kicker">APPLICATIONS</p><h2 id="scenario-title">应用场景</h2></div><div class="work-scenario-grid">{p.scenarios.map(item=><article><h3><Icon name={item.icon} size={18}/>{item.title}</h3><p>{item.text}</p></article>)}</div></section>
+ <nav class="work-section-nav toc" aria-label={`${p.name} 项目内容`}>{sections.map(([id,label],i)=><a href={`#${id}`}><small>0{i+1}</small>{label}</a>)}</nav>
+
+ <section id="preview" class="work-section">
+  <div class="work-section-heading"><div><p class="work-kicker">01 / PRODUCT FEATURES</p><h2>{isReference?'功能与产品设计':p.media?.kind==='sample'?'功能与样例界面':'功能与实际界面'}</h2></div><div class="work-deck-navigation"><span data-view-count aria-hidden="true">01 <b>/ {String(p.previews.length).padStart(2,'0')}</b></span><button type="button" data-view-prev aria-label="上一个功能模块"><Icon name="back" size={18}/></button><button type="button" data-view-next aria-label="下一个功能模块"><Icon name="arrow" size={18}/></button></div></div>
+  <div class="work-gallery" data-gallery>
+   <div class="work-view-controls" role="tablist" aria-label={`${p.name} 功能模块`}>{p.previews.map((view,i)=><button id={`tab-${view.id}`} type="button" role="tab" data-view={view.id} aria-selected={i===0} tabindex={i===0?0:-1} aria-controls={`view-${view.id}`}><Icon name={view.icon} size={17}/>{view.label}</button>)}</div>
+   <div class="work-deck-stage">
+    {p.previews.map((view,i)=><div id={`view-${view.id}`} class="work-view" role="tabpanel" aria-labelledby={`tab-${view.id}`} data-view-panel={view.id} hidden={i!==0}>
+     <div class="work-view-copy"><p class="work-view-eyebrow"><span>0{i+1}</span>{view.eyebrow}</p><h3>{view.title}</h3><p class="work-view-description">{view.text}</p><ul class="work-feature-points">{view.points.map(point=><li><p><strong>{point.label}</strong><span>{point.text}</span></p></li>)}</ul>{view.note&&<p class="work-view-note">{view.note}</p>}</div>
+     <figure class="work-screen-card"><div class="work-screen-label"><span>{view.image?.label||view.label} <small>/ {mediaLabel}</small></span><Icon name="arrow-up-right" size={16}/></div><a href={asset(view.image?.id||view.id)} class:list={['work-shot-link',{'work-shot-crop':p.media?.crop}]} data-shot data-caption={`${view.image?.label||view.label} · ${mediaCaption}`} aria-label={`放大查看${view.label}${mediaLabel}`}><img src={asset(view.image?.id||view.id)} srcset={responsive(view.image?.id||view.id)} sizes="(min-width: 1000px) 600px, 90vw" width="1600" height="960" loading="lazy" decoding="async" alt={view.image?.alt||`${p.name} ${view.label}，${mediaCaption}`}/><span class="work-enlarge"><Icon name="fullscreen" size={14}/>放大查看</span></a></figure>
+    </div>)}
+   </div>
+  </div>
+  <div class="work-gallery-note"><span>{p.media?.galleryNote||'界面截图来自本地实际运行，使用独立演示数据。'}</span><span>切换查看 · 点击图片放大</span></div>
+  <p class="sr-only" role="status" aria-live="polite" data-view-status>当前展示：{p.previews[0].label}</p>
+ </section>
+
+ <section id="stack" class="work-section">
+  <div class="work-section-heading"><div><p class="work-kicker">02 / TECHNOLOGY</p><h2>采用的技术栈</h2></div><p>从界面交互到业务服务，<br/>组成完整的项目应用。</p></div>
+  <div class="work-stack">
+   <div class:list={['work-stack-architecture',{'is-extended':p.architecture.length===4}]} aria-label="项目主要模块架构">{p.architecture.map((layer,i)=><>{i>0&&<span aria-hidden="true">↔</span>}<span><Icon name={layer.icon} size={17}/>{layer.label}</span></>)}</div>
+   <dl class="work-stack-grid">{p.stack.map(item=><div><dt>{item.category}</dt><dd><div class="work-stack-names">{item.names.map(name=><strong>{name}</strong>)}</div><p>{item.usage}</p></dd></div>)}</dl>
+  </div>
+ </section>
+ <section id="development" class="work-section">
+  <div class="work-section-heading"><div><p class="work-kicker">03 / DEVELOPMENT</p><h2>开发说明</h2></div><p>代码组织与交互设计，<br/>围绕实际工作场景展开。</p></div>
+  <div class="work-development-intro"><span class="work-development-mark" aria-hidden="true"><Icon name="code" size={29}/></span><p>{p.developmentIntro}</p></div>
+  <div class="work-development-list">{p.development.map(item=><article><span class="work-development-number">{item.number}</span><div><h3>{item.title}</h3><p>{item.text}</p><ul aria-label={`${item.title}涉及的设计`}>{item.tags.map(tag=><li>{tag}</li>)}</ul></div></article>)}</div>
+  {p.review&&<div class="work-review"><div class="work-review-heading"><h3>实现范围与资料</h3><p>资料核对 <time datetime={p.review.date}>{p.review.date.replaceAll('-','.')}</time></p></div><div class="work-review-grid"><section class="work-boundaries" aria-labelledby="work-scope-title"><h4 id="work-scope-title">当前范围与使用条件</h4><ul>{p.review.limits.map(limit=><li>{limit}</li>)}</ul></section><details class="work-sources"><summary><span>查看关键实现文件 <small>{p.review.sources.length} 项</small></span><Icon name="down-chevron" size={17}/></summary><ul>{p.review.sources.map(source=><li><code>{source}</code></li>)}</ul></details></div><p class="work-takeaway">{p.review.takeaway}</p></div>}
+ </section>
+ <nav class:list={['work-end-nav',{'has-previous':p.previous}]} aria-label="继续浏览项目">{p.previous&&<a class="work-previous" href={`/projects/${p.previous.slug}/`}><Icon name="back" size={18}/><span>上一个作品<strong>{p.previous.name}</strong></span></a>}<a class="work-return" href="/projects/"><Icon name="layers" size={17}/>返回项目作品集</a><a href={`/projects/${p.next.slug}/`}><span>下一个作品 <strong>{p.next.name}</strong></span><Icon name="arrow" size={20}/></a></nav>
+
+ <dialog class="work-lightbox" aria-label="查看界面大图"><div class="work-lightbox-toolbar"><p></p><div><button class="work-zoom-toggle" type="button" data-zoom aria-pressed="false">原尺寸</button><button class="work-lightbox-close" type="button" data-close aria-label="关闭大图"><Icon name="close" size={21}/></button></div></div><div class="work-lightbox-viewport"><img alt="" width="1600" height="960"/></div><a class="work-original" target="_blank" rel="noopener">打开原图 <Icon name="arrow-up-right" size={15}/></a></dialog>
+</main>
+<script>
+ import {setupProjectCase} from '../scripts/taskhub-case';
+ setupProjectCase();
+ document.addEventListener('astro:page-load',setupProjectCase);
+</script>

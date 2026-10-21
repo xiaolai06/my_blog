@@ -1,0 +1,10 @@
+{
+  "projectHeading": "从想法，到作品。",
+  "journalHeading": "写下来，就有了回声。",
+  "aboutHeading": "在这里，慢慢认识我。",
+  "footerMessages": {
+    "default": ["愿我们都能在热爱的世界里，", "持续创造，慢慢变好。"],
+    "projects": ["每个作品，都是成长的注脚。", "下一段故事，正在慢慢发生。"],
+    "journal": ["把日子写成故事，", "把微光留在字里行间。"]
+  }
+}

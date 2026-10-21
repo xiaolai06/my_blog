@@ -1,0 +1,90 @@
+import type {ProjectCase} from './project-case';
+
+// Content checked against the local ClothHub source; see docs/clothhub-source-review.md.
+export const clothhubCase:ProjectCase={
+ slug:'clotheshub',name:'ClothHub',chineseName:'智汇衣链',
+ headline:['服装电商的','运营与商品设计工作台'],
+ introduction:'面向服装电商与小型运营团队，将商品库存、店铺订单、采购供应链、客户营销和经营财务集中管理。结合选品分析、服装图片换色与 AI 助手，把日常运营和商品企划放进同一个工作台。',
+ tags:['服装电商运营','全栈 Web 应用','数据与视觉工具'],
+ opening:{id:'dashboard',label:'经营总览',alt:'ClothHub 经营总览实际运行界面，展示商品、订单、销售趋势与库存信息'},
+ scenarios:[
+  {icon:'layers',title:'多店铺日常运营',text:'在统一工作台维护商品、店铺上架与订单，跟进库存变化，集中查看不同渠道的经营记录。'},
+  {icon:'database',title:'采购与经营协作',text:'从供应商和采购单跟进入库，结合客户、合同、任务与财务台账，组织团队的日常经营工作。'},
+  {icon:'sparkles',title:'选品与商品企划',text:'比较品类趋势、测算商品利润，整理选品报告；通过服装分区换色预览，探索商品配色方案。'},
+ ],
+ previews:[
+  {id:'products',label:'商品与库存',icon:'layers',eyebrow:'PRODUCTS / 商品资料',title:'商品资料与库存管理',text:'围绕 SKU 维护商品图片、分类、成本、售价和库存。分类树与多维筛选帮助定位商品，表单和批量操作用于日常维护；采购与订单的业务变化也会反映到商品库存。',points:[
+   {label:'分类管理',text:'按分类树浏览商品，新增、编辑分类并筛选记录。'},
+   {label:'商品档案',text:'维护 SKU、商品图、价格、库存与供应商信息。'},
+   {label:'组合检索',text:'结合关键词、状态、日期与排序查找商品。'},
+   {label:'批量维护',text:'勾选多条记录，集中处理上下架或删除操作。'},
+   {label:'库存联动',text:'订单创建扣减库存，取消回补，采购收货增加库存。'},
+  ]},
+  {id:'orders',label:'订单与店铺',icon:'layout',eyebrow:'ORDERS / 销售跟进',title:'店铺上架与订单跟进',text:'店铺维护渠道和上架商品，订单记录客户、商品明细、支付及物流信息。通过状态筛选和详情面板跟进销售，把商品信息、店铺售价和实际订单分开维护，并保留彼此的业务关联。',points:[
+   {label:'店铺档案',text:'维护店铺平台、负责人和启用状态。'},
+   {label:'上架管理',text:'关联商品，设置店铺售价与上架状态。'},
+   {label:'订单录入',text:'选择客户与商品，调整数量并汇总订单金额。'},
+   {label:'状态流转',text:'按允许的路径处理付款、发货、完成或取消。'},
+   {label:'明细查询',text:'按日期、客户、物流等条件筛选，查看订单详情。'},
+  ]},
+  {id:'supply',label:'供应链管理',icon:'globe',eyebrow:'SUPPLY / 采购入库',title:'供应商与采购单管理',text:'从供应商档案到采购单收货，集中记录商品采购过程。采购明细维护数量和单价，状态流转记录处理阶段；确认收货后，后端同步更新对应商品库存。',points:[
+   {label:'供应商档案',text:'维护联系人、合作状态、等级、评分及备注。'},
+   {label:'采购明细',text:'选择商品、录入数量和单价，计算采购金额。'},
+   {label:'采购分类',text:'结合分类、状态、日期和关键词定位采购单。'},
+   {label:'进度跟踪',text:'按草稿、提交、审核、发货及收货阶段推进。'},
+   {label:'收货入库',text:'核对已发货采购单，收货时一并保存库存变化。'},
+  ]},
+  {id:'customers',label:'客户与营销',icon:'book',eyebrow:'CUSTOMERS / 客户经营',title:'客户、营销与协作台账',text:'客户档案记录来源、标签和消费信息，营销模块维护促销活动、优惠券与折扣规则。合同和任务入口补充日常协作，让客户经营、活动安排和执行记录都有可查询的位置。',points:[
+   {label:'客户分层',text:'按等级、来源与状态筛选，查看消费和订单摘要。'},
+   {label:'营销配置',text:'维护活动、优惠券、适用条件与折扣规则。'},
+   {label:'平台导入',text:'下载 CSV 模板，查看导入结果和错误行反馈。'},
+   {label:'合同台账',text:'登记合作方、金额、有效期与合同状态。'},
+   {label:'任务协作',text:'用看板、列表或甘特视图查看负责人和截止时间。'},
+  ]},
+  {id:'finance',label:'经营与财务',icon:'database',eyebrow:'BUSINESS / 经营数据',title:'经营分析与财务记账',text:'经营分析汇总订单、商品、客户和店铺数据，财务模块进一步查看利润、成本和收支。图表用于比较趋势，明细与导入工具用于整理记录，预测结果则作为经营测算单独呈现。',points:[
+   {label:'销售分析',text:'比较销售趋势、商品排行、品类分布和店铺表现。'},
+   {label:'图表下钻',text:'从趋势图查看日期对应订单，导出分析数据。'},
+   {label:'利润与成本',text:'查看商品利润、成本拆分及经营汇总。'},
+   {label:'收支台账',text:'登记收入和支出，按分类与日期查询流水。'},
+   {label:'表格导入',text:'解析 Excel / CSV，校验有效记录后批量导入。'},
+  ]},
+  {id:'insight',label:'选品工具',icon:'sliders',eyebrow:'SELECTION / 商品企划',title:'趋势参考与选品测算',text:'将趋势查看、利润计算和选品报告组织在一个入口。运营人员可以比较平台关键词与品类热度，代入商品成本和平台费率测算利润，再整理预算、时间安排与风险提示。',points:[
+   {label:'趋势雷达',text:'按平台、关键词与热度查看和比较趋势记录。'},
+   {label:'利润测算',text:'设置售价、销量、采购成本与平台费用参数。'},
+   {label:'选品报告',text:'整理品类建议、预算分配、执行时间与风险项。'},
+   {label:'结果导出',text:'导出报告数据，保留选品方案和测算结果。'},
+   {label:'采集服务',text:'独立接口组织关键词、成本数据与手动同步。'},
+  ],note:'趋势包含演示与回退估算；外部数据采集需配置相应服务。'},
+  {id:'design',label:'服装设计',icon:'landscape',eyebrow:'DESIGN / 服装视觉',title:'服装分区换色与配色留档',text:'上传服装图片后识别衣物区域，为上衣、裤装或连衣裙等部位选择颜色。换色结合区域蒙版与 LAB 色彩处理，尽量保留原图的光影和纹理，用于商品配色预览与方案比较。',points:[
+   {label:'部位识别',text:'通过 SegFormer 分割服装区域，按部位选择范围。'},
+   {label:'分区换色',text:'设置目标色与强度，分别调整不同衣物部位。'},
+   {label:'多色预览',text:'为同一服装比较多个候选配色方案。'},
+   {label:'颜色与色板',text:'浏览颜色分类、收藏配色并维护个人调色板。'},
+   {label:'方案留档',text:'保存、重命名设计记录，或将设计同步到商品。'},
+  ],note:'服装识别与换色需要可用的模型环境；此处展示工作台实际界面。'},
+  {id:'assistant',label:'AI 助手',icon:'sparkles',eyebrow:'ASSISTANT / 业务辅助',title:'带页面上下文的 AI 助手',text:'助手以侧栏形式进入当前工作台，结合所在模块和问题意图选择专业角色与业务工具。对话保存历史会话，以流式方式呈现回答和工具状态，帮助查询、分析与处理已有业务记录。',points:[
+   {label:'上下文路由',text:'结合当前页面与问题关键词选择业务角色。'},
+   {label:'工具调用',text:'按模块筛选可用工具，连接对应业务服务。'},
+   {label:'流式反馈',text:'逐步显示回复和工具状态，支持停止与复制回答。'},
+   {label:'会话管理',text:'保存、切换与删除会话，继续查看历史消息。'},
+   {label:'模型配置',text:'接入兼容 OpenAI 的服务，配置模型和连接信息。'},
+  ],note:'真实问答与工具调用需配置模型服务；未配置时显示演示提示。'},
+ ],
+ architecture:[{icon:'layout',label:'Next.js 前端'},{icon:'code',label:'FastAPI 服务'},{icon:'database',label:'SQLAlchemy / SQLite'}],
+ stack:[
+  {category:'界面框架',names:['Next.js 15','React 19','TypeScript'],usage:'采用 App Router 组织登录与工作台入口，业务组件通过 next/dynamic 按需加载。'},
+  {category:'界面与可视化',names:['Tailwind CSS 4','Recharts','Lucide'],usage:'构建筛选表格、详情面板、表单与多视图工作台，绘制销售、利润和经营趋势图。'},
+  {category:'状态与数据交互',names:['Zustand','Axios','SSE'],usage:'持久化登录状态，统一认证与续期；通过服务端事件通知相关模块重新获取数据。'},
+  {category:'业务服务与持久化',names:['FastAPI','SQLAlchemy 2','SQLite'],usage:'按商品、订单、采购等领域组织接口，结合 Pydantic 校验字段，以关系模型维护业务记录。'},
+  {category:'数据与智能辅助',names:['httpx / Playwright','OpenAI SDK','APScheduler'],usage:'独立服务组织数据采集；助手接入兼容模型与工具调用，调度器提供周期任务入口。'},
+  {category:'服装图像处理',names:['SegFormer','PyTorch','OpenCV'],usage:'结合 NumPy、Pillow 与 LAB 色彩变换完成服装区域识别、蒙版处理和局部换色。'},
+ ],
+ developmentIntro:'项目采用 Next.js 与 FastAPI 前后端分离结构，以商品、订单和采购等业务记录为基础，将运营管理、数据分析与服装视觉工具组织到统一工作台。开发中关注跨模块的数据衔接，也关注检索、编辑、导入和结果反馈这些日常操作的完整体验。',
+ development:[
+  {number:'01',title:'围绕业务状态维护库存',text:'创建订单时先校验库存，再保存明细并扣减数量；取消订单和确认采购收货分别回补、增加库存。订单与采购的主要流程由状态表校验，状态和库存变化在同一次数据库提交中保存。',tags:['库存校验','状态流转','关联记录']},
+  {number:'02',title:'让不同模块及时看到数据变化',text:'后端通过 SSE 发送实体变更事件，前端按商品、订单、任务等类型订阅并重新获取相关数据。事件连接支持断线重连，列表与经营图表能够响应其他模块的操作，减少手动刷新。',tags:['实体事件','订阅刷新','断线重连']},
+  {number:'03',title:'细化高频的检索与导入操作',text:'商品和订单检索采用输入防抖与请求取消，避免快速输入时旧结果覆盖新筛选。批量操作集中提交；财务表格先解析并逐行校验，营销 CSV 导入再返回成功数量、失败行和处理记录。',tags:['防抖与请求取消','批量处理','导入反馈']},
+  {number:'04',title:'把换色处理拆成清晰的图像管线',text:'分割模型按首次调用加载并缓存，生成衣物类别与部位蒙版；通过形态学处理和边缘羽化整理区域，再在 LAB 空间调整色度、控制明度偏移，保留原图大部分光影与纹理。',tags:['服装分割','蒙版羽化','LAB 色彩处理']},
+ ],
+ previous:{name:'TaskHub',slug:'taskhub'},next:{name:'学绩',slug:'student-score'},
+};

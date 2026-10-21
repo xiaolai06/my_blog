@@ -1,0 +1,226 @@
+@font-face{font-family:'Sakura Project Display';src:url('/fonts/ma-shan-zheng-projects.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap}
+
+/* Shared gutters keep the work, navigation and landscape on the same axis. */
+.project-page{--project-radius:18px}
+.project-page :is(.header-inner,.inner-main,.case-main){width:min(1440px,calc(100% - clamp(40px,8vw,112px)))}
+.project-page :is(.inner-main,.case-main){padding-top:28px;padding-bottom:20px}
+.project-page .breadcrumb{font-size:12px;flex-wrap:wrap;gap:12px;line-height:1.8}
+.project-page .section-number{font-size:11px;letter-spacing:2px;color:var(--accent);margin-bottom:19px}
+.project-page .collection-heading{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:48px;align-items:center;padding:42px 0 44px}
+.project-page .collection-heading h1{font:400 clamp(44px,4vw,60px)/1.4 'Sakura Project Display',var(--serif);letter-spacing:2px;font-synthesis:none}
+.project-page .collection-intro{font-size:15px;line-height:2;color:var(--muted);margin-top:20px}
+.project-page .collection-summary{padding-left:30px;border-left:1px solid var(--line)}
+.collection-summary>p{font-size:12px;color:var(--muted)}
+.collection-summary dl{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:18px 0 15px}
+.collection-summary dl>div{display:flex;flex-direction:column-reverse;gap:7px}
+.collection-summary dt,.collection-summary>span{font-size:12px;color:var(--muted)}
+.collection-summary dd{font:38px/1 Georgia,serif;letter-spacing:-1px;margin:0;color:var(--text)}
+.project-page .section-heading{margin-bottom:23px;gap:20px;align-items:center}
+.project-page .section-heading h2{font-size:26px;letter-spacing:.5px}
+.project-page .section-heading em{font-size:15px;letter-spacing:.3px;margin-left:17px}
+.project-page .filter-button{min-height:36px;padding:7px 15px;font-size:12px;line-height:1.6}
+.project-page .archive-projects{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:stretch}
+.project-page .project-card{border-radius:var(--project-radius);box-shadow:0 3px 15px var(--card-shadow);transition:transform .2s var(--ease),border-color .2s ease,box-shadow .2s ease}
+.project-page .project-card:hover{transform:translateY(-4px)}
+.project-page .project-cover{aspect-ratio:1.55}
+.project-page .project-body{padding:23px 24px 24px}
+.project-page .project-name h3{font:600 29px/1.3 Georgia,serif;letter-spacing:-.6px}
+.project-page .project-card-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px}
+.project-page .project-subtitle{font-size:13px;letter-spacing:.3px;margin:0}
+.project-page .project-category{font-size:11px;line-height:1.6;color:var(--muted);padding:3px 8px;border-radius:6px;background:var(--bg);white-space:nowrap}
+.project-page .project-description{font-size:14px;line-height:1.95;min-height:0;margin:17px 0 24px;flex:1}
+.project-page .tech-tags{gap:6px}
+.project-page .tech-tags>span{border-radius:7px;font-size:11px;padding:4px 9px}
+.project-page .project-archive-note{display:flex;gap:13px;border-top:1px solid var(--line);margin-top:28px;padding:22px 0 4px;color:var(--muted)}
+.project-archive-note>svg{margin-top:5px;flex-shrink:0;color:var(--accent)}
+.project-archive-note p{font:16px/1.9 var(--serif);color:var(--text);margin-bottom:4px}
+.project-archive-note span{font-size:12px;line-height:1.9}
+.project-page .scenic-footer{margin-top:var(--scene-content-gap)}
+
+/* Illustrated work cards use a quiet paper frame and a shared reading grid. */
+.project-collection .archive-projects .project-card{padding:10px 10px 0;background:var(--surface);box-shadow:none}
+.project-collection .archive-projects .project-cover{aspect-ratio:1.6;border-radius:10px}
+.project-collection .archive-projects .project-cover::after{display:none}
+.project-collection .archive-projects .project-body{padding:21px 13px 22px}
+.project-collection .archive-projects .project-name h3{font-size:28px;letter-spacing:-.5px}
+.project-collection .archive-projects .project-name>svg{width:32px;height:32px;padding:7px;border:1px solid var(--line);border-radius:50%;color:var(--accent);transition:transform .2s ease,background .2s ease}
+.project-collection .archive-projects .project-card-meta{margin-top:10px}
+.project-collection .archive-projects .project-category{padding:2px 7px;background:var(--bg);font-size:11px}
+.project-collection .archive-projects .project-description{margin:17px 0 22px;line-height:1.95}
+.project-collection .archive-projects .tech-tags{padding-top:14px;border-top:1px solid var(--line);gap:5px 10px}
+.project-collection .archive-projects .tech-tags>span{background:none;border:0;border-radius:0;padding:0;font-size:11px;line-height:1.8;color:var(--muted)}
+.project-collection .archive-projects .tech-tags>span+span::before{content:'·';margin-right:10px;color:var(--muted)}
+.project-collection .project-card:focus-within{outline:2px solid var(--accent);outline-offset:4px}
+@media(hover:hover) and (pointer:fine){
+ .project-collection .archive-projects .project-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px var(--card-shadow)}
+ .project-collection .project-card:hover .project-name>svg{background:var(--soft)}
+}
+@media(hover:none),(pointer:coarse){.project-collection .archive-projects .project-card:hover{transform:none}}
+@media(max-width:640px){
+ .project-collection .archive-projects .project-card{padding:8px 8px 0}
+ .project-collection .archive-projects .project-cover{border-radius:9px}
+ .project-collection .archive-projects .project-body{padding:19px 12px 20px}
+ .project-collection .archive-projects .project-name h3{font-size:27px}
+}
+
+/* Project records: an illustrated introduction, then a quiet reading column. */
+.project-page .case-heading{grid-template-columns:1.08fr 1fr;gap:clamp(32px,5vw,72px);margin-top:38px}
+.project-page .case-heading h1{font:600 clamp(48px,5vw,76px)/1.2 Georgia,serif;letter-spacing:-2px;overflow-wrap:anywhere}
+.project-page .case-subtitle{font:21px/1.8 var(--serif);margin-top:15px}
+.project-page .case-intro{font-size:15px;line-height:1.95;margin:22px 0 24px;max-width:560px}
+.case-online{margin-top:24px}
+.case-online>a{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:46px;padding:10px 18px;background:var(--accent);color:var(--accent-foreground);border-radius:9px;font:650 14px/1.7 var(--sans)}
+.case-online>a:hover{filter:brightness(1.08)}
+.case-online>p{font:13px/1.8 var(--sans);color:var(--muted);margin-top:10px;max-width:460px}
+.project-page .case-cover{overflow:visible;border-radius:0;background:transparent}
+.project-page .case-cover img{aspect-ratio:1.5;object-fit:cover;border-radius:var(--project-radius)}
+.project-page .case-cover figcaption{position:static;text-align:right;font-size:11px;line-height:1.8;margin-top:8px;padding:0;background:none;border-radius:0;backdrop-filter:none;color:var(--muted)}
+.project-page .case-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:34px 0 48px;padding:20px 0;align-items:start}
+.project-page .case-meta>div+div{border-left:1px solid var(--line);padding-left:24px}
+.project-page .case-meta dt{font-size:11px;color:var(--muted);margin-bottom:7px}
+.project-page .case-meta dd{font-size:14px;color:var(--text);margin:0}
+.project-page .reading-layout{grid-template-columns:minmax(0,820px) 210px;gap:clamp(32px,5vw,72px);max-width:1160px;margin-inline:auto}
+.project-page .case-prose{grid-column:1;grid-row:1;font-size:15px;line-height:2}
+.project-page .case-prose section{margin-bottom:50px;scroll-margin-top:32px}
+.project-page .case-prose h2{font-size:27px;margin:0 0 20px;letter-spacing:.5px}
+.project-page .case-prose h3{font-size:19px}
+.project-page .feature-grid{gap:16px;margin:27px 0 0}
+.project-page .feature-grid>div{border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--surface)}
+.project-page .feature-number{font-size:11px}
+.project-page .feature-grid h3{font-size:18px;margin:7px 0 10px}
+.project-page .feature-grid p{font-size:14px;line-height:1.9;margin:0}
+.project-page .architecture-flow{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;gap:12px;margin:25px 0 10px;padding:0}
+.project-page .architecture-flow>li{margin:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-height:108px}
+.project-page .architecture-flow small{font-size:11px;margin-bottom:12px}
+.project-page .architecture-flow strong{font-size:13px;line-height:1.8;font-weight:500;overflow-wrap:anywhere}
+.project-page .case-prose .caption{font-size:12px;line-height:1.8;color:var(--muted);margin:9px 0 25px}
+.project-page .stack-list{margin:0;border-top:1px solid var(--line)}
+.project-page .stack-list>div{grid-template-columns:minmax(150px,1fr) 2fr;gap:24px;padding:19px 0}
+.project-page .stack-list dt{font-size:13px;font-weight:500}
+.project-page .stack-list dd{font-size:14px;line-height:1.9;color:var(--muted);margin:0}
+.project-page .highlight-block{display:grid;grid-template-columns:36px minmax(0,1fr);gap:20px;padding:24px 0}
+.project-page .highlight-block>span{font-size:24px;line-height:1.6}
+.project-page .highlight-block h3{font-size:18px;margin:0 0 10px}
+.project-page .highlight-block p{font-size:14px;line-height:1.95;margin:0}
+.project-page .case-prose li{font-size:14px;line-height:1.95}
+.project-page .source-details{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.project-page .source-details summary{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:15px 18px;cursor:pointer;list-style:none;font-size:14px}
+.project-page .source-details summary::-webkit-details-marker{display:none}
+.project-page .source-details summary small{font-size:11px;color:var(--muted);margin-left:10px}
+.project-page .source-details summary>svg{color:var(--muted);transition:transform .15s ease}
+.project-page .source-details[open] summary>svg{transform:rotate(90deg)}
+.project-page .source-list{margin:0;padding:0 18px 16px!important}
+.project-page .source-list li{border:0;border-top:1px solid var(--line);border-radius:0;padding:11px 0;margin:0;background:transparent}
+.project-page .source-list code{font-size:12px;line-height:1.8;padding:0}
+.project-page .prose .case-takeaway{font-size:19px;line-height:2;text-align:left;border-radius:12px;padding:24px 28px;margin:0}
+.project-page .reading-sidebar{display:block;grid-column:2;grid-row:1;position:sticky;top:30px}
+.project-page .toc{gap:15px;padding-left:20px}
+.project-page .toc>span{font-size:12px;letter-spacing:.5px;color:var(--text);margin-bottom:5px}
+.project-page .toc a{font-size:13px;line-height:1.8}
+.project-page .toc a.active::before{left:-22px;top:5px;height:14px}
+.project-page .reading-sidebar>.text-link{font-size:12px}
+.project-page .project-pagination{display:grid;grid-template-columns:1fr 1.5fr;gap:24px;margin:50px 0 10px;padding-top:28px;border-top:1px solid var(--line)}
+.project-page .project-back{display:flex;align-items:center;gap:12px;width:fit-content;align-self:center;color:var(--muted);font-size:14px;padding:13px 0;transition:color .15s ease}
+.project-page .project-back:hover{color:var(--accent)}
+.project-page .next-project{display:flex;justify-content:flex-start;gap:18px;border:1px solid var(--line);background:var(--surface);border-radius:var(--project-radius);padding:18px;margin:0;min-width:0;transition:border-color .15s ease}
+.project-page .next-project:hover{border-color:var(--border-hover)}
+.project-page .next-project>img{width:96px;height:72px;object-fit:cover;border-radius:10px;flex-shrink:0;filter:var(--media-filter)}
+.project-page .next-project-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.project-page .next-project-copy>span,.project-page .next-project-copy>small{font-size:12px;color:var(--muted)}
+.project-page .next-project-copy>strong{font:600 25px/1.3 Georgia,serif;color:var(--text);overflow-wrap:anywhere}
+.project-page .next-project>svg{margin-left:auto;flex-shrink:0}
+
+@media(max-width:1000px){
+ .project-page .collection-heading{grid-template-columns:minmax(0,1fr) 210px;gap:30px}
+ .project-page .collection-summary{padding-left:24px}
+ .project-page .archive-projects{gap:18px}
+ .project-page .project-body{padding:20px 18px}
+ .project-page .project-name h3{font-size:26px}
+ .project-page .project-card-meta{flex-wrap:wrap;gap:6px}
+ .project-page .reading-layout{grid-template-columns:1fr;gap:28px}
+ .project-page .reading-sidebar{grid-column:1;grid-row:auto;position:static}
+ .project-page .case-prose{grid-column:1;grid-row:auto}
+ .project-page .toc{border:0;padding:0;display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;margin:0}
+ .project-page .toc>span{width:100%;margin-bottom:3px}
+ .project-page .toc a{padding:6px 11px;border:1px solid var(--line);border-radius:7px;font-size:12px}
+ .project-page .toc a.active{background:var(--soft)}
+ .project-page .toc a.active::before{display:none}
+ .project-page .reading-sidebar>.text-link{display:none}
+ .project-page .case-heading{gap:32px}
+ .project-page .case-subtitle{font-size:18px}
+}
+@media(max-width:900px){
+ .project-page .archive-projects{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .project-page .section-heading h2{white-space:normal}
+ .project-page .section-heading em{display:block;margin:6px 0 0;font-size:14px}
+ .project-page .case-heading{grid-template-columns:1fr 1fr}
+ .project-page .case-heading h1{font-size:52px}
+ .project-page .case-intro{font-size:14px}
+ .project-page .case-cover img{aspect-ratio:1.15}
+}
+@media(max-width:640px){
+ .project-page{--project-radius:16px}
+ .project-page :is(.inner-main,.case-main){padding-top:24px}
+ .project-page .breadcrumb{font-size:11px;gap:8px}
+ .project-page .collection-heading{grid-template-columns:1fr;gap:25px;padding:30px 0 32px}
+ .project-page .section-number{font-size:10px;letter-spacing:1.5px;margin-bottom:12px}
+ .project-page .collection-heading h1{font-size:clamp(35px,9.5vw,52px);letter-spacing:1px}
+ .project-page .collection-intro{font-size:13px;line-height:1.95;margin-top:15px}
+ .project-page .collection-intro br{display:none}
+ .project-page .collection-summary{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:20px;padding:18px 0 0;border-left:0;border-top:1px solid var(--line)}
+ .collection-summary>p{font-size:11px}
+ .collection-summary>span{font-size:11px;grid-column:1;grid-row:2}
+ .collection-summary dl{grid-column:2;grid-row:1/3;margin:0;gap:20px}
+ .collection-summary dl>div{gap:5px}
+ .collection-summary dd{font-size:28px}
+ .collection-summary dt{font-size:10px}
+ .project-page .section-heading{flex-direction:column;align-items:flex-start;gap:17px;margin-bottom:20px}
+ .project-page .section-heading h2{font-size:24px}
+ .project-page .section-heading em{display:inline;margin-left:11px;font-size:13px}
+ .project-page .filter-button{font-size:11px;padding:7px 13px;min-height:34px}
+ .project-page .archive-projects{grid-template-columns:1fr;gap:20px}
+ .project-page .project-cover{aspect-ratio:1.65}
+ .project-page .project-body{padding:20px}
+ .project-page .project-name h3{font-size:28px}
+ .project-page .project-card-meta{flex-wrap:nowrap}
+ .project-page .project-description{font-size:14px;margin:15px 0 22px}
+ .project-page .project-archive-note{gap:10px;padding-top:20px}
+ .project-archive-note p{font-size:14px}
+ .project-archive-note span{font-size:11px}
+ .project-page .case-heading{grid-template-columns:1fr;gap:25px;margin-top:30px}
+ .project-page .case-heading h1{font-size:48px;letter-spacing:-1.3px}
+ .project-page .case-subtitle{font-size:18px;margin-top:10px}
+ .project-page .case-intro{font-size:14px;margin:17px 0 20px}
+ .project-page .case-cover img{aspect-ratio:1.5}
+ .project-page .case-cover figcaption{font-size:10px}
+ .project-page .case-meta{gap:12px;margin:26px 0 28px;padding:17px 0}
+ .project-page .case-meta>div+div{padding-left:12px}
+ .project-page .case-meta dt{font-size:10px}
+ .project-page .case-meta dd{font-size:12px;line-height:1.8}
+ .project-page .reading-layout{gap:30px}
+ .project-page .case-prose{font-size:14px;line-height:2}
+ .project-page .case-prose section{margin-bottom:38px}
+ .project-page .case-prose h2{font-size:24px;margin-bottom:18px}
+ .project-page .case-prose h3{font-size:18px}
+ .project-page .feature-grid{grid-template-columns:1fr;gap:12px;margin-top:22px}
+ .project-page .feature-grid>div{padding:18px}
+ .project-page .feature-grid p,.project-page .highlight-block p{font-size:13px}
+ .project-page .architecture-flow{grid-template-columns:1fr 1fr;gap:10px}
+ .project-page .architecture-flow>li{min-height:100px;padding:15px}
+ .project-page .stack-list>div{grid-template-columns:1fr;gap:6px;padding:16px 0}
+ .project-page .stack-list dd{font-size:13px}
+ .project-page .highlight-block{grid-template-columns:26px minmax(0,1fr);gap:14px;padding:21px 0}
+ .project-page .highlight-block>span{font-size:22px}
+ .project-page .case-prose li{font-size:13px}
+ .project-page .source-details summary{font-size:13px;padding:14px}
+ .project-page .source-list{padding:0 14px 12px!important}
+ .project-page .source-list code{font-size:11px}
+ .project-page .prose .case-takeaway{font-size:17px;padding:20px;margin:0}
+ .project-page .project-pagination{grid-template-columns:1fr;gap:12px;margin-top:32px;padding-top:16px}
+ .project-page .project-back{font-size:13px}
+ .project-page .next-project{padding:15px;gap:13px}
+ .project-page .next-project>img{width:76px;height:68px;border-radius:8px}
+ .project-page .next-project-copy>strong{font-size:23px}
+ .project-page .next-project-copy>span,.project-page .next-project-copy>small{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.project-page :is(.project-card,.next-project,.source-details summary>svg){transition:none}}

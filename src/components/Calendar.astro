@@ -1,0 +1,15 @@
+---
+import { getCollection } from 'astro:content';
+import Icon from './Icon.astro';
+const posts=await getCollection('blog');
+const entries=posts.filter(p=>!p.data.draft).map(p=>({date:p.data.pubDate.toISOString().slice(0,10),title:p.data.title,url:`/blog/${p.id}/`}));
+---
+<section class="calendar-panel panel" aria-label="手记日历" data-calendar data-entries={JSON.stringify(entries)}>
+<div class="calendar-caption"><h3><Icon name="calendar" size={17}/>拾日历</h3><button type="button" class="calendar-today" aria-label="回到今天">今天</button></div>
+<div class="calendar-heading"><h4 class="calendar-month" aria-live="polite">手记日历</h4><div class="calendar-navigation"><button type="button" class="icon-button calendar-prev" aria-label="上个月"><Icon name="chevron" size={15} class="rotate"/></button><button type="button" class="icon-button calendar-next" aria-label="下个月"><Icon name="chevron" size={15}/></button></div></div>
+<div class="weekdays" aria-hidden="true">{['一','二','三','四','五','六','日'].map(d=><span>{d}</span>)}</div>
+<div class="calendar-days" role="group" aria-label="选择日期，方向键可切换"></div>
+<p class="calendar-summary"></p>
+<div class="calendar-note" aria-live="polite" aria-atomic="true"></div>
+<noscript><p class="calendar-fallback">开启 JavaScript 可按日期翻阅，或<a href="/blog/">直接阅读手记</a>。</p></noscript>
+</section>

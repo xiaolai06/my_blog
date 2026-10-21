@@ -1,0 +1,12 @@
+---
+import type { Project } from '../data/projects';
+import Icon from './Icon.astro';
+interface Props { project:Project; index?:number; showCategory?:boolean; featured?:boolean }
+const { project:p,index=0,showCategory=false,featured=false } = Astro.props;
+---
+<article class:list={['project-card',p.color,{'project-featured':featured}]} data-category={p.category}>
+<a href={`/projects/${p.slug}/`} class="project-link">
+<div class="project-cover"><div class="project-art" style={`--float-delay:-${index*2.3}s`}><img src={p.cover} alt={p.coverAlt||`${p.name} 项目主题插画`} width="600" height="450" loading="lazy"/></div><span class="cover-number">0{index+1}</span></div>
+<div class="project-body">{featured&&<span class="project-feature-label">FEATURED PROJECT · 01</span>}<div class="project-name"><h3>{p.name}</h3><Icon name="arrow" size={19}/></div><div class="project-card-meta"><p class="project-subtitle">{p.subtitle.split(' · ')[0]}</p>{showCategory&&<span class="project-category">{p.category}</span>}</div><p class="project-description">{p.description}</p>{featured&&<p class="project-takeaway">{p.takeaway}</p>}<div class="tech-tags">{p.tags.map(tag => <span>{tag}</span>)}</div>{featured&&<span class="project-open">走进项目<Icon name="arrow-up-right" size={17}/></span>}</div>
+</a>
+</article>

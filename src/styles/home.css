@@ -1,0 +1,203 @@
+/* Soft paper surfaces, aligned project columns, and an editorial journal. */
+:root .home-page{--home-card-gap:22px;--home-column-gap:28px;--home-card-radius:26px;--home-image-radius:18px;--muted:#5c555d;--accent:#93463c;--decorative-text:#795749;--home-calendar-outside:#786d76;--home-heading:#28242a;--home-copy:#4d4650}
+:root[data-theme=dark] .home-page{--muted:#ccc5cd;--accent:#f0b5a2;--decorative-text:#d7b8a8;--home-calendar-outside:#aaa1ae;--home-heading:#f3eeeb;--home-copy:#d6cfd8}
+:root .home-page .home-main{--text:var(--home-heading);padding-top:30px;color:var(--text)}
+:root .home-page .welcome-line{margin-bottom:32px}
+:root .home-page .welcome-line>p{font-size:15px;font-weight:600;line-height:1.8}
+:root .home-page .welcome-line>span{font-size:12px;font-weight:500}
+:root .home-page .welcome-line i{color:var(--decorative-text)}
+:root .home-page .section-heading{gap:24px;align-items:center;margin-bottom:24px}
+:root .home-page .section-heading h2{font-size:30px;font-weight:700;line-height:1.45;letter-spacing:.6px;color:var(--text)}
+:root .home-page .section-heading em{font-size:15px;font-weight:500;margin-left:15px;color:var(--decorative-text)}
+:root .home-page .section-intro{font-size:14px;font-weight:500;line-height:1.8;color:var(--home-copy);margin-top:9px;letter-spacing:.3px}
+:root .home-page .project-filters{gap:6px;flex-wrap:wrap}
+:root .home-page .filter-button{min-height:44px;padding:9px 17px;font-size:13px;font-weight:600;border-radius:999px}
+:root .home-page .home-columns{display:grid;grid-template-columns:minmax(0,1fr) 348px;gap:var(--home-card-gap) var(--home-column-gap);align-items:start}
+:root .home-page .main-column{min-width:0;display:flex;flex-direction:column}
+:root .home-page .projects-section .project-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:auto;gap:var(--home-card-gap);align-items:stretch}
+:root .home-page :is(.project-card,.panel,.journal-row){border:1px solid var(--line);border-radius:var(--home-card-radius);background:var(--surface);box-shadow:0 6px 32px var(--card-shadow)}
+:root .home-page .projects-section .project-card{grid-column:auto;grid-row:auto;min-width:0}
+:root .home-page .projects-section .project-card .project-link{display:flex;flex-direction:column}
+:root .home-page .projects-section .project-card .project-cover{width:calc(100% - 20px);margin:10px 10px 0;aspect-ratio:2.1;height:auto;flex-shrink:0;max-height:none;border-radius:var(--home-image-radius)}
+:root .home-page .project-cover:after{display:none}
+:root .home-page .cover-number{font:600 11px/1.5 var(--sans);color:#fffdfb;background:#1e302ee0;border:1px solid #ffffff40;border-radius:999px;padding:3px 8px;opacity:1;top:14px;left:14px;text-shadow:none}
+:root .home-page .projects-section .project-card .project-body{padding:21px;gap:0}
+:root .home-page .project-name h3{font:700 28px/1.3 var(--serif);letter-spacing:-.5px;color:var(--text)}
+:root .home-page .project-name>svg{width:30px;height:30px;padding:6px;border:1px solid var(--line);border-radius:50%;color:var(--accent)}
+:root .home-page .project-card-meta{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+:root .home-page .project-subtitle{font-size:15px;font-weight:650;margin:0;line-height:1.7;color:var(--accent)}
+:root .home-page .project-category{font-size:12px;font-weight:600;color:var(--muted);padding:0 0 0 12px;border-left:1px solid var(--line);background:none;line-height:1.5}
+:root .home-page .projects-section .project-card .project-description{font-size:14px;font-weight:500;line-height:1.9;margin:12px 0 18px;min-height:0;color:var(--home-copy)}
+:root .home-page .tech-tags{gap:7px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:15px;margin-top:auto}
+:root .home-page .tech-tags>span{font:600 12px/1.6 var(--sans);padding:4px 10px;background:var(--bg);border:1px solid var(--line);border-radius:999px}
+:root .home-page .projects-section-footer{display:flex;justify-content:flex-end;width:100%;padding-top:14px}
+:root .home-page .all-projects{font-size:14px;font-weight:650;min-height:44px;margin:0}
+:root .home-page .section-heading>.text-link{font-size:14px;font-weight:650}
+:root .home-page .sidebar{display:flex;flex-direction:column;align-items:stretch;gap:var(--home-card-gap);margin:0;min-width:0}
+:root .home-page .profile-panel{position:relative;display:flex;flex:none;flex-direction:column;padding:24px;overflow:hidden;width:100%;background:linear-gradient(145deg,color-mix(in srgb,var(--soft) 38%,var(--surface)),var(--surface) 65%)}
+:root .home-page .profile-panel .profile-eyebrow{font:600 12px/1.5 var(--sans);letter-spacing:1.5px;color:var(--decorative-text);margin:0 0 16px}
+:root .home-page .profile-top{gap:14px;align-items:center}
+:root .home-page .profile-avatar{width:49px;height:49px;background:var(--soft);border:1px solid color-mix(in srgb,var(--accent) 15%,transparent)}
+:root .home-page .profile-avatar svg{width:39px;height:39px}
+:root .home-page .profile-top h3{font:700 26px/1.4 var(--serif);letter-spacing:.6px;color:var(--text)}
+:root .home-page .profile-role{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;line-height:1.6;margin-top:5px;color:var(--accent)}
+:root .home-page .profile-role i{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 10%,transparent)}
+:root .home-page .profile-panel .profile-description{font-size:14px;font-weight:500;line-height:1.9;color:var(--home-copy);margin-top:16px;text-wrap:pretty}
+:root .home-page .profile-focus{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+:root .home-page .profile-focus>span{font-size:12px;font-weight:600;line-height:1.5;color:var(--accent);background:var(--soft);border-radius:5px;padding:4px 7px}
+:root .home-page .profile-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:18px;padding-top:14px;border-top:1px solid var(--line);gap:0}
+:root .home-page .profile-stats a{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;width:100%;min-height:44px;gap:10px;padding:4px 0;background:transparent;border:0;border-radius:8px}
+:root .home-page .profile-stats a+a{border-left:1px solid var(--line);border-radius:0;padding-left:22px}
+:root .home-page .profile-stats strong{font:700 28px/1.1 var(--sans);font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.04em;color:var(--text)}
+:root .home-page .profile-stats span{font:600 13px/1.5 var(--sans);color:var(--home-copy);letter-spacing:.02em;white-space:nowrap}
+:root .home-page .profile-more{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:650;justify-content:space-between;min-height:44px;padding-top:10px;margin-top:auto;color:var(--accent)}
+:root .home-page .calendar-panel{flex:none;padding:22px 24px;position:relative;overflow:hidden}
+:root .home-page .calendar-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+:root .home-page .calendar-caption h3{display:flex;align-items:center;gap:8px;font:700 17px/1.5 var(--sans);letter-spacing:.5px;color:var(--text)}
+:root .home-page .calendar-caption h3 svg{color:var(--accent)}
+:root .home-page .calendar-today{font:600 13px/1.5 var(--sans);min-height:30px;padding:5px 10px;border:1px solid var(--line);border-radius:7px;color:var(--home-copy)}
+:root .home-page .calendar-today:hover{color:var(--accent);background:var(--soft)}
+:root .home-page .calendar-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+:root .home-page .calendar-month{font:700 22px/1.5 var(--sans);letter-spacing:.2px;font-variant-numeric:lining-nums tabular-nums;color:var(--text)}
+:root .home-page .calendar-navigation{display:flex;gap:4px}
+:root .home-page .calendar-heading .icon-button{width:30px;height:32px;border:1px solid var(--line);border-radius:7px}
+:root .home-page .weekdays{font:600 12px/1.6 var(--sans);color:var(--muted);margin:0 0 8px;gap:2px}
+:root .home-page .calendar-days{gap:3px 2px}
+:root .home-page .calendar-days>*{height:31px;font:600 13px/1.5 var(--sans);font-variant-numeric:lining-nums tabular-nums}
+:root .home-page .calendar-days button{width:31px;border-radius:9px;transition:background .15s ease,transform .18s ease,color .15s ease}
+:root .home-page .calendar-days .other-month{color:var(--home-calendar-outside);opacity:1;font-weight:500}
+:root .home-page .calendar-days .has-post{background:var(--soft);color:var(--accent)}
+:root .home-page .calendar-days .has-post:after{bottom:3px;width:7px;height:2px;border-radius:3px}
+:root .home-page .calendar-days .today{box-shadow:inset 0 0 0 1px var(--accent);font-weight:600}
+:root .home-page .calendar-days .selected{background:var(--accent);color:var(--accent-foreground);box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 18%,transparent)}
+:root .home-page .calendar-days .selected:after{background:var(--accent-foreground)}
+:root .home-page .calendar-summary{font-size:12px;font-weight:500;line-height:1.8;color:var(--home-copy);margin-top:11px;display:flex;align-items:center;gap:6px}
+:root .home-page .calendar-summary:before{content:'';width:4px;height:4px;border-radius:50%;background:var(--accent)}
+:root .home-page .calendar-note{display:grid;grid-template-rows:25px 1fr 24px;gap:5px;block-size:128px;border-top:1px solid var(--line);padding-top:12px;margin-top:11px;font-size:13px;font-weight:500;line-height:1.8;color:var(--home-copy)}
+:root .home-page .calendar-note>strong{color:var(--text);font-weight:700;font-size:14px;font-variant-numeric:lining-nums tabular-nums}
+:root .home-page .calendar-entry-list{display:flex;flex-direction:column;gap:4px;min-width:0}
+:root .home-page .calendar-entry-list>a,:root .home-page .calendar-more{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;min-height:24px;line-height:1.8;color:var(--home-copy)}
+:root .home-page .calendar-entry-list>a{font-size:13px;font-weight:500}
+:root .home-page .calendar-entry-list>a>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root .home-page .calendar-entry-list>a:after,:root .home-page .calendar-more:after{content:'↗';flex-shrink:0;font-size:12px;color:var(--accent)}
+:root .home-page .calendar-more{font-size:12px;font-weight:500;color:var(--accent)}
+:root .home-page .calendar-entry-list>a:hover{color:var(--accent)}
+:root .home-page .journal-section{margin-top:40px}
+:root .home-page .section-divider{margin-bottom:34px;gap:20px}
+:root .home-page .journal-section .section-heading{align-items:flex-end;margin-bottom:24px}
+:root .home-page .journal-illustrated{display:grid;grid-template-columns:1.04fr 1fr;gap:22px}
+:root .home-page .journal-illustrated .journal-row{position:relative;display:grid;grid-template-columns:164px minmax(0,1fr);align-items:center;min-height:214px;gap:22px;padding:12px 24px 12px 12px;overflow:hidden;transition:box-shadow .25s ease,border-color .25s ease}
+:root .home-page .journal-thumbnail{width:100%;height:100%;min-height:174px;overflow:hidden;align-self:stretch;flex-shrink:0;border-radius:var(--home-image-radius)}
+:root .home-page .journal-thumbnail:after{display:none}
+:root .home-page .journal-thumbnail img{width:100%;height:100%;min-height:0;object-fit:cover;transition:transform .5s var(--ease)}
+:root .home-page .journal-info{padding-block:10px}
+:root .home-page .journal-info h3{font:700 20px/1.65 var(--sans);margin:12px 0 8px;letter-spacing:.01em;color:var(--text);text-wrap:pretty}
+:root .home-page .journal-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+:root .home-page .journal-info time{font:600 12px/1.5 var(--sans);font-variant-numeric:lining-nums tabular-nums;letter-spacing:.035em;color:var(--muted)}
+:root .home-page .journal-kind{font:600 12px/1.5 var(--sans);padding:4px 10px;border-radius:999px;background:var(--soft);color:var(--accent)}
+:root .home-page .journal-info>p{display:block;font-size:14px;font-weight:500;line-height:1.9;color:var(--home-copy)}
+:root .home-page .journal-tags{display:none}
+:root .home-page .journal-illustrated .journal-arrow{display:none}
+:root .home-page .journal-reading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;font:600 12px/1.6 var(--sans);color:var(--muted)}
+:root .home-page .journal-reading>svg{color:var(--accent);width:28px;height:28px;padding:6px;border-radius:50%;background:var(--soft)}
+:root .home-page .journal-illustrated .journal-row:first-child{grid-column:1;grid-row:span 2;display:flex;flex-direction:column;align-items:stretch;gap:0;padding:12px}
+:root .home-page .journal-row:first-child .journal-thumbnail{height:auto;min-height:0;aspect-ratio:2.05;flex:none}
+:root .home-page .journal-row:first-child .journal-info{display:flex;flex:1;flex-direction:column;padding:24px 16px 14px}
+:root .home-page .journal-row:first-child .journal-info h3{font-size:26px;margin:13px 0 10px}
+:root .home-page .journal-row:first-child .journal-reading{margin-top:auto;padding-top:22px}
+:root .home-page .journal-row:focus-visible{outline-offset:5px;border-color:var(--accent)}
+:root .home-page .profile-stats a:hover{border-color:var(--border-hover);background:var(--soft)}
+@media(hover:hover) and (pointer:fine){
+ :root .home-page .journal-row:hover{border-color:var(--border-hover);box-shadow:0 10px 30px var(--hover-shadow)}
+ :root .home-page .journal-row:hover .journal-thumbnail img{transform:scale(1.035)}
+}
+@media(max-width:1180px){
+ :root .home-page .home-columns{grid-template-columns:minmax(0,1fr) 320px;gap:22px}
+ :root .home-page .profile-panel{padding:22px}
+ :root .home-page .journal-illustrated .journal-row{grid-template-columns:132px minmax(0,1fr);gap:18px;padding-right:20px}
+ :root .home-page .journal-info h3{font-size:19px}
+ :root .home-page .journal-row:first-child .journal-info h3{font-size:24px}
+}
+@media(max-width:1100px){
+ :root .home-page .home-columns{grid-template-columns:1fr;gap:28px}
+ :root .home-page .sidebar{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+ :root .home-page .profile-panel{padding:26px;justify-content:space-between}
+ :root .home-page .profile-more{margin-top:12px}
+ :root .home-page .calendar-panel{padding:23px}
+ :root .home-page .calendar-days>*{height:34px}
+ :root .home-page .calendar-days button{width:34px}
+}
+@media(max-width:760px){
+ :root .home-page .home-main{padding-top:26px}
+ :root .home-page .welcome-line{margin-bottom:26px}
+ :root .home-page .welcome-line>p{font-size:13px}
+ :root .home-page .welcome-line>span{display:none}
+ :root .home-page .projects-section>.section-heading{flex-direction:column;align-items:flex-start;gap:18px}
+ :root .home-page .section-heading h2{font-size:27px}
+ :root .home-page .section-heading em{font-size:13px;margin-left:10px}
+ :root .home-page .section-intro{font-size:13px;margin-top:8px}
+ :root .home-page .projects-section .project-grid{grid-template-columns:1fr;grid-auto-rows:auto;gap:20px}
+ :root .home-page .projects-section .project-card .project-cover{width:calc(100% - 20px);margin:10px 10px 0;aspect-ratio:1.85;height:auto}
+ :root .home-page .projects-section .project-card .project-body{padding:23px}
+ :root .home-page .sidebar{grid-template-columns:1fr 1fr;gap:18px}
+ :root .home-page .profile-panel,:root .home-page .calendar-panel{padding:20px}
+ :root .home-page .profile-top{gap:10px}
+ :root .home-page .profile-top h3{font-size:23px}
+ :root .home-page .profile-avatar{width:43px;height:43px}
+ :root .home-page .profile-stats a{gap:8px}
+ :root .home-page .profile-stats a+a{padding-left:12px}
+ :root .home-page .calendar-month{font-size:19px}
+ :root .home-page .calendar-days>*{height:30px}
+ :root .home-page .calendar-days button{width:30px}
+ :root .home-page .journal-section .section-heading em{display:none}
+ :root .home-page .journal-section .section-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+ :root .home-page .journal-section .section-heading>div{min-width:0}
+ :root .home-page .journal-illustrated{grid-template-columns:1fr;gap:18px}
+ :root .home-page .journal-illustrated .journal-row{grid-template-columns:128px minmax(0,1fr);gap:18px;padding:10px 18px 10px 10px;min-height:166px}
+ :root .home-page .journal-illustrated .journal-row:first-child{grid-column:auto;grid-row:auto;padding:10px}
+ :root .home-page .journal-thumbnail{width:100%;height:100%;min-height:142px;border-radius:16px}
+ :root .home-page .journal-row:first-child .journal-thumbnail{aspect-ratio:1.9}
+ :root .home-page .journal-row:first-child .journal-info{padding:21px 12px 13px}
+ :root .home-page .journal-info h3{font-size:18px;line-height:1.7}
+ :root .home-page .journal-info>p{display:block;font-size:14px}
+ :root .home-page .journal-reading{margin-top:12px}
+ :root .home-page .journal-meta{gap:8px}
+ :root .home-page .journal-meta time{font-size:12px}
+ :root .home-page .journal-kind{font-size:12px;padding:3px 8px}
+ :root .home-page .journal-section .section-intro{max-width:200px;line-height:1.8}
+ :root .home-page .journal-section .text-link{flex-shrink:0;min-height:44px}
+}
+@media(max-width:600px){
+ :root .home-page .sidebar{grid-template-columns:1fr;gap:20px}
+ :root .home-page .profile-panel,:root .home-page .calendar-panel{padding:25px}
+ :root .home-page .profile-top h3{font-size:26px}
+ :root .home-page .profile-avatar{width:52px;height:52px}
+ :root .home-page .calendar-days>*{height:38px;font-size:13px}
+ :root .home-page .calendar-days button{width:min(38px,100%)}
+ :root .home-page .calendar-month{font-size:21px}
+ :root .home-page .calendar-caption{margin-bottom:17px}
+ :root .home-page .journal-illustrated .journal-row{grid-template-columns:104px minmax(0,1fr);gap:15px;padding-right:16px}
+ :root .home-page .journal-row:not(:first-child) .journal-info>p{display:none}
+ :root .home-page .journal-info h3{font-size:17px;margin-top:9px}
+ :root .home-page .journal-row:first-child .journal-info h3{font-size:23px}
+}
+@media(max-width:360px){
+ :root .home-page .profile-panel,:root .home-page .calendar-panel{padding:19px}
+ :root .home-page .calendar-days>*{height:33px}
+ :root .home-page .calendar-days button{width:min(33px,100%)}
+ :root .home-page .projects-section .project-card .project-body{padding:21px}
+}
+/* A filtered pair uses one project per row beside the two sidebar panels. */
+@media(min-width:1101px){
+ :root .home-page .projects-section .project-grid:has(>.project-card[hidden]){grid-template-columns:1fr}
+ :root .home-page .projects-section .project-grid:has(>.project-card[hidden]) .project-link{flex-direction:row}
+ :root .home-page .projects-section .project-grid:has(>.project-card[hidden]) .project-cover{width:44%;margin:10px 0 10px 10px;aspect-ratio:auto;flex-shrink:0}
+ :root .home-page .projects-section .project-grid:has(>.project-card[hidden]) .project-body{justify-content:center}
+ :root .home-page .projects-section .project-grid:has(>.project-card[hidden]) .tech-tags{margin-top:18px}
+}
+@media(prefers-reduced-motion:reduce){
+ :root .home-page .journal-thumbnail img{transition:none}
+ :root .home-page .journal-row:hover .journal-thumbnail img{transform:none}
+}
+:root[data-motion=off] .home-page .journal-thumbnail img{transition:none}
+:root[data-motion=off] .home-page .journal-row:hover .journal-thumbnail img{transform:none}

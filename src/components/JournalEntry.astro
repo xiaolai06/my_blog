@@ -1,0 +1,16 @@
+---
+import type {CollectionEntry} from 'astro:content';
+import Icon from './Icon.astro';
+import {journalType,journalDate,journalTagTone} from '../data/journal';
+interface Props {post:CollectionEntry<'blog'>;initiallyHidden?:boolean}
+const {post,initiallyHidden=false}=Astro.props,type=journalType(post.data);
+---
+<a class="journal-entry" hidden={initiallyHidden} href={`/blog/${post.id}/`} data-archive-entry data-entry-type={type.id} data-date={post.data.pubDate.toISOString().slice(0,10)} data-updated={(post.data.updatedDate??post.data.pubDate).toISOString()} data-search={`${post.data.title} ${post.data.description} ${post.data.category} ${type.label} ${post.data.tags.join(' ')}`}>
+ <div class="entry-cover"><img src={post.data.cover} alt="" width="640" height="360" loading="lazy"/></div>
+ <div class="entry-content">
+  <div class="entry-meta"><span class="entry-kind"><Icon name={type.icon} size={15}/>{type.label}</span><span class="entry-subject">{post.data.category}</span><time datetime={post.data.pubDate.toISOString()}>{journalDate(post.data.pubDate)}</time></div>
+  <h3>{post.data.title}</h3><p>{post.data.description}</p>
+  <div class="entry-evidence"><span>{post.data.readingTime} 分钟阅读</span>{post.data.resources.length>0&&<span>{post.data.resources.length} 份参考资料</span>}</div>
+  <div class="entry-bottom"><div class="entry-tags">{post.data.tags.map(tag=><span class="journal-tag" data-tone={journalTagTone(tag)}><span aria-hidden="true">#</span>{tag}</span>)}</div><span class="entry-open" aria-hidden="true"><Icon name="arrow-up-right" size={19}/></span></div>
+ </div>
+</a>

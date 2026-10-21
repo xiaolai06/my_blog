@@ -1,63 +1,134 @@
 ---
-import AboutHeroImage from '../assets/blog-placeholder-about.jpg';
-import Layout from '../layouts/BlogPost.astro';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Icon from '../components/Icon.astro';
+import Flower from '../components/Flower.astro';
+import { profile, skills, education, honors, experiences, strengths, interests } from '../data/profile';
+import '../styles/about.css';
+const emailHref = `mailto:${profile.email}`;
 ---
+<SiteLayout aboutPage title="关于我" image="/images/scenes-v2/about-hero-dusk-desktop-2172.webp" description="赖沛盛的个人简介与求职作品集：深圳职业技术大学计算机应用技术在校生，关注 Python、视觉数据、具身智能与 AI 应用开发。">
+ <link slot="head" rel="preload" href="/fonts/ma-shan-zheng-about.woff2" as="font" type="font/woff2" crossorigin/>
+ <main id="main-content" class="container inner-main about-content">
+  <h1 class="about-print-title">{profile.name} · 开发者简历</h1>
+  <div class="about-wayfinding">
+   <nav class="breadcrumb" aria-label="当前位置"><a href="/">首页</a><Icon name="chevron" size={14}/><span aria-current="page">关于我</span></nav>
+   <nav class="about-jump-links" aria-label="关于页章节"><a href="#hello">个人简介</a><a href="#skills">专业技能</a><a href="#background">教育荣誉</a><a href="#experience">实践经历</a><a href="#assessment">自我评价</a><a href="#interests">兴趣爱好</a></nav>
+   <button class="about-print-button" type="button" data-resume-print><Icon name="printer" size={17}/>打印 / 保存简历</button>
+  </div>
 
-<Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
-	pubDate={new Date('August 08 2021')}
-	heroImage={AboutHeroImage}
->
-	<p>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo
-		viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam
-		adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus
-		et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus
-		vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque
-		sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet.
-	</p>
+  <section id="hello" class="about-introduction" aria-labelledby="hello-title">
+   <div class="about-resume-intro">
+    <p class="about-eyebrow"><span></span> PERSONAL PROFILE / 个人简介</p>
+    <h2 id="hello-title">你好，我是 <span>{profile.name}</span><span class="about-heading-dot">。</span></h2>
+    <div class="about-career" aria-labelledby="career-label"><p id="career-label" class="about-career-label"><Icon name="code" size={16}/>求职意向</p><ul class="about-career-roles">{profile.jobInterests.map(job => <li><span>{job.title}</span>{job.method && <small lang="en">{job.method}</small>}</li>)}</ul></div>
+    <p class="about-intro-lead">从数据与模型出发，把想法做成可用的应用。</p>
+    <p>我就读于深圳职业技术大学计算机应用技术专业。主要使用 Python 处理数据、编写自动化脚本与开展视觉应用实践，也使用 TypeScript、React 和后端框架完成 Web 应用开发。</p>
+    <p>在四足机器人、视觉模型与 AI Agent 项目中，积累了感知数据处理、模型训练、端侧部署和工具调用实践。希望从应用开发岗位切入，参与从需求分析、开发联调到测试部署的完整过程。</p>
+    <div class="about-intro-note"><span><Icon name="check" size={20}/></span><p>习惯先明确需求，再拆分任务和验证结果；开发中重视代码检查、异常处理与过程记录，遇到问题及时沟通并持续跟进。</p></div>
+    <dl class="about-resume-facts">
+     <div><dt>实践重点</dt><dd>感知数据 · 模型应用 · 工程实现</dd></div>
+     <div><dt>所在地</dt><dd>{profile.location}</dd></div>
+     <div><dt>主要技术</dt><dd>{profile.primaryStack}</dd></div>
+     <div><dt>当前身份</dt><dd>计算机应用技术 · 在校生</dd></div>
+    </dl>
+    <div class="about-intro-actions"><a class="button about-project-button" href="/projects/">查看我的作品<Icon name="arrow-up-right" size={18}/></a><a class="about-text-link" href={profile.github} target="_blank" rel="noopener noreferrer" aria-label="访问 GitHub 主页（新窗口）"><Icon name="github" size={18}/>GitHub 主页<Icon name="arrow-up-right" size={15}/></a></div>
+   </div>
 
-	<p>
-		Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non
-		tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non
-		blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna
-		porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis
-		massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc.
-		Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis
-		bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra
-		massa massa ultricies mi.
-	</p>
+   <aside id="contact" class="about-resume-card" aria-label={`${profile.name} 的个人资料与联系方式`}>
+    <div class="about-card-scenery" aria-hidden="true"><img src="/images/scenes-v2/about-footer-dusk-desktop-1280.webp" alt="" width="1280" height="427" loading="lazy" decoding="async"/></div>
+    <div class="about-card-cover"><span class="about-image-label"><Flower size={16} colored/>个人名片 <span> / PROFILE</span></span><span class="about-card-city"><Icon name="pin" size={14}/>{profile.location}</span></div>
+    <div class="about-card-glass">
+     <div class="about-card-identity"><div class="about-card-avatar" aria-hidden="true"><Flower size={43} colored/></div><div><p class="about-card-name">{profile.name}<span lang="en">{profile.handle}</span></p><p class="about-card-role"><span>{education.major}</span><span>在校生</span></p></div></div>
+     <p class="about-card-school"><Icon name="graduation" size={18}/>{education.school}</p>
+     <ul class="about-card-directions" aria-label="求职方向">{profile.jobInterests.map(job => <li>{job.label}</li>)}</ul>
+     <dl class="about-resume-contacts">
+      <div class="about-resume-contact about-contact-wide"><Icon name="mail" size={21}/><div><dt>电子邮箱</dt><dd><a href={emailHref}>{profile.email}</a></dd></div><button type="button" class="about-copy-button" data-copy-value={profile.email} data-copy-label="邮箱" aria-label="复制邮箱" title="复制邮箱"><span class="about-copy-default"><Icon name="copy" size={18}/></span><span class="about-copy-done"><Icon name="check" size={18}/></span></button></div>
+      <div class="about-resume-contact about-contact-social"><Icon name="phone" size={21}/><div><dt>手机号码</dt><dd><a href={`tel:${profile.phone}`}>{profile.phone}</a></dd></div><button type="button" class="about-copy-button" data-copy-value={profile.phone} data-copy-label="手机号" aria-label="复制手机号" title="复制手机号"><span class="about-copy-default"><Icon name="copy" size={18}/></span><span class="about-copy-done"><Icon name="check" size={18}/></span></button></div>
+      <div class="about-resume-contact about-contact-social"><Icon name="message" size={19}/><div><dt>微信</dt><dd>{profile.wechat}</dd></div><button type="button" class="about-copy-button" data-copy-value={profile.wechat} data-copy-label="微信号" aria-label="复制微信号" title="复制微信号"><span class="about-copy-default"><Icon name="copy" size={17}/></span><span class="about-copy-done"><Icon name="check" size={17}/></span></button></div>
+      <div class="about-resume-contact about-contact-social"><Icon name="people" size={19}/><div><dt>QQ</dt><dd>{profile.qq}</dd></div><button type="button" class="about-copy-button" data-copy-value={profile.qq} data-copy-label="QQ号" aria-label="复制QQ号" title="复制QQ号"><span class="about-copy-default"><Icon name="copy" size={17}/></span><span class="about-copy-done"><Icon name="check" size={17}/></span></button></div>
+      <div class="about-resume-contact about-contact-social"><Icon name="github" size={21}/><div><dt>GitHub</dt><dd><a href={profile.github} target="_blank" rel="noopener noreferrer" aria-label={`访问 ${profile.name} 的 GitHub 主页（新窗口）`}>@{profile.handle}</a></dd></div><Icon name="arrow-up-right" size={18}/></div>
+     </dl>
+     <p class="about-copy-feedback" data-copy-status role="status" aria-live="polite">欢迎通过以上方式联系我。</p>
+    </div>
+   </aside>
+  </section>
 
-	<p>
-		Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl
-		suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet
-		nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae
-		turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem
-		dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat
-		semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus
-		vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum
-		facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam
-		vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla
-		urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim.
-	</p>
+  <section id="skills" class="about-section" aria-labelledby="skills-title">
+   <header class="about-section-heading"><div><p class="about-eyebrow">01 / PROFESSIONAL SKILLS</p><h2 id="skills-title">专业技能<span>以数据为基础，连接模型与应用。</span></h2></div><a class="about-text-link" href="/projects/">在作品中了解更多<Icon name="arrow-up-right" size={17}/></a></header>
+   <div class="about-skills-grid">{skills.map(skill => <article class="about-skill"><header><span class="about-skill-icon"><Icon name={skill.icon} size={25}/></span><div><p class="about-skill-english" lang="en">{skill.english}</p><h3>{skill.title}</h3></div></header><p class="about-skill-description">{skill.description}</p><ul class="about-tool-tags" aria-label={`${skill.title}的工具与方向`}>{skill.tools.map(tool => <li>{tool}</li>)}</ul></article>)}</div>
+  </section>
 
-	<p>
-		Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper
-		viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc
-		scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur
-		gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus
-		pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim
-		blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id
-		cursus metus aliquam eleifend mi.
-	</p>
+  <section id="background" class="about-section" aria-labelledby="background-title">
+   <header class="about-section-heading"><div><p class="about-eyebrow">02 / EDUCATION & HONORS</p><h2 id="background-title">教育与荣誉<span>在学习和竞赛中积累。</span></h2></div></header>
+   <div class="about-background-grid">
+    <article class="about-education-card">
+     <div class="about-education-heading"><span class="about-detail-icon"><Icon name="graduation" size={26}/></span><div><p class="about-small-label">EDUCATION / 教育背景</p><h3>{education.school}</h3></div></div>
+     <div class="about-education-meta"><p>{education.major} <span>{education.degree}</span></p><span>{education.period}</span></div>
+     <p class="about-education-description">{education.description}</p>
+     <dl class="about-academic-metrics">{education.metrics.map(metric => <div><dt>{metric.label}</dt><dd>{metric.value}<span>{metric.suffix}</span></dd></div>)}</dl>
+     <div class="about-courses"><h4>核心课程 <span>成绩 / 百分制</span></h4><ul>{education.courses.map(course => <li><span>{course.name}</span><strong>{course.score}</strong></li>)}</ul></div>
+     <div class="about-education-note"><Icon name="layers" size={19}/><p><strong>把所学放进实践</strong>将编程、机器视觉与智能控制课程中的知识，用于机器人、模型训练和应用开发，逐步积累从数据处理到部署的经验。</p></div>
+    </article>
+    <article class="about-honors-card">
+     <header><span class="about-detail-icon"><Icon name="trophy" size={25}/></span><div><p class="about-small-label">HONORS & AWARDS</p><h3>竞赛与荣誉</h3></div></header>
+     <ul>{honors.map(honor => <li><div class="about-honor-meta"><span class="about-honor-year">{honor.year}</span><span>{honor.category}</span></div><div><h4>{honor.title}</h4><p>{honor.detail}</p></div></li>)}</ul>
+    </article>
+   </div>
+  </section>
 
-	<p>
-		Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta
-		nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam
-		tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci
-		ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar
-		proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
-	</p>
-</Layout>
+  <section id="experience" class="about-section about-experience" aria-labelledby="experience-title">
+   <div class="about-experience-intro"><p class="about-eyebrow">03 / EXPERIENCE</p><h2 id="experience-title">校园与社会实践</h2><p class="about-experience-lead">从技术支持到课堂，<br/>把事情认真做好。</p><p>在真实任务中练习数据处理、问题排查和团队协作，也在教学中学习表达与倾听。</p><a class="about-text-link" href="/projects/">查看开发作品<Icon name="arrow" size={17}/></a></div>
+   <ol class="about-experience-list">{experiences.map((item,index) => <li><span class="about-experience-marker">0{index + 1}</span><article><div class="about-experience-top"><div><p class="about-experience-kind">{item.kind}</p><h3>{item.title}</h3></div><span class="about-experience-period">{item.period}</span></div><p class="about-experience-organization">{item.organization}</p><p class="about-experience-summary">{item.summary}</p><ul>{item.points.map(point => <li><Icon name="check" size={15}/><span>{point}</span></li>)}</ul></article></li>)}</ol>
+  </section>
+
+  <section id="assessment" class="about-section" aria-labelledby="strengths-title">
+   <header class="about-section-heading"><div><p class="about-eyebrow">04 / SELF-ASSESSMENT</p><h2 id="strengths-title">自我评价<span>重视执行、验证与团队协作。</span></h2></div></header>
+   <p class="about-assessment-lead">我重视把需求落到实际结果，也愿意承担数据整理、问题排查和功能完善等基础工作。遇到新任务会主动学习、先做验证，协作中及时同步进展与困难；希望在具身智能、AI 应用或全栈开发岗位中持续积累工程经验，交付清晰、可靠且便于维护的成果。</p>
+   <div class="about-strengths-grid">{strengths.map(item => <article class="about-strength-card"><span class="about-detail-icon"><Icon name={item.icon} size={23}/></span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
+  </section>
+
+  <section id="interests" class="about-section about-interests" aria-labelledby="interests-title">
+   <header class="about-section-heading"><div><p class="about-eyebrow">05 / LIFE & INTERESTS</p><h2 id="interests-title">兴趣与日常<span>工作之外，也保持好奇。</span></h2></div></header>
+   <div class="about-interests-grid">{interests.map(item => <article class="about-interest"><span><Icon name={item.icon} size={23}/></span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
+  </section>
+ </main>
+</SiteLayout>
+<script>
+ const initializedResumePages = new WeakSet<HTMLElement>();
+ function setupResumePage() {
+ const root = document.querySelector<HTMLElement>('.about-content');
+ if (!root || initializedResumePages.has(root)) return;
+ initializedResumePages.add(root);
+ const copyButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-copy-value]'));
+ const copyStatus = root.querySelector<HTMLElement>('[data-copy-status]');
+ let resetTimer: ReturnType<typeof setTimeout>;
+ const resetCopies = () => copyButtons.forEach(button => {
+  delete button.dataset.copied;
+  button.setAttribute('aria-label', `复制${button.dataset.copyLabel}`);
+ });
+ copyButtons.forEach(copyButton => copyButton.addEventListener('click', async () => {
+  const label = copyButton.dataset.copyLabel || '内容';
+  copyButton.disabled = true;
+  try {
+   await navigator.clipboard.writeText(copyButton.dataset.copyValue || '');
+   clearTimeout(resetTimer);
+   resetCopies();
+   copyButton.dataset.copied = 'true';
+   copyButton.setAttribute('aria-label', `${label}已复制`);
+   if (copyStatus) copyStatus.textContent = `${label}已复制，可以粘贴使用。`;
+   resetTimer = setTimeout(() => {
+    resetCopies();
+    if (copyStatus) copyStatus.textContent = '欢迎通过以上方式联系我。';
+   }, 4000);
+  } catch {
+   if (copyStatus) copyStatus.textContent = `${label}复制未完成，可以直接选择文字。`;
+  } finally {
+   copyButton.disabled = false;
+  }
+ }));
+ document.addEventListener('astro:before-swap', () => clearTimeout(resetTimer), { once: true });
+ root.querySelector('[data-resume-print]')?.addEventListener('click', () => window.print());
+ }
+ document.addEventListener('astro:page-load', setupResumePage);
+ setupResumePage();
+</script>

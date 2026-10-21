@@ -1,0 +1,17 @@
+---
+import Icon from './Icon.astro';
+import '../styles/journal-date-picker.css';
+---
+<dialog class="diary-date-dialog" data-date-dialog id="diary-date-dialog" aria-labelledby="diary-range-title" aria-describedby="diary-range-status">
+ <div class="range-dialog-heading"><div><span>按时间翻阅</span><h2 id="diary-range-title">选择日期范围</h2></div><button type="button" data-range-close aria-label="关闭日期选择"><Icon name="close" size={21}/></button></div>
+ <div class="range-boundaries" role="group" aria-label="起止日期">
+  <button type="button" data-range-boundary="start" aria-pressed="true"><span>开始日期</span><strong data-range-start>选择日期</strong></button><span aria-hidden="true"><Icon name="arrow" size={19}/></span><button type="button" data-range-boundary="end" aria-pressed="false"><span>结束日期</span><strong data-range-end>选择日期</strong></button>
+ </div>
+ <div class="range-dialog-shortcuts" role="group" aria-label="快捷日期范围"><button type="button" data-range-preset="today">今天</button><button type="button" data-range-preset="week">本周</button><button type="button" data-range-preset="month">本月</button><button type="button" data-range-preset="recent">近 30 天</button></div>
+ <div class="range-calendar-area">
+  <div class="range-calendar-navigation"><button type="button" data-range-prev aria-label="日期范围日历上个月"><Icon name="chevron" size={19} class="rotate"/></button><button type="button" data-range-next aria-label="日期范围日历下个月"><Icon name="chevron" size={19}/></button></div>
+  <div class="range-calendars">{[0,1].map(index=><section class="range-month" data-range-panel={index}><button type="button" data-range-month-title={index} aria-expanded="false" aria-controls="range-month-jump"><span></span><Icon name="down-chevron" size={14}/></button><div class="range-weekdays" aria-hidden="true">{['一','二','三','四','五','六','日'].map(day=><span>{day}</span>)}</div><div class="range-days" data-range-days={index} role="group" aria-label={index===0?'第一个月':'第二个月'}></div></section>)}</div>
+  <div class="range-month-jump" id="range-month-jump" hidden><div class="range-year-navigation"><button type="button" data-range-year-prev aria-label="日期范围上一年"><Icon name="chevron" size={18} class="rotate"/></button><button type="button" data-range-year aria-expanded="false" aria-label="选择年份"></button><button type="button" data-range-year-next aria-label="日期范围下一年"><Icon name="chevron" size={18}/></button></div><div data-range-months class="range-month-options" role="group" aria-label="选择月份"></div><button type="button" class="range-month-back" data-range-jump-back>返回日期选择</button></div>
+ </div>
+ <div class="range-dialog-footer"><p id="diary-range-status" data-range-status role="status" aria-live="polite">先选择开始日期，再选择结束日期。</p><div><button type="button" data-range-cancel>取消</button><button type="button" data-range-apply disabled>应用日期<Icon name="arrow" size={16}/></button></div></div>
+</dialog>

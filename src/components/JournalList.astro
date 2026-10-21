@@ -1,0 +1,10 @@
+---
+import { getCollection } from 'astro:content';
+import Icon from './Icon.astro';
+interface Props { limit?:number; illustrated?:boolean }
+const { limit=99, illustrated=false } = Astro.props;
+const posts=(await getCollection('blog')).filter(p=>!p.data.draft).sort((a,b)=>b.data.pubDate.valueOf()-a.data.pubDate.valueOf()).slice(0,limit);
+---
+<div class:list={['journal-list',{'journal-illustrated':illustrated}]}>{posts.map(post=><a class="journal-row" href={`/blog/${post.id}/`} data-journal data-date={post.data.pubDate.toISOString().slice(0,10)} data-text={`${post.data.title} ${post.data.category} ${post.data.tags.join(' ')}`}>
+{illustrated ? <div class="journal-thumbnail"><img src={post.data.cover} alt="" width="640" height="360" loading="lazy"/></div> : <div class="journal-date"><strong>{String(post.data.pubDate.getUTCDate()).padStart(2,'0')}</strong><span>{post.data.pubDate.toISOString().slice(0,7).replace('-','.')}</span></div>}
+<div class="journal-info">{illustrated ? <div class="journal-meta"><time datetime={post.data.pubDate.toISOString()}>{post.data.pubDate.toISOString().slice(0,10).replaceAll('-','.')}</time><span class="journal-kind">{post.data.category}</span></div> : <span class="journal-category">{post.data.category}<i>·</i>{post.data.readingTime} 分钟阅读</span>}<h3>{post.data.title}</h3><p>{post.data.description}</p><div class="journal-tags">{post.data.tags.map(tag=><span>#{tag}</span>)}</div>{illustrated&&<span class="journal-reading"><span>{post.data.readingTime} 分钟阅读</span><Icon name="arrow-up-right" size={16}/></span>}</div><span class="journal-arrow"><Icon name="arrow"/></span></a>)}</div>

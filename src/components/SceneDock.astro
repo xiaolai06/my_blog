@@ -1,0 +1,29 @@
+---
+import Flower from './Flower.astro';
+import Icon from './Icon.astro';
+import '../styles/scene-dock.css';
+const choices=[{id:'auto',label:'随时间',icon:'clock'},{id:'dawn',label:'晨曦',icon:'sunrise'},{id:'day',label:'晴昼',icon:'sun'},{id:'dusk',label:'落日',icon:'sunset'},{id:'night',label:'月夜',icon:'moon'}];
+const isMusic = Astro.url.pathname.startsWith('/music');
+---
+<aside class="scene-dock" data-scene-dock aria-label="场景设置" transition:name="site-controls" transition:animate="none" hidden>
+ <button class="scene-dock-flower" type="button" aria-label="打开场景与音乐设置；可拖动，Alt 加方向键移动" aria-expanded="false" aria-controls="scene-fan" aria-haspopup="dialog" aria-describedby="dock-current-track" title="场景设置 · 拖动可移动"><Flower size={43} colored/><span class="scene-dock-notes" aria-hidden="true"><Icon name="music" size={13}/><Icon name="music" size={10}/><i></i><i></i><i></i></span><span class="scene-dock-close"><Icon name="close" size={20}/></span></button>
+ <section class="scene-fan" id="scene-fan" role="dialog" aria-modal="false" aria-labelledby="scene-fan-title" aria-describedby="scene-fan-caption" hidden>
+  <span class="sr-only" id="scene-fan-title">场景设置</span>
+  <span class="sr-only" id="scene-fan-caption">选择分类后展开对应选项</span>
+  <div class="scene-fan-ring scene-fan-roots" data-fan-roots role="group" aria-label="功能分类">
+   {[{id:'hero',label:isMusic?'壁纸场景':'顶部场景',icon:'landscape'},{id:'footer',label:'底部场景',icon:'water'},{id:'experience',label:'沉浸体验',icon:'music'}].map(({id,label,icon})=><button class="scene-fan-sector scene-fan-parent" type="button" data-fan-branch={id} aria-expanded="false" aria-controls={`scene-fan-${id}`}><svg class="scene-fan-art" viewBox="0 0 704 704" aria-hidden="true"><path/></svg><span class="scene-fan-label"><Icon name={icon} size={20}/><span>{label}</span><small data-fan-summary={id}>{id==='experience'?'音乐·动效':'随时间'}</small></span></button>)}
+  </div>
+  {(['hero','footer'] as const).map(region=><div class="scene-fan-ring scene-fan-children" id={`scene-fan-${region}`} data-fan-options={region} role="group" aria-label={region==='hero'?'顶部场景时段':'底部场景时段'} hidden inert>{choices.map(({id,label,icon})=><button class={`scene-fan-sector scene-fan-option scene-choice-${id}`} type="button" data-wheel-choice={id} data-region={region} aria-pressed="false"><svg class="scene-fan-art" viewBox="0 0 704 704" aria-hidden="true"><path/></svg><span class="scene-fan-label"><Icon name={icon} size={20}/><span>{label}</span><span class="scene-fan-check"><Icon name="check" size={11}/></span></span></button>)}</div>)}
+  <div class="scene-fan-ring scene-fan-children" id="scene-fan-experience" data-fan-options="experience" role="group" aria-label="沉浸体验选项" hidden inert>
+   <a class="scene-fan-sector scene-fan-option" data-music-mode href={isMusic?'/':'/music/'}><svg class="scene-fan-art" viewBox="0 0 704 704" aria-hidden="true"><path/></svg><span class="scene-fan-label"><Icon name={isMusic?'back':'music'} size={20}/><span>{isMusic?'返回页面':'音乐空间'}</span></span></a>
+   <button class="scene-fan-sector scene-fan-option" type="button" data-dock-music-play aria-label="播放精选" aria-pressed="false"><svg class="scene-fan-art" viewBox="0 0 704 704" aria-hidden="true"><path/></svg><span class="scene-fan-label"><span data-music-play><Icon name="play" size={20}/></span><span data-music-pause hidden><Icon name="pause" size={20}/></span><span data-music-label>播放精选</span></span></button>
+   <button class="scene-fan-sector scene-fan-option" type="button" data-dock-music-next aria-label="下一首音乐" disabled><svg class="scene-fan-art" viewBox="0 0 704 704" aria-hidden="true"><path/></svg><span class="scene-fan-label"><Icon name="skip-forward" size={20}/><span>下一首</span></span></button>
+   <button class="scene-fan-sector scene-fan-option" type="button" data-dock-motion aria-pressed="false"><svg class="scene-fan-art" viewBox="0 0 704 704" aria-hidden="true"><path/></svg><span class="scene-fan-label"><span data-dock-pause><Icon name="pause" size={20}/></span><span data-dock-play hidden><Icon name="play" size={20}/></span><span data-motion-label>暂停动效</span></span></button>
+   <button class="scene-fan-sector scene-fan-option" type="button" data-dock-reset><svg class="scene-fan-art" viewBox="0 0 704 704" aria-hidden="true"><path/></svg><span class="scene-fan-label"><Icon name="fullscreen" size={20}/><span>位置归位</span></span></button>
+  </div>
+  <span class="sr-only" data-dock-track id="dock-current-track">选择音乐，开始聆听</span>
+ </section>
+ <span class="sr-only" data-wheel-status role="status" aria-live="polite" aria-atomic="true"></span>
+</aside>
+<script>import {setupSceneDock} from '../scripts/scene-dock';setupSceneDock();</script>
+

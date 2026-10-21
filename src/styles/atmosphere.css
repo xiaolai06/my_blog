@@ -1,0 +1,41 @@
+/* Ambient motion lives on artwork. Reading text and layout stay still. */
+.sakura-mark-petal{fill:var(--petal-color)}
+.brand .sakura-mark{filter:drop-shadow(0 2px 5px #bd5d791a);transition:transform .24s var(--ease)}
+.header-overlay .brand .sakura-mark{filter:drop-shadow(0 1px 6px #ffc4c75c)}
+.header-overlay .brand>span{color:#fff3eb}
+.header-overlay .brand small{color:#efc5bc}
+.ambient-toggle{color:var(--muted)}
+.project-art{position:absolute;inset:0}
+.project-art>img{width:100%;height:100%;object-fit:cover}
+.home-page .project-art{animation:artwork-float 9s cubic-bezier(.45,0,.55,1) var(--float-delay,0s) infinite alternate;animation-play-state:paused;transform:scale(1.035)}
+.home-page .profile-avatar{animation:avatar-float 6s cubic-bezier(.45,0,.55,1) infinite alternate;animation-play-state:paused}
+.home-page :is(.project-art,.profile-avatar).is-in-view{animation-play-state:running}
+.footer-atmosphere{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;mask-image:linear-gradient(transparent,#000 30%)}
+.footer-haze{position:absolute;left:34%;bottom:8%;width:38%;height:45%;background:radial-gradient(ellipse,#f8b6a330,transparent 70%);animation:evening-haze 12s cubic-bezier(.45,0,.55,1) infinite alternate;animation-play-state:paused}
+.footer-petal{position:absolute;left:var(--petal-left);top:8%;width:var(--petal-size);height:calc(var(--petal-size)*.6);border-radius:85% 10% 85% 12%;background:linear-gradient(130deg,#f6c5bb,#db8b98);animation:footer-drift var(--petal-duration) linear var(--petal-delay) infinite;animation-play-state:paused;opacity:0}
+.footer-landscape.is-in-view :is(.footer-petal,.footer-haze){animation-play-state:running}
+[data-theme=dark] .footer-petal{opacity:.5}
+[data-motion=off] :is(.project-art,.profile-avatar,.footer-petal,.footer-haze),[data-page-hidden] :is(.project-art,.profile-avatar,.footer-petal,.footer-haze,.petal,.hero-scene>img,.mouse-scroll i){animation-play-state:paused!important}
+@keyframes artwork-float{from{transform:translate3d(0,3px,0) scale(1.035)}to{transform:translate3d(0,-4px,0) scale(1.045)}}
+@keyframes avatar-float{from{transform:translate3d(0,2px,0) rotate(-2deg)}to{transform:translate3d(0,-3px,0) rotate(2deg)}}
+@keyframes evening-haze{from{opacity:.3;transform:translate3d(-15px,0,0) scale(.95)}to{opacity:.7;transform:translate3d(15px,-5px,0) scale(1.05)}}
+@keyframes footer-drift{0%{opacity:0;transform:translate3d(-20px,-20px,0) rotate(-25deg)}12%{opacity:.45}65%{opacity:.4;transform:translate3d(24px,210px,0) rotate(135deg)}100%{opacity:0;transform:translate3d(75px,450px,0) rotate(270deg)}}
+@media(hover:hover) and (pointer:fine){
+ .brand:hover .sakura-mark{transform:rotate(-9deg) scale(1.06)}
+ .home-page .journal-illustrated .journal-row:hover{transform:translateY(-3px);box-shadow:0 12px 28px var(--hover-shadow);border-color:var(--border-hover)}
+ .home-page .journal-row:hover .journal-arrow{transform:translateX(3px);background:var(--soft)}
+}
+@media(hover:none),(pointer:coarse){
+ .project-card:hover,.button:hover,.journal-row:hover .journal-arrow{transform:none}
+ .project-card:hover .project-cover img,.journal-row:hover .journal-thumbnail img{transform:none}
+ .text-link:hover{gap:10px}
+}
+@media(max-width:360px){
+ .site-header:not(.header-overlay) .header-actions{gap:1px}
+ .site-header:not(.header-overlay) .header-actions .icon-button{width:32px}
+}
+@media(prefers-reduced-motion:reduce){
+ .home-page .project-art,.home-page .profile-avatar{animation:none;transform:none}
+ .footer-petal,.footer-haze{display:none}
+ .brand:hover .sakura-mark,.home-page .journal-illustrated .journal-row:hover{transform:none}
+}

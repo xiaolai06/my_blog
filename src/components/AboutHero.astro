@@ -1,0 +1,16 @@
+---
+import ImageScene from './ImageScene.astro';
+import WindPetals from './WindPetals.astro';
+import { aboutHeading } from '../data/page-copy.json';
+import '../styles/project-scenes.css';
+---
+<section class="project-hero about-hero" data-scene-region="hero" data-scene-family="about" aria-labelledby="about-page-title">
+ <div class="project-hero-scene" aria-hidden="true"><ImageScene family="about" kind="hero" imageClass="project-hero-art" priority/></div>
+ <WindPetals count={72}/>
+ <div class="project-hero-content container">
+  <h1 id="about-page-title" class="project-hero-title">{aboutHeading}</h1>
+  <p class="project-hero-english" lang="en">A little about me, a world of possibilities.</p>
+  <p class="project-hero-description"><span>一个独立开发者，在代码与生活之间。</span><span>保持热爱，让想法慢慢生长。</span></p>
+  <span class="sr-only" data-scene-status aria-live="polite"></span>
+ </div>
+</section>

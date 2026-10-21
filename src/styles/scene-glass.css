@@ -1,0 +1,38 @@
+/* Glass is contextual: transparent over artwork, quiet over the pale valley. */
+:root{
+ --scene-control-surface:#ffffff24;
+ --scene-control-border:#5147451a;
+ --scene-control-text:#5b5053;
+ --scene-control-active:#854f49;
+ --scene-control-selection:#fffaf254;
+ --scene-control-hover:#ffffff24;
+ --scene-control-divider:#51474521;
+ --scene-control-radius:26px;
+ --scene-selection-radius:20px;
+ --scene-selection-shadow:inset 0 0 0 1px #ffffff33;
+}
+:root[data-theme=dark]{
+ --scene-control-surface:#11192529;
+ --scene-control-border:#ffffff24;
+ --scene-control-text:#e1dce2;
+ --scene-control-active:#fff7f2;
+ --scene-control-selection:#fff5ed1f;
+ --scene-control-hover:#ffffff12;
+ --scene-control-divider:#ffffff26;
+ --scene-selection-shadow:inset 0 0 0 1px #ffffff0f;
+}
+/* The hero is always an image surface, so its foreground stays readable in both themes. */
+.hero{
+ --scene-control-surface:#17202b33;
+ --scene-control-border:#ffffff30;
+ --scene-control-text:#eee7e4;
+ --scene-control-active:#fff8f2;
+ --scene-control-selection:#fff1e424;
+ --scene-control-hover:#ffffff12;
+ --scene-control-divider:#ffffff26;
+ --scene-selection-shadow:inset 0 0 0 1px #ffffff0d;
+}
+.scene-glass{background:var(--scene-control-surface);border:1px solid var(--scene-control-border);box-shadow:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.scene-glass button:active{transform:scale(.98)}
+.scene-glass button:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+@media(forced-colors:active){.scene-glass{background:Canvas;border-color:ButtonText}.scene-glass button{color:ButtonText}.scene-glass button[aria-pressed=true]{outline:1px solid Highlight;outline-offset:-3px}}

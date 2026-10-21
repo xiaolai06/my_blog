@@ -1,0 +1,12 @@
+---
+import { getCollection } from 'astro:content';
+import { projects } from '../data/projects';
+import Icon from './Icon.astro';
+import {journalType} from '../data/journal';
+const posts=(await getCollection('blog')).filter(p=>!p.data.draft);
+const entries=[...projects.map(p=>({title:p.name+' · '+p.subtitle,description:p.description,type:'项目',url:`/projects/${p.slug}/`,keywords:p.tags.join(' ')+' '+p.category})),...posts.map(p=>({title:p.data.title,description:p.data.description,type:journalType(p.data).label,url:`/blog/${p.id}/`,keywords:p.data.tags.join(' ')+' '+p.data.category+' '+journalType(p.data).label}))];
+---
+<dialog class="search-dialog" aria-labelledby="search-title" data-index={JSON.stringify(entries)}>
+<div class="search-top"><Icon name="search" size={22}/><label id="search-title" class="sr-only" for="site-search">搜索项目与手记</label><input id="site-search" type="search" placeholder="寻找一个项目，一段灵感…" autocomplete="off"/><button class="icon-button search-close" aria-label="关闭搜索"><Icon name="close"/></button></div>
+<div class="search-meta"><span>搜索项目与手记</span><kbd>ESC 关闭</kbd></div><div class="search-results" aria-live="polite"></div><p class="search-hint">试试「React」「校园」或「项目复盘」</p>
+</dialog>

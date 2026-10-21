@@ -1,63 +1,68 @@
-# Astro Starter Kit: Blog
+# 落樱小筑
 
-```sh
-npm create astro@latest -- --template blog
+基于现有 Astro 工程打造的个人作品集与博客。背景以用户提供的樱花落日图片制成循环视频，搭配可暂停花瓣；内置浅色/深色阅读主题。
+
+## 本地预览
+
+```powershell
+npm install
+npx astro dev --background
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+打开 http://localhost:4321/ 。
 
-Features:
-
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+```powershell
+npx astro dev status
+npx astro dev logs
+npx astro dev stop
+npm run build
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+开发服务使用 Astro 后台模式。构建结果位于 dist/，不需要数据库，也不需要模型密钥。
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## 已有页面
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+- 首页：动态背景、项目分类、手记列表、个人侧栏、可切月与查看当日文章的日历。
+- /projects/：项目集合；/projects/orulink/、/projects/taskhub/、/projects/clotheshub/：完整项目案例。
+- /blog/：支持关键词、标签和日期筛选的归档；三篇明确标注的示例文章。
+- /about/：关于这里；404 页面、RSS、站点地图。
+- /music/：全屏动态音乐空间。从樱花菜单「沉浸体验 → 音乐空间」进入；支持拖动、玻璃通透度、免费精选、在线电台、本地歌曲、开放音频搜索、收藏、大字同步歌词、自定义时钟与 1–180 分钟专注计时。右上角保留音乐、计时、退出，两个开关分别展开或收起对应面板。播放器和计时卡片均可拖动并记住位置，计时中或暂停时都能移动。点击左侧时钟或计时数字可调整设置。退出后通过樱花菜单暂停、继续和切歌，播放时显示音符动效，站内换页保持连续聆听。
+- 顶部搜索：点击放大镜或 Ctrl / ⌘ K；支持上下键、回车和 Esc。
+- 动效与主题设置只保存于本机；系统减少动态偏好优先生效。
 
-Any static assets, like images, can be placed in the `public/` directory.
+## 维护内容
 
-## 🧞 Commands
+项目资料在 src/data/projects.ts。每个项目包含功能、架构、技术栈、亮点、限制与源码线索。内容来自三个本地仓库的只读核对（2026-10-16），不代表运行验收。封面是生成的主题插画，不能当作真实运行截图。
 
-All commands are run from the root of the project, from a terminal:
+文章放在 src/content/blog/。新文章示例：
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+```yaml
+---
+title: 新的手记
+description: 一句话介绍这篇文章
+pubDate: 2026-10-16
+category: 开发随笔
+tags: [独立开发, 技术写作]
+readingTime: 3
+draft: false
+cover: /images/sakura-sunset.webp
+---
+```
 
-## 👀 Want to learn more?
+正文使用 Markdown；二级标题自动进入目录。设 draft: true 可隐藏；没有 draft 字段的原始 Astro 样例也默认隐藏。个人姓名与联系方式尚未提供，因此当前关于页没有虚构联系方式。网站名与介绍在 src/consts.ts，页面与样式分别位于 src/pages/、src/components/、src/styles/global.css。
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 发布前
 
-## Credit
+设置 SITE_URL 为实际站点完整域名，再执行 npm run build，RSS、canonical 与站点地图将使用该域名。未设置时默认本地地址。替换示例手记并填写个人资料；如果需要展示实际产品效果，可在案例中补入确认后的运行截图。
 
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+## 设计与素材
+
+首页直接播放「落日 / 月夜」两段 24 秒循环视频，树冠连同枝干柔和摇摆，根部稳定，配合发梢、云层和日月光晕。首页按访问者本机时间在 05:00 切回落日、19:00 切入月夜。页脚另有四段视频：05–09 晨曦、09–16 晴昼、16–19 落日、19–次日05 月夜。边界到点自动切换，两个方向均采用 6 秒叠化；手动预览采用 3.2 秒叠化，在下个时间边界或 10 分钟后恢复随时间。下一场景先解码并对齐风的播放进度，准备好才开始过渡。动效支持全局暂停、系统减少动态、离屏停止与静图回退。
+
+场景素材、完整生成提示词及实现说明见 `docs/living-scenes.md`。页面使用 `public/videos/*-v4.mp4` 六段本地视频，总计约 22 MB，按需加载；`sakura-sunset-loop.mp4` 是上一版预览，当前页面不再引用。
+
+设计依据和有意调整见 docs/design.md；生成素材及提示词见 docs/assets.md。背景来自用户提供原图，已转为 WebP；所有网站资源都随项目保存，不依赖远程图片或在线字体。
+
+首页排版在 src/styles/home.css；全站字体与插画页脚在 src/styles/typography.css。思源宋体和黑体采用400–700可变字重，许可位于public/fonts/。字体按现有文章和界面文字生成精简字集；增加大量新文字后可运行 `npm run fonts` 更新，需联网。未收录的新字会先使用系统后备字体，不影响阅读。
+
+参考 Fuwari、Mizuki 的信息组织，页面与交互为本项目定制实现。

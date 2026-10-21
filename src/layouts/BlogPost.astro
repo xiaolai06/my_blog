@@ -1,84 +1,53 @@
 ---
-import { Image } from 'astro:assets';
-import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
-import Header from '../components/Header.astro';
-
-type Props = CollectionEntry<'blog'>['data'];
-
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+import SiteLayout from './SiteLayout.astro';
+import Icon from '../components/Icon.astro';
+import Flower from '../components/Flower.astro';
+import {SITE_TITLE} from '../consts';
+import {getCollection,type CollectionEntry} from 'astro:content';
+import type {MarkdownHeading} from 'astro';
+import {journalType,journalDate,journalTagTone} from '../data/journal';
+import {projects} from '../data/projects';
+import '../styles/journal.css';
+import '../styles/journal-reader.css';
+type Props=CollectionEntry<'blog'>['data'] & {postId:string;headings?:MarkdownHeading[]};
+const {postId,title,description,pubDate,updatedDate,cover,coverCaption,category,tags,readingTime,summary=[],resources=[],relatedProject,headings=[]}=Astro.props;
+const type=journalType(Astro.props),toc=headings.filter(heading=>heading.depth===2||heading.depth===3);
+const project=projects.find(project=>project.slug===relatedProject);
+const candidates=(await getCollection('blog')).filter(post=>!post.data.draft&&post.id!==postId);
+const score=(post:CollectionEntry<'blog'>)=>post.data.tags.filter(tag=>tags.includes(tag)).length*3+(journalType(post.data).id===type.id?2:0);
+const related=candidates.sort((a,b)=>score(b)-score(a)||b.data.pubDate.valueOf()-a.data.pubDate.valueOf()).slice(0,2);
+const updated=updatedDate&&updatedDate.valueOf()>pubDate.valueOf()?updatedDate:undefined;
+const showCover=type.id==='project'||type.id==='essay'||!!coverCaption;
 ---
-
-<html lang="en">
-	<head>
-		<BaseHead title={title} description={description} />
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-		</style>
-	</head>
-
-	<body>
-		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{updatedDate && (
-								<div class="last-updated-on">
-									Last updated on <FormattedDate date={updatedDate} />
-								</div>
-							)}
-						</div>
-						<h1>{title}</h1>
-						<hr />
-					</div>
-					<slot />
-				</div>
-			</article>
-		</main>
-		<Footer />
-	</body>
-</html>
+<SiteLayout journalPage journalDetail title={title} description={description} image={cover}>
+ <div class="reader-progress" aria-hidden="true"><span data-reader-progress></span></div>
+ <main id="main-content" class="container journal-reader" data-journal-reader data-entry-type={type.id}>
+  <nav class="breadcrumb" aria-label="当前位置"><a href="/">首页</a><Icon name="chevron" size={14}/><a href="/blog/" data-reader-back>手记</a><Icon name="chevron" size={14}/><a href={`/blog/?type=${type.id}`}>{type.label}</a></nav>
+  <article class="reader-layout" aria-labelledby="article-title">
+   <header class:list={['reader-heading',{'reader-heading--illustrated':showCover}]}>
+    <div class="reader-heading-copy">
+    <div class="reader-heading-kicker"><a class="journal-type-pill" href={`/blog/?type=${type.id}`}><Icon name={type.icon} size={16}/>{type.label}</a>{category!==type.label&&<span class="reader-category">{category}</span>}</div>
+    <h1 id="article-title" tabindex="-1">{title}</h1><p class="reader-description">{description}</p>
+    <div class="reader-meta"><span class="reader-author"><Flower size={25} colored/>{SITE_TITLE}</span><time datetime={pubDate.toISOString()}>{journalDate(pubDate)}</time><span><Icon name="clock" size={14}/>{readingTime} 分钟阅读</span>{updated&&<span class="reader-updated">更新于 <time datetime={updated.toISOString()}>{journalDate(updated)}</time></span>}</div>
+    {tags.length>0&&<div class="reader-tags">{tags.map(tag=><a class="journal-tag" data-tone={journalTagTone(tag)} href={`/blog/?q=${encodeURIComponent(tag)}`}><span aria-hidden="true">#</span>{tag}</a>)}</div>}
+    </div>
+    {showCover&&<figure class="reader-cover"><img src={cover} alt="" width={type.id==='essay'?1672:1200} height={type.id==='essay'?941:900}/><figcaption>{coverCaption??(type.id==='project'?'项目主题插画':'手记主题插画')}</figcaption></figure>}
+   </header>
+   <div class="reader-toolbar" aria-label="阅读工具">
+    <a href="/blog/" data-reader-back class="reader-toolbar-back"><Icon name="back" size={18}/><span>返回手记</span></a>
+    <span class="reader-current-section" data-reader-section>开始阅读</span>
+    <span class="reader-toolbar-percent" data-reader-percent aria-label="阅读进度">0%</span>
+    <div class="reader-font-tools" role="group" aria-label="正文字号"><button type="button" data-reader-font="smaller" aria-label="减小正文字号">A−</button><span data-reader-font-label role="status" aria-live="polite">19px</span><button type="button" data-reader-font="larger" aria-label="增大正文字号">A+</button></div>
+    {(toc.length>0||resources.length>0)&&<details class="reader-toc"><summary aria-label="展开或收起文章目录"><Icon name="menu" size={18}/><span>目录</span><small>{toc.filter(h=>h.depth===2).length+(resources.length>0?1:0)}</small><Icon name="down-chevron" size={15}/></summary><div class="reader-toc-panel"><div class="reader-toc-caption"><strong>本篇目录</strong><button type="button" data-toc-close aria-label="收起目录"><Icon name="close" size={18}/></button></div><nav aria-label="文章目录">{toc.map((heading,index)=><a href={`#${heading.slug}`} data-toc-link data-depth={heading.depth}><span aria-hidden="true">{heading.depth===2?String(toc.slice(0,index+1).filter(h=>h.depth===2).length).padStart(2,'0'):'·'}</span>{heading.text}</a>)}{resources.length>0&&<a href="#journal-references" data-toc-link data-depth="2"><span aria-hidden="true">{String(toc.filter(h=>h.depth===2).length+1).padStart(2,'0')}</span>资料与出处</a>}</nav></div></details>}
+   </div>
+   <div class="reader-content">
+    {toc.some(h=>h.depth===2)&&<details class="reader-outline" open><summary><span><Icon name="menu" size={18}/>本文导航</span><small>{toc.filter(h=>h.depth===2).length} 个章节<Icon name="down-chevron" size={15}/></small></summary><nav aria-label="正文阅读路线">{toc.filter(h=>h.depth===2).map((heading,index)=><a href={`#${heading.slug}`}><span>{String(index+1).padStart(2,'0')}</span>{heading.text}</a>)}{resources.length>0&&<a href="#journal-references"><span><Icon name="book" size={14}/></span>资料与出处</a>}</nav></details>}
+    {summary.length>0&&<section class="reader-summary" aria-labelledby="reader-summary-title"><h2 id="reader-summary-title"><Icon name={type.icon} size={18}/>{type.summaryTitle}</h2><ol>{summary.map(item=><li>{item}</li>)}</ol></section>}
+    <div class="prose reader-prose" data-reading-body><slot/></div>
+    {resources.length>0&&<section class="reader-resources" id="journal-references" aria-labelledby="journal-references-title"><h2 id="journal-references-title">资料与出处</h2><p class="reader-source-note">正文结合原始资料与具体场景整理；示例、工程判断及验证边界已在文中说明。资料核对：{journalDate(updated??pubDate)}。</p><ol>{resources.map(resource=><li><a href={resource.url}><span>{resource.title}<small>{resource.url.startsWith('http')?new URL(resource.url).hostname:'本站项目'}</small></span><Icon name="arrow-up-right" size={17}/></a></li>)}</ol></section>}
+    {project&&<a class="reader-project" href={`/projects/${project.slug}/`}><img src={project.cover} alt="" width="480" height="270" loading="lazy"/><div><span>关联项目</span><strong>{project.name}</strong><p>{project.subtitle}</p></div><Icon name="arrow-up-right" size={22}/></a>}
+   </div>
+   <footer class="reader-related"><div class="reader-related-heading"><h2>接着翻一页</h2><nav class="reader-related-actions" aria-label="阅读结束导航"><a href="#article-title" data-reader-top>回到篇首<Icon name="sunrise" size={16}/></a><a href="/blog/" data-reader-back>全部记录<Icon name="arrow" size={16}/></a></nav></div>{related.length>0?<div class="reader-related-grid">{related.map(post=><a class="reader-related-card" href={`/blog/${post.id}/`}><span>{journalType(post.data).label}<time datetime={post.data.pubDate.toISOString()}>{journalDate(post.data.pubDate)}</time></span><h3>{post.data.title}</h3><p>{post.data.description}</p><Icon name="arrow-up-right" size={18}/></a>)}</div>:<a class="reader-back-empty" href="/blog/" data-reader-back>回到手记，等下一页慢慢写下。</a>}</footer>
+  </article>
+ </main>
+</SiteLayout>

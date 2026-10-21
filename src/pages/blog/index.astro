@@ -1,112 +1,48 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
-import BaseHead from '../../components/BaseHead.astro';
-import Footer from '../../components/Footer.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
-import Header from '../../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
-
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import JournalEntry from '../../components/JournalEntry.astro';
+import DiaryCalendar from '../../components/DiaryCalendar.astro';
+import Icon from '../../components/Icon.astro';
+import {journalTypes,journalType,journalTagTone,journalPageSize} from '../../data/journal';
+import '../../styles/journal.css';
+import {getCollection} from 'astro:content';
+const posts=(await getCollection('blog')).filter(post=>!post.data.draft).sort((a,b)=>b.data.pubDate.valueOf()-a.data.pubDate.valueOf());
+const tags=[...new Set(posts.flatMap(post=>post.data.tags))];
+const pageCount=Math.max(1,Math.ceil(posts.length/journalPageSize));
+const sorts=[{id:'newest',label:'最新发布'},{id:'oldest',label:'最早发布'},{id:'updated',label:'最近更新'}];
 ---
-
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<Header />
-		<main>
-			<section>
-				<ul>
-					{posts.map((post) => (
-						<li>
-							<a href={`/blog/${post.id}/`}>
-								{post.data.heroImage && (
-									<Image width={720} height={360} src={post.data.heroImage} alt="" />
-								)}
-								<h4 class="title">{post.data.title}</h4>
-								<p class="date">
-									<FormattedDate date={post.data.pubDate} />
-								</p>
-							</a>
-						</li>
-					))}
-				</ul>
-			</section>
-		</main>
-		<Footer />
-	</body>
-</html>
+<SiteLayout journalPage title="手记" description="从项目架构与 UI 选型，到 Python 与 Coding Agent。用代码、对照与出处，记录可复用的工程知识。">
+ <main id="main-content" class="container journal-collection" data-journal-archive>
+  <nav class="breadcrumb" aria-label="当前位置"><a href="/">首页</a><Icon name="chevron" size={14}/><span aria-current="page">手记</span></nav>
+  <header class="archive-intro"><div><span class="archive-eyebrow">ENGINEERING NOTES</span><h2>在实践里，理解技术的来龙去脉。</h2><p>从第一个可运行的例子，到一套说得清的实现。记录项目的设计过程、学习中的关键理解，以及值得回头查阅的方法。</p></div><div class="archive-library-stat"><strong>{posts.length.toString().padStart(2,'0')}</strong><span>篇手记 · {journalTypes.length} 种视角</span></div></header>
+  <div class="archive-layout">
+   <div class="archive-tools">
+    <div class="archive-types" role="group" aria-label="按记录类型筛选">
+     <button type="button" data-journal-type="all" aria-pressed="true">全部记录<span>{posts.length}</span></button>
+     {journalTypes.map(type=><button type="button" data-journal-type={type.id} aria-pressed="false"><Icon name={type.icon} size={18}/>{type.label}<span>{posts.filter(post=>journalType(post.data).id===type.id).length}</span></button>)}
+    </div>
+    <div class="archive-search-row">
+     <form class="archive-search-form" role="search"><div class="journal-search"><Icon name="search" size={20}/><label for="journal-query" class="sr-only">搜索标题、内容简介或标签</label><input id="journal-query" type="search" placeholder="搜索记录、关键词、标签…" autocomplete="off"/><button class="journal-query-clear" type="button" aria-label="清空关键词" hidden><Icon name="close" size={18}/></button></div></form>
+     <details class="journal-sort" data-journal-sort><summary aria-haspopup="menu"><Icon name="sort" size={18}/><span data-sort-label>最新发布</span><Icon name="down-chevron" size={16}/></summary><div class="journal-sort-menu" role="menu" aria-label="记录排序">{sorts.map(sort=><button type="button" role="menuitemradio" aria-checked={String(sort.id==='newest')} data-sort-option={sort.id} tabindex="-1"><span>{sort.label}</span><Icon name="check" size={17}/></button>)}</div></details>
+    </div>
+   </div>
+   <section class="archive-main" aria-labelledby="journal-list-title">
+    <h2 class="sr-only" id="journal-list-title" data-journal-list-title tabindex="-1">全部记录</h2>
+    <div class="archive-active-filters" data-journal-active hidden></div>
+    <div class="archive-results">{posts.map((post,index)=><JournalEntry post={post} initiallyHidden={index>=journalPageSize}/>)}</div>
+    <div class="journal-empty" hidden><Icon name="book" size={34}/><h3>暂时还没有记录</h3><p data-empty-message>换个关键词，或翻翻其他日期。</p><button type="button" data-journal-reset>查看全部记录<Icon name="arrow" size={18}/></button></div>
+    <noscript><p class="journal-noscript">这里按时间展示所有记录，点击标题即可阅读。</p></noscript>
+    <footer class="archive-result-footer"><p data-journal-result-count role="status" aria-live="polite" aria-atomic="true"><span data-result-prefix>共</span><strong data-result-total>{posts.length}</strong><span>篇记录</span><span class="archive-result-range" data-result-range>每页 {journalPageSize} 篇</span></p></footer>
+    <nav class="archive-pagination" aria-label="手记分页" data-journal-pagination>
+     <div class="archive-page-controls"><button type="button" data-page-step="-1" disabled aria-label="上一页">上一页</button><div class="archive-page-numbers" data-page-numbers>{Array.from({length:pageCount},(_,index)=>index+1).map(page=><a href={page===1?'/blog/':`/blog/?page=${page}`} data-page={page} aria-current={page===1?'page':undefined} aria-label={`第 ${page} 页`}>{page}</a>)}</div><button type="button" data-page-step="1" disabled={pageCount<=1} aria-label="下一页">下一页</button></div>
+     <form class="archive-page-jump" data-page-jump><label for="journal-page-number">跳至</label><input id="journal-page-number" name="page" type="number" min="1" max={pageCount} step="1" value="1" required inputmode="numeric"/><span>页</span><button type="submit">跳转</button></form>
+    </nav>
+   </section>
+   <aside class="archive-rail" aria-label="日期与主题检索">
+    <DiaryCalendar dates={posts.map(post=>post.data.pubDate.toISOString().slice(0,10))}/>
+    {tags.length>0&&<details class="archive-topic-panel" open><summary><span>主题索引</span><Icon name="down-chevron" size={16}/></summary><div class="archive-topics">{tags.map(tag=><a href={`/blog/?q=${encodeURIComponent(tag)}`} data-journal-topic={tag} class="journal-tag" data-tone={journalTagTone(tag)}><span aria-hidden="true">#</span>{tag}<small>{posts.filter(post=>post.data.tags.includes(tag)).length}</small></a>)}</div></details>}
+    <a class="archive-rss" href="/rss.xml"><Icon name="rss" size={17}/>订阅更新<Icon name="arrow-up-right" size={16}/></a>
+   </aside>
+  </div>
+ </main>
+</SiteLayout>

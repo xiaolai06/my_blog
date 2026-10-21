@@ -1,0 +1,43 @@
+/* Separate annular sectors radiate from the flower; there is no disc behind them. */
+.scene-dock{position:fixed;inset:0;z-index:80;pointer-events:none;overflow:clip;font-family:var(--sans);line-height:1.4;--fan-surface:color-mix(in srgb,var(--surface) 97%,var(--bg));--fan-edge:color-mix(in srgb,var(--accent) 19%,var(--line));--fan-selected:color-mix(in srgb,var(--surface) 88%,var(--accent));--fan-shadow:#38252e24;--fan-text:#242024;--fan-muted:#5b5053;--fan-selected-text:#853f35}
+.scene-dock-flower{position:absolute;left:0;top:0;z-index:4;pointer-events:auto;width:56px;height:56px;display:grid;place-items:center;border-radius:50%;border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));background:color-mix(in srgb,var(--surface) 96%,transparent);box-shadow:0 4px 18px #38252e18;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;transition:background .15s ease,box-shadow .15s ease}
+.scene-dock-flower>.sakura-mark{transition:transform .2s cubic-bezier(.23,1,.32,1),opacity .15s ease;filter:drop-shadow(0 2px 4px #bb5c711f)}
+.scene-dock-close{position:absolute;display:grid;place-items:center;opacity:0;transform:rotate(-45deg);color:var(--accent);transition:transform .2s cubic-bezier(.23,1,.32,1),opacity .15s ease}
+.scene-dock-flower[aria-expanded=true]>.sakura-mark{opacity:.15;transform:rotate(45deg) scale(.85)}
+.scene-dock-flower[aria-expanded=true] .scene-dock-close{opacity:1;transform:rotate(0)}
+.scene-dock[data-dragging] .scene-dock-flower{cursor:grabbing;box-shadow:0 7px 24px #38252e35}
+.scene-fan{position:absolute;left:0;top:0;width:704px;height:704px;pointer-events:none;color:var(--text);transform-origin:352px 352px;isolation:isolate}
+.scene-fan-ring{position:absolute;inset:0;pointer-events:none;filter:drop-shadow(0 4px 12px var(--fan-shadow))}
+.scene-fan-sector{position:absolute;inset:0;display:block;width:704px;height:704px;padding:0;border:0;background:none;color:var(--fan-text);text-decoration:none;pointer-events:auto;transform-origin:352px 352px;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.scene-fan-art{position:absolute;inset:0;width:704px;height:704px;overflow:visible;pointer-events:none}
+.scene-fan-art path{fill:var(--fan-surface);stroke:var(--fan-edge);stroke-width:1;stroke-linejoin:round;transition:fill .15s ease,stroke .15s ease}
+.scene-fan-label{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;width:96px;min-height:60px;gap:6px;transform:translate(-50%,-50%);font:600 14px/1.4 var(--sans);letter-spacing:.15px;white-space:nowrap;pointer-events:none}
+.scene-fan-label>svg,.scene-fan-label :is([data-dock-pause],[data-dock-play])>svg{width:26px;height:26px}
+.scene-fan-label>svg,.scene-fan-label>[data-dock-pause],.scene-fan-label>[data-dock-play]{color:var(--accent)}
+.scene-fan-label>[data-dock-pause],.scene-fan-label>[data-dock-play]{line-height:0}
+.scene-fan-parent .scene-fan-label{width:96px;gap:4px}
+.scene-fan-label>small{font-size:11px;font-weight:500;line-height:1.4;color:var(--fan-muted);letter-spacing:0}
+.scene-fan-parent[aria-expanded=true] .scene-fan-art path,.scene-fan-option[aria-pressed=true] .scene-fan-art path{fill:var(--fan-selected);stroke:var(--accent)}
+.scene-fan-parent[aria-expanded=true] .scene-fan-label,.scene-fan-option[aria-pressed=true] .scene-fan-label{color:var(--fan-selected-text)}
+.scene-fan-parent[aria-expanded=true] .scene-fan-label>small{color:var(--fan-selected-text)}
+.scene-fan-check{position:absolute;right:17px;top:0;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;color:var(--accent-foreground);background:var(--accent);opacity:0}
+.scene-fan-option[aria-pressed=true] .scene-fan-check{opacity:1}
+.scene-choice-dawn .scene-fan-label>svg{color:#b67458}.scene-choice-day .scene-fan-label>svg{color:#a67b33}.scene-choice-night .scene-fan-label>svg{color:#9186b0}
+.scene-fan-sector:disabled{cursor:default}.scene-fan-sector:disabled .scene-fan-label{opacity:.4}
+.scene-fan-sector:focus-visible{outline:none}.scene-fan-sector:focus-visible .scene-fan-art path{stroke:var(--accent);stroke-width:3}
+.scene-dock-flower:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(hover:hover) and (pointer:fine){.scene-dock-flower:hover{background:var(--surface);box-shadow:0 5px 20px #38252e2b}.scene-fan-sector:not(:disabled):hover .scene-fan-art path{fill:var(--fan-selected);stroke:var(--accent)}}
+[data-theme=dark] .scene-dock{--fan-shadow:#0006;--fan-edge:color-mix(in srgb,var(--accent) 28%,var(--line));--fan-text:#f5eeeb;--fan-muted:#d0c2c4;--fan-selected-text:#f0b6a5}
+.scene-dock[data-compact] .scene-fan-label{font-size:13px;gap:5px}
+.scene-dock[data-compact] .scene-fan-parent .scene-fan-label{gap:7px}
+.scene-dock[data-compact] .scene-fan-label>small{display:none}
+.scene-dock[data-compact] .scene-fan-label>svg,.scene-dock[data-compact] .scene-fan-label :is([data-dock-pause],[data-dock-play])>svg{width:24px;height:24px}
+@media(prefers-reduced-motion:reduce){.scene-dock-flower,.scene-dock-flower>.sakura-mark,.scene-dock-close,.scene-fan-art path{transition:none}}
+
+/* The flower itself carries playback state; no second floating player is needed. */
+.scene-dock-notes{position:absolute;inset:0;pointer-events:none;opacity:0;color:var(--accent);transition:opacity .3s ease}.scene-dock-notes>svg{position:absolute;left:43px;top:-6px;filter:drop-shadow(0 1px 3px var(--surface));animation:dock-note 2.8s ease-in-out infinite}.scene-dock-notes>svg:nth-child(2){left:-5px;top:6px;animation-delay:-1.4s}.scene-dock-notes>i{position:absolute;bottom:8px;left:22px;width:2px;height:7px;border-radius:2px;background:var(--accent);transform-origin:bottom;animation:dock-beat .8s ease-in-out infinite alternate}.scene-dock-notes>i:nth-of-type(2){left:27px;height:10px;animation-delay:-.3s}.scene-dock-notes>i:nth-of-type(3){left:32px;height:6px;animation-delay:-.5s}.scene-dock-flower:before{content:'';position:absolute;inset:-4px;border:1px solid transparent;border-radius:50%;pointer-events:none}
+[data-music-selected=true] .scene-dock-flower:before{border-color:color-mix(in srgb,var(--accent) 24%,transparent)}[data-music-playing=true] .scene-dock-flower:before{border-color:color-mix(in srgb,var(--accent) 48%,transparent);animation:dock-sound-ring 3s ease-in-out infinite}[data-music-playing=true] .scene-dock-notes{opacity:1}[data-music-playing=true] .scene-dock-flower>.sakura-mark{transform:scale(.87);transform-origin:50% 44%}.scene-dock-flower[aria-expanded=true] .scene-dock-notes{opacity:0}
+.scene-fan-label :is([data-music-play],[data-music-pause]){line-height:0;color:var(--accent)}.scene-fan-label :is([data-music-play],[data-music-pause])>svg{width:24px;height:24px}#scene-fan-experience .scene-fan-label{font-size:12px;gap:5px}
+@keyframes dock-note{0%,100%{transform:translate(0,2px) rotate(-8deg);opacity:.45}50%{transform:translate(2px,-4px) rotate(9deg);opacity:1}}@keyframes dock-beat{from{transform:scaleY(.35)}to{transform:scaleY(1)}}@keyframes dock-sound-ring{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.07);opacity:1}}
+[data-motion=off] :is(.scene-dock-notes>svg,.scene-dock-notes>i,.scene-dock-flower:before),[data-page-hidden] :is(.scene-dock-notes>svg,.scene-dock-notes>i,.scene-dock-flower:before){animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.scene-dock-notes>svg,.scene-dock-notes>i,.scene-dock-flower:before{animation:none}.scene-dock-notes{transition:none}}

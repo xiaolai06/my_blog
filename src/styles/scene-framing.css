@@ -1,0 +1,137 @@
+/* Short, edge-to-edge scene banners; retain the site's original typography. */
+body{--page-width:1280px;--page-gutter:32px;--scene-content-gap:28px}
+body .container,body.home-page .home-main,body.project-page :is(.inner-main,.case-main,.header-inner){width:min(var(--page-width),calc(100% - var(--page-gutter)*2))}
+body .site-header{height:82px;border-bottom:0;background:var(--bg)}
+body .site-header .header-inner{width:min(var(--page-width),calc(100% - var(--page-gutter)*2));height:100%}
+body .brand{font-size:27px;gap:11px}
+body .brand>svg{width:36px;height:36px}
+body .brand small{font-size:8px;letter-spacing:2.3px}
+body .desktop-nav{gap:28px;margin-right:26px}
+body .desktop-nav a{font-size:16px;letter-spacing:1px}
+body .header-actions{gap:10px}
+body .header-actions .icon-button{width:44px;height:44px}
+body.home-page .hero,body .project-hero{width:100%;height:clamp(580px,34.375vw,880px);min-height:0;aspect-ratio:auto;margin:0;overflow:hidden;border-radius:0;background:#18202d;isolation:isolate}
+body.home-page .hero-scene{inset:0;width:auto;transform:none;mask-image:none}
+body.home-page .hero-scene :is(.video-scene-reference,.video-scene-stage){object-position:center bottom;filter:none}
+body.home-page .hero-shade{background:linear-gradient(90deg,#10172399,#12121f50 42%,transparent 76%),linear-gradient(180deg,#0d152c33,transparent 40%)}
+body.home-page .hero-content{width:min(1600px,calc(100% - clamp(48px,10vw,192px)));max-width:none;padding:126px 0 48px;margin:0 auto;--hero-indent:24px}
+body.home-page .hero h1{font-size:clamp(58px,5.2vw,78px);line-height:1.24;letter-spacing:3px}
+body.home-page .hero-title-line+.hero-title-line{padding-left:var(--hero-indent);margin-top:8px}
+body :is(.hero-english,.project-hero-english){font-size:17px;line-height:1.7;margin-top:13px}
+body :is(.hero-description,.project-hero-description){font-size:20px;line-height:2;letter-spacing:.06em;margin-top:17px}
+body :is(.hero-description,.project-hero-description)>span+span{margin-top:5px}
+body .hero-buttons{margin-top:28px;gap:16px}
+body .hero .button{min-height:50px;padding:12px 26px;font-size:14px;gap:20px;border-radius:999px}
+body.home-page .hero-blend{display:block;height:clamp(40px,4vw,64px)}
+body .project-hero::after{display:block;height:clamp(32px,3vw,48px)}
+body.home-page .hero-clouds{inset:0;height:auto}
+body .project-hero{height:clamp(380px,21.875vw,560px)}
+body .project-hero.project-hero--compact{height:clamp(260px,20vw,300px);min-height:0}
+body .project-hero .project-hero-content{width:min(1600px,calc(100% - clamp(48px,10vw,192px)));max-width:none;margin:0 auto}
+body .project-hero .project-hero-title{font-size:clamp(48px,4.2vw,68px);line-height:1.25}
+body .project-hero--compact .project-hero-title{font-size:48px}
+body .project-hero .project-hero-scene{inset:0;height:auto;mask-image:none}
+body .project-hero .project-hero-art{object-position:right center}
+body .project-hero::before{background:linear-gradient(90deg,#0d122a99,transparent 75%)}
+/* A shallow dissolve connects the artwork without washing out its subject. */
+body .scenic-footer{--footer-edge:clamp(24px,2.2vw,36px);width:100%;margin:24px 0 0;background:var(--bg)}
+body .scenic-footer .footer-landscape{width:100%;height:clamp(200px,16.6667vw,426.667px);min-height:0;aspect-ratio:auto;border-radius:0;overflow:hidden;background:var(--bg)}
+body .scenic-footer .footer-scenery{inset:0;width:100%;height:100%;object-fit:cover;object-position:right 18%;mask-image:linear-gradient(transparent,#000 var(--footer-edge))}
+body .scenic-footer .footer-landscape[data-scene-family=home] .footer-scenery{object-position:right 70%}
+body .scenic-footer .footer-atmosphere{mask-image:linear-gradient(transparent,#000 var(--footer-edge))}
+body .scenic-footer .footer-landscape::after{background:none}
+@media(min-width:761px) and (max-width:1100px){
+ body.home-page .hero{height:580px;padding-bottom:0}
+ body.home-page .hero-content{padding-top:126px}
+ body.home-page .hero h1{font-size:58px}
+}
+@media(max-width:760px){
+ body{--page-gutter:18px;--scene-content-gap:24px}
+ body .site-header{height:72px}
+ body .brand,body .brand>span{font-size:23px}
+ body .brand>svg{width:31px;height:31px}
+ body .brand small{font-size:7px;letter-spacing:1.6px}
+ body .header-actions{gap:0}
+ body .header-actions .icon-button{width:40px;height:44px}
+ body.home-page .hero{height:560px;padding-bottom:0;border-radius:0}
+ body.home-page .hero-content{padding:128px 0 48px;width:calc(100% - 40px)}
+ body.home-page .hero-blend{height:48px}
+ body.home-page .hero h1{font-size:clamp(36px,10vw,54px);line-height:1.3;letter-spacing:1px}
+ body.home-page .hero-scene{inset:0;height:auto;mask-image:none}
+ body.home-page .hero-scene :is(.video-scene-reference,.video-scene-stage){object-position:63% center}
+ body.home-page .hero-shade{background:linear-gradient(90deg,#10182cc9,#12172c65 76%,#13172e33)}
+ body :is(.hero-english,.project-hero-english){font-size:14px;margin-top:13px}
+ body :is(.hero-description,.project-hero-description){font-size:14px;line-height:1.9;margin-top:20px;letter-spacing:0}
+ body .hero-description>span{display:block}
+ body .hero-description{max-width:340px}
+ body .hero-buttons{margin-top:24px;gap:8px}
+ body .hero .button{padding:10px 14px;font-size:12px;gap:8px}
+ body .project-hero{height:380px;padding-bottom:0;border-radius:0}
+ body .project-hero.project-hero--compact{height:280px;padding-bottom:0}
+ body .project-hero .project-hero-content{width:calc(100% - 40px)}
+ body .project-hero .project-hero-title{font-size:clamp(29px,7.7vw,42px)}
+ body .project-hero .project-hero-art{object-position:64% center}
+ body .project-hero::before{background:linear-gradient(90deg,#0c132bc9,#0c132b44)}
+ body .scenic-footer{--footer-edge:24px;margin-top:24px;margin-bottom:0}
+ body .scenic-footer .footer-landscape{height:clamp(230px,60vw,300px);border-radius:0}
+ body .scenic-footer .footer-scenery{object-position:right center}
+}
+@media(max-width:360px){body{--page-gutter:14px}body .brand,body .brand>span{font-size:21px}body .header-actions .icon-button{width:35px}}
+/* Shared framing. Homepage cards and layout are owned by home.css. */
+body .site-header .brand>span{font-size:27px}
+body .site-header .brand>.sakura-mark{width:36px;height:36px}
+body.project-page .project-card{border-radius:14px}
+body .project-collection .archive-projects .project-cover{aspect-ratio:16 / 9}
+body .project-collection .archive-projects .project-body{padding:16px 10px 18px}
+body .project-collection .archive-projects .project-name h3{font-size:26px}
+body .project-collection .archive-projects .project-description{font-size:13px;line-height:1.85;margin:12px 0 16px}
+body .project-collection .archive-projects .tech-tags{padding-top:10px}
+body.project-page .case-heading h1{font-size:clamp(38px,4vw,58px)}
+body.project-page .case-cover img{max-height:300px;aspect-ratio:16 / 9}
+@media(max-width:760px){
+ body .site-header .brand>span{font-size:23px}
+ body .site-header .brand>.sakura-mark{width:31px;height:31px}
+ body .site-header .mobile-nav{top:66px;left:var(--page-gutter);right:var(--page-gutter);border-radius:14px}
+}
+@media(max-width:360px){body .site-header .brand>span{font-size:21px}}
+:root body .site-header .header-inner.container{width:min(var(--page-width),calc(100% - var(--page-gutter)*2));max-width:var(--page-width);gap:24px}
+body .site-header.header-overlay{height:104px;background:transparent}
+:root body .site-header.header-overlay .header-inner.container{width:min(1600px,calc(100% - clamp(48px,10vw,192px)));max-width:none}
+body .site-header .desktop-nav{gap:24px;margin-right:22px}
+body .site-header .desktop-nav a{font-size:18px;letter-spacing:1px}
+@media(max-width:760px){
+ body .site-header.header-overlay{height:88px}
+ body .site-header .mobile-nav{top:78px}
+ body.home-page .hero-scene{inset:0;width:auto;mask-image:none}
+ body.home-page .hero-scene :is(.video-scene-reference,.video-scene-stage){object-position:63% center}
+ :root body .site-header .header-inner.container{gap:8px}
+}
+body .project-cover{max-height:220px}
+body .about-grid{gap:48px;align-items:start}
+body .about-grid .page-heading h1{font-size:38px}
+body .about-visual{min-height:0;height:360px;border-radius:16px;margin-top:30px}
+body .about-visual figcaption{left:26px;bottom:24px}
+body .about-visual figcaption p{font-size:23px;line-height:1.6;margin:12px 0}
+body .article-image{margin-bottom:32px}
+body .article-image>img{max-height:320px}
+@media(max-width:760px){body .about-grid{gap:24px}body .about-grid .page-heading h1{font-size:30px}body .about-visual{height:270px;margin-top:0}body .article-image>img{max-height:220px}}
+body .project-hero-title{text-wrap:balance}
+@media(max-width:760px){body .journal-hero:not(.project-hero--compact){height:410px}}
+:root body .project-hero .project-hero-content{padding:124px 0 40px}
+:root body .project-hero--compact .project-hero-content{padding-top:114px}
+@media(max-width:760px){:root body .project-hero .project-hero-content{padding:124px 0 40px}}
+
+/* New illustrations use the intended desktop banner ratio, with a shallow edge blend. */
+body .scenic-footer .image-scene{mask-image:linear-gradient(transparent,#000 var(--footer-edge))}
+body .scenic-footer .image-scene .footer-scenery{mask-image:none;object-position:center 20%}
+body.home-page .hero-scene .image-scene-art{object-position:center}
+@media(min-width:761px){
+ body .scenic-footer{--footer-edge:20px}
+ body .project-hero .image-scene-art{object-position:center 90%}
+ body .project-hero::after{height:28px}
+ /* Fit the complete illustration to the shorter footer; blend its quiet left
+    edge into a full-width continuation of the same landscape. */
+ body .scenic-footer .image-scene-frame::before{content:'';position:absolute;inset:0;background-image:var(--scene-image);background-size:cover;background-position:left 30%}
+ body .scenic-footer .image-scene .footer-scenery{left:auto;right:0;width:auto;height:100%;max-width:100%;object-fit:contain;object-position:right center;mask-image:linear-gradient(90deg,transparent,#000 18%);z-index:1}
+ body .scenic-footer .stream-reflections{left:auto;right:0;width:auto;height:100%;aspect-ratio:3}
+}

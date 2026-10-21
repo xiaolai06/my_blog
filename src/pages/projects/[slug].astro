@@ -1,0 +1,17 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import {projects} from '../../data/projects';
+import {orulinkCase,studentScoreCase} from '../../data/campus-cases';
+import ProjectCase from '../../components/ProjectCase.astro';
+import TaskHubCase from '../../components/TaskHubCase.astro';
+import ClothHubCase from '../../components/ClothHubCase.astro';
+import '../../styles/projects.css';
+export function getStaticPaths(){return projects.map(project=>({params:{slug:project.slug},props:{project}}));}
+const {project:p}=Astro.props;
+const description=p.slug==='taskhub'?'TaskHub 智汇轻营：连接客户、项目、任务排期与收支的个人工作室工作台，查看实际界面、功能模块与实现思路。':p.slug==='clotheshub'?'ClothHub 智汇衣链：集中管理服装电商商品、订单、供应链与经营财务，查看选品分析、服装换色和 AI 助手的实际界面与技术说明。':p.description;
+const campusCase=p.slug==='orulink'?orulinkCase:studentScoreCase;
+const image=p.slug==='orulink'?'/images/projects/orulink/dashboard.webp':p.slug==='student-score'?'/images/projects/student-score/directory.webp':`/images/projects/${p.slug}/dashboard.webp`;
+---
+<SiteLayout projectPage projectDetail title={p.name+' · '+p.subtitle} description={description} image={image}>
+ {p.slug==='taskhub'?<TaskHubCase/>:p.slug==='clotheshub'?<ClothHubCase/>:<ProjectCase project={campusCase}/>}
+</SiteLayout>

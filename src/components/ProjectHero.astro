@@ -1,0 +1,20 @@
+---
+import ImageScene from './ImageScene.astro';
+import WindPetals from './WindPetals.astro';
+import { projectHeading } from '../data/page-copy.json';
+import '../styles/project-scenes.css';
+interface Props { compact?: boolean }
+const {compact=false}=Astro.props;
+const Heading=compact?'p':'h1';
+---
+<section class:list={['project-hero',{'project-hero--compact':compact}]} data-scene-region="hero" data-scene-family="projects" aria-label="樱窗创作间">
+ <div class="project-hero-scene" aria-hidden="true"><ImageScene family="projects" kind="hero" imageClass="project-hero-art" priority/></div>
+ <div class="project-hero-content container">
+  <Heading class="project-hero-title">{projectHeading}</Heading>
+  <p class="project-hero-english" lang="en">{compact?'Notes behind the work.':'Things made with care.'}</p>
+  {!compact&&<p class="project-hero-description"><span>从真实问题出发，记录项目的设计、实现与取舍。</span><span>看看它们解决了什么，又是如何一步步做出来的。</span></p>}
+  <span class="sr-only" data-scene-status aria-live="polite"></span>
+ </div>
+ <WindPetals count={80}/>
+</section>
+<script>import {setupSceneRegions} from '../scripts/scene-regions';setupSceneRegions();</script>

@@ -1,0 +1,40 @@
+/* A small shared vocabulary: wind, reflected light, and directional feedback. */
+.motion-card{position:relative;isolation:isolate}
+.motion-card:before{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;background:radial-gradient(280px circle at var(--pointer-x,50%) var(--pointer-y,0%),color-mix(in srgb,var(--accent) 9%,transparent),transparent 72%);opacity:0;transition:opacity .25s ease}
+.project-card .project-art>img{transform:translate3d(var(--art-x,0px),var(--art-y,0px),0) scale(1.015);transition:transform .45s cubic-bezier(.23,1,.32,1)}
+.project-card .project-open svg,.profile-more svg{transition:transform .24s cubic-bezier(.23,1,.32,1)}
+.filter-button{transition:background .2s ease,color .2s ease,border-color .2s ease,transform .18s ease}
+.hero-buttons .button>svg{transition:transform .24s cubic-bezier(.23,1,.32,1)}
+.text-link{transition:color .18s ease}
+.text-link>svg{transition:transform .24s var(--ease)}
+.icon-button{transition:transform .18s var(--ease),background .18s ease,color .18s ease}
+.icon-button:active{transform:scale(.92)}
+.reader-related-card{transition:translate .24s var(--ease),border-color .24s ease,background .24s ease}
+@media(hover:hover) and (pointer:fine){
+ .motion-card:hover:before{opacity:1}
+ .project-card:hover{transform:translateY(-5px);box-shadow:0 16px 35px var(--hover-shadow)}
+ .project-card:hover .project-art>img{transform:translate3d(var(--art-x,0px),var(--art-y,0px),0) scale(1.045)}
+ .project-card:hover .project-open svg,.profile-more:hover svg{transform:translate(3px,-3px)}
+ .hero-buttons .button:hover>svg{transform:translateX(4px)}
+ .calendar-days button:hover{transform:translateY(-2px)}
+ .filter-button:hover{transform:translateY(-2px)}
+ .text-link:hover{gap:10px}
+ .text-link:hover>svg{transform:translateX(4px)}
+ .reader-related-card:hover{translate:0 -3px}
+}
+.filter-button:active,.calendar-days button:active{transform:scale(.94)}
+.motion-card:focus-within{border-color:var(--border-hover)}
+:root[data-motion=off] :is(.motion-card,.motion-card:before,.project-card img,.project-open svg,.profile-more svg,.filter-button,.calendar-days button,.hero-buttons .button>svg){transition:none}
+:root[data-motion=off] :is(.project-card:hover,.filter-button:hover,.calendar-days button:hover,.profile-more:hover svg,.project-card:hover .project-open svg,.hero-buttons .button:hover>svg,.filter-button:active,.calendar-days button:active){transform:none}
+:root[data-motion=off] .motion-card:before{display:none}
+:root[data-motion=off] .project-card .project-art>img{transform:none!important}
+:root[data-motion=off] :is(.text-link>svg,.icon-button){transition:none;transform:none!important}
+:root[data-motion=off] .reader-related-card{transition:none;translate:none}
+@media(prefers-reduced-motion:reduce){
+ .motion-card:before{display:none}
+ .project-card .project-art>img{transform:none!important;transition:none}
+ :is(.project-card:hover,.filter-button:hover,.calendar-days button:hover,.profile-more:hover svg,.project-card:hover .project-open svg,.hero-buttons .button:hover>svg){transform:none}
+ :is(.motion-card,.filter-button,.calendar-days button,.project-open svg,.profile-more svg,.hero-buttons .button>svg){transition:none}
+ :is(.text-link>svg,.icon-button){transition:none;transform:none!important}
+ .reader-related-card{transition:none;translate:none}
+}

@@ -1,0 +1,20 @@
+---
+import Icon from './Icon.astro';
+import ImageScene from './ImageScene.astro';
+import WindPetals from './WindPetals.astro';
+import '../styles/hero-scenes.css';
+---
+<section class="hero" data-scene-region="hero" data-scene-family="home" aria-label="樱花落日">
+<div class="hero-scene" aria-hidden="true"><ImageScene family="home" kind="hero" imageClass="hero-scene-image" priority/><div class="hero-shade"></div></div>
+<div class="hero-clouds" aria-hidden="true"><i></i><i></i></div>
+<WindPetals/>
+<div class="hero-content container">
+<h1><span class="hero-title-line">循着热爱，</span><span class="hero-title-line">记录与创造。</span></h1>
+<p class="hero-english" lang="en">Stay curious. Keep creating.</p>
+<p class="hero-description"><span>分享项目实践，也记录日常灵感。</span><span>在代码与文字之间，留下成长的足迹。</span></p>
+<div class="hero-buttons"><a class="button button-coral" href="#projects">探索我的项目<Icon name="arrow" size={17}/></a><a class="button button-glass" href="/blog/">翻阅手记<Icon name="arrow" size={17}/></a></div>
+<span class="sr-only hero-scene-status" data-scene-status aria-live="polite"></span>
+</div>
+<div class="hero-blend" aria-hidden="true"></div>
+</section>
+<script>import { setupHeroScenes } from '../scripts/hero-scenes';setupHeroScenes();</script>

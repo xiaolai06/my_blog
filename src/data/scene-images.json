@@ -1,0 +1,596 @@
+{
+  "home-hero-dusk-desktop": {
+    "width": 2138,
+    "height": 735,
+    "src": "/images/scenes-v2/home-hero-dusk-desktop-2138.webp",
+    "srcset": "/images/scenes-v2/home-hero-dusk-desktop-1280.webp 1280w, /images/scenes-v2/home-hero-dusk-desktop-2138.webp 2138w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-hero-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 169000
+      },
+      {
+        "src": "/images/scenes-v2/home-hero-dusk-desktop-2138.webp",
+        "width": 2138,
+        "bytes": 368664
+      }
+    ]
+  },
+  "home-hero-dusk-mobile": {
+    "width": 1047,
+    "height": 1502,
+    "src": "/images/scenes-v2/home-hero-dusk-mobile-1047.webp",
+    "srcset": "/images/scenes-v2/home-hero-dusk-mobile-640.webp 640w, /images/scenes-v2/home-hero-dusk-mobile-1047.webp 1047w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-hero-dusk-mobile-640.webp",
+        "width": 640,
+        "bytes": 167636
+      },
+      {
+        "src": "/images/scenes-v2/home-hero-dusk-mobile-1047.webp",
+        "width": 1047,
+        "bytes": 354966
+      }
+    ]
+  },
+  "home-hero-dawn-desktop": {
+    "width": 2143,
+    "height": 734,
+    "src": "/images/scenes-v2/home-hero-dawn-desktop-2143.webp",
+    "srcset": "/images/scenes-v2/home-hero-dawn-desktop-1280.webp 1280w, /images/scenes-v2/home-hero-dawn-desktop-2143.webp 2143w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-hero-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 175836
+      },
+      {
+        "src": "/images/scenes-v2/home-hero-dawn-desktop-2143.webp",
+        "width": 2143,
+        "bytes": 360588
+      }
+    ]
+  },
+  "home-hero-day-desktop": {
+    "width": 2138,
+    "height": 735,
+    "src": "/images/scenes-v2/home-hero-day-desktop-2138.webp",
+    "srcset": "/images/scenes-v2/home-hero-day-desktop-1280.webp 1280w, /images/scenes-v2/home-hero-day-desktop-2138.webp 2138w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-hero-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 198414
+      },
+      {
+        "src": "/images/scenes-v2/home-hero-day-desktop-2138.webp",
+        "width": 2138,
+        "bytes": 422544
+      }
+    ]
+  },
+  "home-hero-night-desktop": {
+    "width": 2138,
+    "height": 736,
+    "src": "/images/scenes-v2/home-hero-night-desktop-2138.webp",
+    "srcset": "/images/scenes-v2/home-hero-night-desktop-1280.webp 1280w, /images/scenes-v2/home-hero-night-desktop-2138.webp 2138w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-hero-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 167674
+      },
+      {
+        "src": "/images/scenes-v2/home-hero-night-desktop-2138.webp",
+        "width": 2138,
+        "bytes": 361952
+      }
+    ]
+  },
+  "home-footer-dawn-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/home-footer-dawn-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/home-footer-dawn-desktop-1280.webp 1280w, /images/scenes-v2/home-footer-dawn-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-footer-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 180324
+      },
+      {
+        "src": "/images/scenes-v2/home-footer-dawn-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 417880
+      }
+    ]
+  },
+  "home-footer-day-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/home-footer-day-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/home-footer-day-desktop-1280.webp 1280w, /images/scenes-v2/home-footer-day-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-footer-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 198782
+      },
+      {
+        "src": "/images/scenes-v2/home-footer-day-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 460456
+      }
+    ]
+  },
+  "home-footer-dusk-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/home-footer-dusk-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/home-footer-dusk-desktop-1280.webp 1280w, /images/scenes-v2/home-footer-dusk-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-footer-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 167520
+      },
+      {
+        "src": "/images/scenes-v2/home-footer-dusk-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 380962
+      }
+    ]
+  },
+  "home-footer-night-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/home-footer-night-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/home-footer-night-desktop-1280.webp 1280w, /images/scenes-v2/home-footer-night-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/home-footer-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 156856
+      },
+      {
+        "src": "/images/scenes-v2/home-footer-night-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 349088
+      }
+    ]
+  },
+  "projects-hero-dawn-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/projects-hero-dawn-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/projects-hero-dawn-desktop-1280.webp 1280w, /images/scenes-v2/projects-hero-dawn-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-hero-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 99888
+      },
+      {
+        "src": "/images/scenes-v2/projects-hero-dawn-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 224196
+      }
+    ]
+  },
+  "projects-hero-day-desktop": {
+    "width": 2142,
+    "height": 734,
+    "src": "/images/scenes-v2/projects-hero-day-desktop-2142.webp",
+    "srcset": "/images/scenes-v2/projects-hero-day-desktop-1280.webp 1280w, /images/scenes-v2/projects-hero-day-desktop-2142.webp 2142w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-hero-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 118560
+      },
+      {
+        "src": "/images/scenes-v2/projects-hero-day-desktop-2142.webp",
+        "width": 2142,
+        "bytes": 269546
+      }
+    ]
+  },
+  "projects-hero-dusk-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/projects-hero-dusk-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/projects-hero-dusk-desktop-1280.webp 1280w, /images/scenes-v2/projects-hero-dusk-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-hero-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 94712
+      },
+      {
+        "src": "/images/scenes-v2/projects-hero-dusk-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 215920
+      }
+    ]
+  },
+  "projects-hero-night-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/projects-hero-night-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/projects-hero-night-desktop-1280.webp 1280w, /images/scenes-v2/projects-hero-night-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-hero-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 97416
+      },
+      {
+        "src": "/images/scenes-v2/projects-hero-night-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 223554
+      }
+    ]
+  },
+  "projects-footer-dawn-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/projects-footer-dawn-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/projects-footer-dawn-desktop-1280.webp 1280w, /images/scenes-v2/projects-footer-dawn-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-footer-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 200146
+      },
+      {
+        "src": "/images/scenes-v2/projects-footer-dawn-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 474504
+      }
+    ]
+  },
+  "projects-footer-day-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/projects-footer-day-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/projects-footer-day-desktop-1280.webp 1280w, /images/scenes-v2/projects-footer-day-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-footer-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 209678
+      },
+      {
+        "src": "/images/scenes-v2/projects-footer-day-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 499246
+      }
+    ]
+  },
+  "projects-footer-dusk-desktop": {
+    "width": 2129,
+    "height": 739,
+    "src": "/images/scenes-v2/projects-footer-dusk-desktop-2129.webp",
+    "srcset": "/images/scenes-v2/projects-footer-dusk-desktop-1280.webp 1280w, /images/scenes-v2/projects-footer-dusk-desktop-2129.webp 2129w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-footer-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 212062
+      },
+      {
+        "src": "/images/scenes-v2/projects-footer-dusk-desktop-2129.webp",
+        "width": 2129,
+        "bytes": 478412
+      }
+    ]
+  },
+  "projects-footer-night-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/projects-footer-night-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/projects-footer-night-desktop-1280.webp 1280w, /images/scenes-v2/projects-footer-night-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/projects-footer-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 176556
+      },
+      {
+        "src": "/images/scenes-v2/projects-footer-night-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 416314
+      }
+    ]
+  },
+  "journal-hero-dawn-desktop": {
+    "width": 1983,
+    "height": 793,
+    "src": "/images/scenes-v2/journal-hero-dawn-desktop-1983.webp",
+    "srcset": "/images/scenes-v2/journal-hero-dawn-desktop-1280.webp 1280w, /images/scenes-v2/journal-hero-dawn-desktop-1983.webp 1983w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-hero-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 116778
+      },
+      {
+        "src": "/images/scenes-v2/journal-hero-dawn-desktop-1983.webp",
+        "width": 1983,
+        "bytes": 221934
+      }
+    ]
+  },
+  "journal-hero-day-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/journal-hero-day-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/journal-hero-day-desktop-1280.webp 1280w, /images/scenes-v2/journal-hero-day-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-hero-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 122664
+      },
+      {
+        "src": "/images/scenes-v2/journal-hero-day-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 279660
+      }
+    ]
+  },
+  "journal-hero-dusk-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/journal-hero-dusk-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/journal-hero-dusk-desktop-1280.webp 1280w, /images/scenes-v2/journal-hero-dusk-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-hero-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 120306
+      },
+      {
+        "src": "/images/scenes-v2/journal-hero-dusk-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 258494
+      }
+    ]
+  },
+  "journal-hero-night-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/journal-hero-night-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/journal-hero-night-desktop-1280.webp 1280w, /images/scenes-v2/journal-hero-night-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-hero-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 97036
+      },
+      {
+        "src": "/images/scenes-v2/journal-hero-night-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 220364
+      }
+    ]
+  },
+  "journal-footer-dawn-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/journal-footer-dawn-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/journal-footer-dawn-desktop-1280.webp 1280w, /images/scenes-v2/journal-footer-dawn-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-footer-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 188190
+      },
+      {
+        "src": "/images/scenes-v2/journal-footer-dawn-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 449222
+      }
+    ]
+  },
+  "journal-footer-day-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/journal-footer-day-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/journal-footer-day-desktop-1280.webp 1280w, /images/scenes-v2/journal-footer-day-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-footer-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 237322
+      },
+      {
+        "src": "/images/scenes-v2/journal-footer-day-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 572972
+      }
+    ]
+  },
+  "journal-footer-dusk-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/journal-footer-dusk-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/journal-footer-dusk-desktop-1280.webp 1280w, /images/scenes-v2/journal-footer-dusk-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-footer-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 194868
+      },
+      {
+        "src": "/images/scenes-v2/journal-footer-dusk-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 458952
+      }
+    ]
+  },
+  "journal-footer-night-desktop": {
+    "width": 2152,
+    "height": 731,
+    "src": "/images/scenes-v2/journal-footer-night-desktop-2152.webp",
+    "srcset": "/images/scenes-v2/journal-footer-night-desktop-1280.webp 1280w, /images/scenes-v2/journal-footer-night-desktop-2152.webp 2152w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/journal-footer-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 179046
+      },
+      {
+        "src": "/images/scenes-v2/journal-footer-night-desktop-2152.webp",
+        "width": 2152,
+        "bytes": 406384
+      }
+    ]
+  },
+  "about-hero-dusk-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-hero-dusk-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-hero-dusk-desktop-1280.webp 1280w, /images/scenes-v2/about-hero-dusk-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-hero-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 167234
+      },
+      {
+        "src": "/images/scenes-v2/about-hero-dusk-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 380666
+      }
+    ]
+  },
+  "about-footer-dusk-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-footer-dusk-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-footer-dusk-desktop-1280.webp 1280w, /images/scenes-v2/about-footer-dusk-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-footer-dusk-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 233230
+      },
+      {
+        "src": "/images/scenes-v2/about-footer-dusk-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 556250
+      }
+    ]
+  },
+  "about-hero-dawn-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-hero-dawn-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-hero-dawn-desktop-1280.webp 1280w, /images/scenes-v2/about-hero-dawn-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-hero-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 161734
+      },
+      {
+        "src": "/images/scenes-v2/about-hero-dawn-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 353698
+      }
+    ]
+  },
+  "about-hero-day-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-hero-day-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-hero-day-desktop-1280.webp 1280w, /images/scenes-v2/about-hero-day-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-hero-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 190168
+      },
+      {
+        "src": "/images/scenes-v2/about-hero-day-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 429252
+      }
+    ]
+  },
+  "about-hero-night-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-hero-night-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-hero-night-desktop-1280.webp 1280w, /images/scenes-v2/about-hero-night-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-hero-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 160686
+      },
+      {
+        "src": "/images/scenes-v2/about-hero-night-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 350140
+      }
+    ]
+  },
+  "about-footer-dawn-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-footer-dawn-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-footer-dawn-desktop-1280.webp 1280w, /images/scenes-v2/about-footer-dawn-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-footer-dawn-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 220804
+      },
+      {
+        "src": "/images/scenes-v2/about-footer-dawn-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 490876
+      }
+    ]
+  },
+  "about-footer-day-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-footer-day-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-footer-day-desktop-1280.webp 1280w, /images/scenes-v2/about-footer-day-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-footer-day-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 249468
+      },
+      {
+        "src": "/images/scenes-v2/about-footer-day-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 568524
+      }
+    ]
+  },
+  "about-footer-night-desktop": {
+    "width": 2172,
+    "height": 724,
+    "src": "/images/scenes-v2/about-footer-night-desktop-2172.webp",
+    "srcset": "/images/scenes-v2/about-footer-night-desktop-1280.webp 1280w, /images/scenes-v2/about-footer-night-desktop-2172.webp 2172w",
+    "variants": [
+      {
+        "src": "/images/scenes-v2/about-footer-night-desktop-1280.webp",
+        "width": 1280,
+        "bytes": 220366
+      },
+      {
+        "src": "/images/scenes-v2/about-footer-night-desktop-2172.webp",
+        "width": 2172,
+        "bytes": 494384
+      }
+    ]
+  }
+}

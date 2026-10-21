@@ -1,0 +1,41 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SearchDialog from '../components/SearchDialog.astro';
+import ProjectHero from '../components/ProjectHero.astro';
+import JournalHero from '../components/JournalHero.astro';
+import AboutHero from '../components/AboutHero.astro';
+import SceneDock from '../components/SceneDock.astro';
+import MusicPlayer from '../components/MusicPlayer.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+interface Props { title?: string; description?: string; hero?: boolean; image?: string; projectPage?: boolean; projectDetail?: boolean; journalPage?: boolean; journalDetail?: boolean; aboutPage?: boolean }
+const { title = SITE_TITLE, description = SITE_DESCRIPTION, hero = false, image, projectPage = false, projectDetail = false, journalPage = false, journalDetail = false, aboutPage = false } = Astro.props;
+const scenicPage = !projectDetail && !journalDetail;
+const pageTransition = {
+  forwards: {
+    old: { name: 'page-leave', duration: '180ms', easing: 'ease-in', fillMode: 'both' as const },
+    new: { name: 'page-enter', duration: '320ms', easing: 'cubic-bezier(.23,1,.32,1)', fillMode: 'both' as const },
+  },
+  backwards: {
+    old: { name: 'page-leave', duration: '180ms', easing: 'ease-in', fillMode: 'both' as const },
+    new: { name: 'page-enter', duration: '320ms', easing: 'cubic-bezier(.23,1,.32,1)', fillMode: 'both' as const },
+  },
+};
+---
+<!doctype html>
+<html lang="zh-CN" transition:name="root" transition:animate={pageTransition}>
+<head><BaseHead title={title === SITE_TITLE ? `${SITE_TITLE} · 循着热爱，记录与创造` : `${title} · ${SITE_TITLE}`} description={description} image={image}/><slot name="head"/></head>
+<body id="top" class:list={{'home-page':hero,'project-page':projectPage,'project-detail-page':projectDetail,'journal-page':journalPage,'journal-detail-page':journalDetail,'about-page':aboutPage}}>
+ <a class="skip-link" href="#main-content">跳到主要内容</a>
+ <Header overlay={hero || (projectPage && !projectDetail) || (journalPage && !journalDetail) || aboutPage}/>
+ {projectPage&&!projectDetail&&<ProjectHero/>}
+ {journalPage&&!journalDetail&&<JournalHero/>}
+ {aboutPage&&<AboutHero/>}
+ <slot/>
+ {scenicPage&&<Footer variant={projectPage ? 'projects' : journalPage ? 'journal' : aboutPage ? 'about' : 'default'}/>}
+ <MusicPlayer/>
+ {scenicPage&&<SceneDock/>}
+ <SearchDialog/>
+</body>
+</html>

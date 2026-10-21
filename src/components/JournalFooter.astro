@@ -1,0 +1,17 @@
+---
+import Flower from './Flower.astro';
+import {SITE_TITLE} from '../consts';
+---
+<footer class="journal-footer container">
+ <a href="/" class="journal-footer-brand"><Flower size={21}/><span>{SITE_TITLE}</span></a>
+ <span>© {new Date().getFullYear()}</span>
+ <nav aria-label="页尾导航"><a href="/blog/">全部记录</a><a href="/rss.xml">订阅更新</a><a href="#top">返回顶部 ↑</a></nav>
+</footer>
+<style>
+ .journal-footer{display:flex;align-items:center;gap:13px;border-top:1px solid var(--line);padding:25px 0 30px;margin-top:28px;color:var(--muted);font:12px/1.8 var(--sans)}
+ .journal-footer-brand{display:flex;align-items:center;gap:9px;color:var(--text);font-weight:600}
+ .journal-footer-brand>svg{color:var(--decorative-text)}
+ nav{display:flex;align-items:center;gap:23px;margin-left:auto}a{min-height:36px;display:inline-flex;align-items:center}a:hover{color:var(--accent)}
+ @media(max-width:600px){.journal-footer{flex-wrap:wrap;gap:8px 13px;padding-block:19px 24px;margin-top:10px}nav{width:100%;justify-content:space-between;margin-left:0;gap:12px}}
+ @media print{.journal-footer{display:none}}
+</style>

@@ -1,0 +1,20 @@
+---
+import Flower from './Flower.astro';
+import Icon from './Icon.astro';
+import Calendar from './Calendar.astro';
+import { getCollection } from 'astro:content';
+import { SITE_TITLE } from '../consts';
+import { projects } from '../data/projects';
+const count=(await getCollection('blog')).filter(p=>!p.data.draft).length;
+---
+<aside class="sidebar">
+<section class="profile-panel panel" aria-label={`关于${SITE_TITLE}`}>
+ <p class="profile-eyebrow">ABOUT THE MAKER</p>
+ <div class="profile-top"><div class="profile-avatar"><Flower size={43} colored/></div><div><h3>{SITE_TITLE}</h3><span class="profile-role"><i aria-hidden="true"></i>独立开发者</span></div></div>
+ <p class="profile-description">从界面设计到全栈实现，把真实需求打磨成实用的小作品。</p>
+ <div class="profile-focus" aria-label="关注方向"><span>全栈开发</span><span>AI 探索</span><span>交互设计</span></div>
+ <div class="profile-stats"><a href="/projects/"><strong>{projects.length.toString().padStart(2,'0')}</strong><span>项目作品</span></a><a href="/blog/"><strong>{count.toString().padStart(2,'0')}</strong><span>手记文章</span></a></div>
+ <a href="/about/" class="profile-more">认识这位开发者<Icon name="arrow-up-right" size={16}/></a>
+</section>
+<Calendar/>
+</aside>

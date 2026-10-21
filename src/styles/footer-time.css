@@ -1,0 +1,49 @@
+/* The scene remains part of the page, with all controls above the artwork. */
+@property --scene-glow{syntax:"<color>";inherits:true;initial-value:#ffc9a54d}
+@property --scene-mist{syntax:"<color>";inherits:true;initial-value:#fff4e0}
+@property --scene-petal-a{syntax:"<color>";inherits:true;initial-value:#f7c6c0}
+@property --scene-petal-b{syntax:"<color>";inherits:true;initial-value:#d47b91}
+.footer-landscape{--scene-glow:#ffc9a54d;--scene-mist:#fff4e0;--scene-petal-a:#f7c6c0;--scene-petal-b:#d47b91}
+.footer-landscape{transition:--scene-glow 3.2s,--scene-mist 3.2s,--scene-petal-a 3.2s,--scene-petal-b 3.2s}
+.footer-landscape[data-ambience=dawn]{--scene-glow:#f4acbd66;--scene-mist:#fff1eb;--scene-petal-a:#ffd6d6;--scene-petal-b:#dc8ba2}
+.footer-landscape[data-ambience=day]{--scene-glow:#f2dfad40;--scene-mist:#fffdf1;--scene-petal-a:#ffc4cb;--scene-petal-b:#d87b96}
+.footer-landscape[data-ambience=night]{--scene-glow:#a8b9ee38;--scene-mist:#bdc9e7;--scene-petal-a:#e5b2ce;--scene-petal-b:#af84b7}
+.footer-scene-controls{position:relative;z-index:3;text-align:left;margin-top:18px;width:max-content;max-width:100%}
+.scene-switcher{position:relative;isolation:isolate;display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:var(--scene-control-radius)}
+.scene-switcher button{min-width:46px;min-height:40px;padding:4px 11px;font-size:12px;font-weight:500;line-height:1.4;letter-spacing:.5px;border-radius:var(--scene-selection-radius);color:var(--scene-control-text);transition:background .18s,color .18s,transform .18s}
+.scene-switcher button:first-child{padding-inline:12px}
+.scene-switcher button[aria-pressed=true]{color:var(--scene-control-active);background:var(--scene-control-selection);font-weight:600}
+.scene-switcher::before{content:"";position:absolute;inset-block:4px;left:0;width:var(--selection-width,0px);transform:translateX(var(--selection-x,0px));border-radius:var(--scene-selection-radius);background:var(--scene-control-selection);box-shadow:var(--scene-selection-shadow);z-index:-1;transition:transform .24s var(--ease),width .24s var(--ease)}
+.scene-switcher[data-selection-ready] button[aria-pressed=true]{background:transparent}
+.scene-switcher button:focus-visible{outline-offset:2px}
+.scene-control-divider{width:1px;height:14px;margin-inline:3px;background:var(--scene-control-divider)}
+.scene-time-status{font-size:10px;line-height:1.7;letter-spacing:1px;margin-top:5px;margin-right:10px;color:var(--muted)}
+.footer-landscape .footer-haze{left:52%;bottom:8%;width:48%;height:61%;background:radial-gradient(ellipse,var(--scene-glow),transparent 70%);animation:footer-light-breathe 11s ease-in-out infinite alternate;animation-play-state:paused}
+.footer-landscape .footer-petal{top:-6%;background:linear-gradient(130deg,var(--scene-petal-a),var(--scene-petal-b));box-shadow:0 0 5px #f7b9b82b;animation-name:footer-petal-wind}
+.stream-reflections{position:absolute;inset:0;width:100%;height:100%;stroke:var(--scene-mist);stroke-width:1.1;pointer-events:none;mask-image:linear-gradient(transparent 48%,#000 78%)}
+.stream-current{opacity:.38;stroke-linecap:round;stroke-dasharray:8 13 27 70;animation:stream-current 5s linear infinite;animation-play-state:paused}
+.stream-current-far{opacity:.28;animation-duration:7s;animation-delay:-3s}
+.stream-ripple{transform-box:fill-box;transform-origin:center;opacity:0;animation:stream-ripple 5.5s ease-out infinite;animation-play-state:paused}
+.stream-ripple-late{animation-delay:-2.7s;animation-duration:7s}
+.footer-landscape.is-in-view :is(.stream-current,.stream-ripple){animation-play-state:running}
+[data-page-hidden] :is(.stream-current,.stream-ripple){animation-play-state:paused!important}
+@keyframes stream-current{from{stroke-dashoffset:0;transform:translateY(-1px)}to{stroke-dashoffset:-118;transform:translateY(3px)}}
+@keyframes stream-ripple{0%{opacity:0;transform:scale(.6)}20%{opacity:.3}100%{opacity:0;transform:scale(1.6)}}
+.footer-mist{position:absolute;bottom:-14%;left:-8%;width:92%;height:52%;opacity:0;border-radius:50%;background:radial-gradient(ellipse,color-mix(in srgb,var(--scene-mist) 27%,transparent),transparent 69%);animation:footer-mist-flow 22s ease-in-out infinite alternate;animation-play-state:paused}
+.footer-mist-far{left:36%;bottom:1%;width:75%;height:44%;animation-duration:29s;animation-delay:-13s}
+.footer-firefly{position:absolute;left:var(--light-left);bottom:var(--light-bottom);width:3px;height:3px;border-radius:50%;background:#f6e2a7;box-shadow:0 0 8px 2px #e5d5ac80;opacity:0;animation:footer-firefly-drift var(--light-duration) ease-in-out var(--light-delay) infinite;animation-play-state:paused}
+.footer-lights{position:absolute;inset:0;opacity:0;transition:opacity 3.2s linear}
+.footer-landscape[data-ambience=night] .footer-lights{opacity:1}
+.footer-landscape.is-in-view :is(.footer-mist,.footer-firefly,.footer-haze,.footer-petal){animation-play-state:running}
+[data-motion=off] .footer-landscape :is(.footer-mist,.footer-firefly,.footer-haze,.footer-petal),[data-page-hidden] .footer-landscape :is(.footer-mist,.footer-firefly,.footer-haze,.footer-petal){animation-play-state:paused!important}
+/* One treatment for all four films avoids a brightness jump after a dissolve. */
+.footer-landscape .footer-scenery{filter:var(--footer-exposure)}
+.footer-landscape::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,transparent 8%,var(--footer-tone) 85%)}
+@keyframes footer-petal-wind{0%{opacity:0;transform:translate3d(-24px,-18px,0) rotate(-28deg)}8%{opacity:.75}48%{opacity:.64;transform:translate3d(48px,160px,0) rotate(120deg)}78%{opacity:.55;transform:translate3d(30px,300px,0) rotate(208deg)}100%{opacity:0;transform:translate3d(100px,440px,0) rotate(296deg)}}
+@keyframes footer-mist-flow{from{opacity:.3;transform:translate3d(-30px,3px,0) scale(1)}to{opacity:.68;transform:translate3d(50px,-8px,0) scale(1.08)}}
+@keyframes footer-light-breathe{from{opacity:.35;transform:translate3d(-10px,3px,0) scale(.92)}to{opacity:.85;transform:translate3d(12px,-6px,0) scale(1.08)}}
+@keyframes footer-firefly-drift{0%,100%{opacity:0;transform:translate3d(-8px,7px,0)}30%{opacity:.7}65%{opacity:.45;transform:translate3d(14px,-14px,0)}85%{opacity:.15}}
+@media(hover:hover) and (pointer:fine){.scene-switcher button:hover{color:var(--scene-control-active);background:var(--scene-control-hover)}}
+@media(max-width:760px){.footer-scene-controls{margin-top:17px}.scene-switcher{gap:1px;padding:3px}.scene-switcher::before{inset-block:3px}.scene-switcher button{min-width:42px;min-height:42px;padding-inline:8px;font-size:11px}.footer-landscape .footer-haze{bottom:0;width:75%;left:30%}.footer-landscape .footer-petal:nth-of-type(3n){display:none}}
+@media(prefers-reduced-motion:reduce){.footer-landscape :is(.footer-petal,.footer-haze,.footer-mist,.footer-firefly,.stream-reflections){display:none!important}.footer-landscape,.footer-lights,.scene-switcher button,.scene-switcher::before{transition:none}}
+
