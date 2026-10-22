@@ -1,0 +1,260 @@
+---
+title: "这座博客是怎样搭起来的：从页面骨架到日历与动效"
+description: "对照落樱小筑的真实源码，拆解顶部导航、风景页脚、内容集合、两种日历、页面转场和音乐模式，并提供可操作的代码样例。"
+pubDate: 2026-10-20
+updatedDate: 2026-10-21
+category: 博客搭建复盘
+type: project
+summary:
+  - 页面骨架、内容数据和浏览器交互各有入口，顶部导航与风景页脚都是本站的 Astro 组件。
+  - 首页拾日历负责按天发现文章，归档日历负责检索；日期范围、关键词与页码共同保存在 URL。
+  - 动效只补充状态与空间关系，现有居中容器、双列卡片和侧栏布局不因动画而改变。
+  - 顶部与页脚、日历、卡片筛选和音乐状态均有可操作样例，预览与完整代码来自同一份文件。
+tags: [Astro, 项目复盘, UI 设计, 动效, 日历]
+readingTime: 18
+draft: false
+cover: /images/journal-journey.webp
+coverCaption: 博客搭建的主题插画；本文预览为教学样例，非页面截图
+resources:
+  - title: "Astro · 组件与布局"
+    url: https://docs.astro.build/en/basics/astro-components/
+  - title: "Astro · 内容集合"
+    url: https://docs.astro.build/en/guides/content-collections/
+  - title: "Astro · 静态路由"
+    url: https://docs.astro.build/en/guides/routing/
+  - title: "Astro · 样式作用域"
+    url: https://docs.astro.build/en/guides/styling/
+  - title: "Astro · View transitions 与导航生命周期"
+    url: https://docs.astro.build/en/guides/view-transitions/
+  - title: "W3C APG · 日期选择器的键盘与焦点参考"
+    url: https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/
+  - title: "web.dev · 高性能 CSS 动画"
+    url: https://web.dev/articles/animations-guide
+  - title: "Maggie Appleton · The Garden"
+    url: https://maggieappleton.com/garden
+  - title: "Gwern · 网站设计说明"
+    url: https://gwern.net/design
+---
+
+import LiveExample from '../../components/LiveExample.astro';
+
+## 先说明这篇复盘的依据
+
+落樱小筑是一座以作品展示和长文阅读为主的个人博客。首页介绍作者与项目，项目页解释作品，手记负责记录实现过程，关于页补充个人信息。风景、花瓣和音乐建立气氛；读者仍然要能找到文章、看懂项目、顺畅地阅读。
+
+这篇依据 **2026 年 10 月 21 日本地源码**整理，文件名可直接在项目中查找。文中“本站实现”表示有源码依据；“样例”是为了看懂某个原理做的简化；“下一步”表示尚未完成的建议。这里没有为搭建过程补写不存在的用户访谈、性能提升比例或使用规模。
+
+目前文章由仓库文件维护，构建后生成页面，没有博客账号、评论数据库或在线多人编辑。TaskHub 是另一个前后端项目，技术栈与这个博客不同；它的登录与邮件实现见[另一篇复盘](/blog/taskhub-auth-email/)。
+
+## 技术栈：什么在构建时做，什么交给浏览器
+
+`package.json` 与 `astro.config.mjs` 能确认本站使用 Astro、MDX、RSS、Sitemap、Sharp 和 Motion。页面由 `.astro` 组件组织，没有引入 React、Tailwind、Radix 或完整 UI 组件库。
+
+| 层次 | 本站采用的方式 | 具体职责 |
+| --- | --- | --- |
+| 页面结构 | Astro 组件与布局 | 生成导航、卡片、侧栏、文章正文 |
+| 内容 | Markdown / MDX + 内容集合 | 校验元数据，生成列表、详情与 RSS |
+| 样式 | 原生 CSS、语义变量、分模块样式表 | 共享配色、字体、布局与亮暗主题 |
+| 浏览器行为 | TypeScript + 原生 DOM | 搜索、日历、阅读工具、音乐与场景设置 |
+| 动效 | CSS、Web Animations API、局部 Motion mini | 悬停、筛选重排、选择指示器与场景菜单 |
+| 导航转场 | Astro ClientRouter | 页面替换、共享元素与导航生命周期 |
+
+采用 Astro 的理由是当前主体内容可以提前生成。并不需要为了显示一篇静态文章，在浏览器里重新构建整棵界面。日历与音乐仍有 JavaScript，但它们增强已存在的 HTML。[Astro 组件说明](https://docs.astro.build/en/basics/astro-components/)解释了这种构建方式。
+
+从数据到阅读页面的路径可以画成：
+
+```text
+src/content/blog/*.md / *.mdx
+           ↓ glob 加载 + schema 校验
+src/content.config.ts
+           ↓ 过滤 draft，按日期排序
+首页最近手记 / 归档 / 详情 / 搜索索引 / RSS
+           ↓ 生成 HTML
+浏览器增强：日期检索、复制代码、目录、字号与音乐
+```
+
+内容集合不保证查询结果的顺序；需要在消费位置显式排序。未发布文章也要在每个公开出口过滤，不能仅仅从列表里隐藏。[内容集合文档](https://docs.astro.build/en/guides/content-collections/)提供了查询与过滤的原始说明。
+
+## 页面骨架：顶部、首屏、侧栏和底部分别是谁
+
+本站的总布局是 `src/layouts/SiteLayout.astro`。它决定普通风景页与详情页要加载什么；首页正文则由 `src/pages/index.astro` 填入插槽。
+
+```text
+SiteLayout.astro
+├─ BaseHead.astro        元信息、全局样式、ClientRouter
+├─ Header.astro          品牌、导航、搜索、主题、手机菜单
+├─ 页面内容插槽
+│  ├─ Hero.astro         首页首屏
+│  ├─ ProjectCard.astro  项目卡片
+│  ├─ Sidebar.astro      作者信息 + Calendar.astro
+│  └─ JournalList.astro  最近手记
+├─ Footer.astro          普通页面的风景收尾
+├─ MusicPlayer.astro     跨导航保留的播放器
+├─ SceneDock.astro       普通风景页的场景控制
+└─ SearchDialog.astro    全站搜索入口
+```
+
+**顶部是导航组件，首屏是内容组件。** `Header.astro` 根据当前路径设置 `aria-current="page"`；首页路径要完整匹配，其他栏目匹配相应路径前缀。主导航、主题按钮、搜索按钮和手机菜单共享同一份页面骨架，但各自承担独立行为。
+
+`Hero.astro` 组合风景图片、遮罩、花瓣和文字。`ProjectHero.astro`、`JournalHero.astro`、`AboutHero.astro` 分别服务不同栏目。它们共享视觉规则，但没有把所有首屏内容塞进一个巨大的条件组件。
+
+**底部是本站的 `Footer.astro`，不是外部组件库的页脚。** 它调用 `ImageScene.astro` 选择风景，再叠加薄雾、光点、花瓣。项目页还有 SVG 水面反光。这里的“动态风景”主要是图片与轻量图层的组合，不能写成 Three.js 三维场景或实时生成的地形。
+
+文章详情刻意使用安静的阅读结尾，不加载普通页面的风景页脚；它的末尾导航在 `BlogPost.astro` 中。因此“文章页没有风景底图”和“首页页脚被裁掉”是两件需要分别检查的事。
+
+<LiveExample demo="blog-shell" />
+
+打开预览可查看导航、风景首屏、内容容器与页脚的关系。这个小样例使用同一张本站图片说明图层结构，省略了真实页面的四时素材、侧栏和完整导航。完整代码可直接展开阅读，不能把它当成 `SiteLayout.astro` 的原样复制。
+
+## 排版：为什么动效不应该改变居中和侧栏
+
+全局容器在 `src/styles/global.css` 中有明确约束：
+
+```css
+.container {
+  width: min(1200px, calc(100% - 80px));
+  margin-inline: auto;
+}
+```
+
+这是本站基础规则的摘录，首屏、文章和窄屏还有各自的覆盖。首页首屏文字使用更宽的容器，主内容使用居中内容区；文章阅读区另有 880px 上限。不能为了“看起来更大”把所有模块统一改成满屏宽度。
+
+首页项目区的实际结构是 `home-columns → main-column + Sidebar`。主列内部是项目卡片网格，侧栏包含作者信息与拾日历。桌面保留两列项目和侧栏，窄屏再按断点调整；手机上需要纵向组织内容，不能给桌面双栏强行套一个固定宽度。
+
+这里最容易出错的是把动画包装层变成布局层。例如新增一个带固定宽度的外壳、对整个内容区施加缩放，或让父元素 `overflow: hidden` 裁掉侧栏与页脚。本站现在把布局交给 CSS 网格和容器，把动画施加在实际卡片、装饰层或独立指示器上。
+
+检查这类修改时，要同时看 1920、1536、1366、1024px 的桌面宽度和手机宽度。除了首屏，还要滚到页面底部：页脚懒加载图片是否出现、侧栏是否被截断、正文是否横向溢出，都不能只靠一张首屏截图判断。
+
+## UI 选型：保留中文阅读气质，再补齐控件行为
+
+本站没有选择一整套后台风格的 UI 库，原因不是“原生一定更快”，而是当前视觉与交互需求可以分开处理。
+
+配色来自 `global.css` 的语义变量：浅色背景 `--bg`、卡片 `--surface`、正文 `--text`、弱化信息 `--muted`、强调色 `--accent` 和边界 `--line`。深色主题覆盖这些含义，组件无需各自硬写一套深色值。
+
+字体在 `typography.css` 中分工：标题与正文有思源宋体、思源黑体的本地字体资源，首页大标题用独立展示字体，介绍文字有文楷资源。文章标题保持清晰的无衬线层级，风景区允许更明显的书写气质。展示字体不承担代码、表单和长段落。
+
+| 界面问题 | 当前选择 | 要自己承担的工作 |
+| --- | --- | --- |
+| 卡片与中文长文 | Astro + CSS | 信息顺序、行长、字号、断点与主题 |
+| 折叠补充说明 | 原生 `details` | 清楚的标题与展开后的阅读结构 |
+| 模态日期选择与图片放大 | 原生 `dialog` 加脚本 | 打开、取消、焦点归还与键盘验证 |
+| 按日期检索 | 自有日历组件 | 日期计算、选择状态、URL 与空状态 |
+| 动画 | CSS / WAAPI，菜单局部用 Motion | 中断、清理、减少动态效果与性能验证 |
+
+这是需求下的取舍。以后如果增加复杂表格、组合框或大量业务表单，引入成熟交互原语可能更合适。TaskHub 已使用 React 与 Base UI，其页面、状态与接口怎样协作，可以接着读 [TaskHub Web 技术栈学习笔记](/blog/taskhub-web-stack/)。
+
+## 内容与阅读：一篇文章如何进入网站
+
+真实内容契约在 `src/content.config.ts`。`title`、`description` 和 `pubDate` 构成列表基本信息；`type`、`tags` 和 `category` 负责组织；`summary`、`resources`、`relatedProject` 为复盘提供重点、出处和关联项目。`draft` 默认是 `true`，写作者需要明确发布。
+
+详情路由 `src/pages/blog/[...slug].astro` 查询内容、过滤草稿，再为文章生成固定地址。下面是它的职责摘录，省略了类型声明和导入：
+
+```ts
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.filter(post => !post.data.draft).map(post => ({
+    params: { slug: post.id },
+    props: post,
+  }));
+}
+// 页面中：const { Content, headings } = await render(post);
+```
+
+`BlogPost.astro` 接收元数据、正文和标题目录，统一输出摘要、阅读工具栏、代码区域、引用资料与相关文章。目录来自正文的二、三级标题；字号偏好保存到本地，范围为 16–24px。宽代码和宽表格在自己的区域内滚动，避免撑开整页。
+
+这次交互样例使用已接入的 MDX，在文章内引入 `LiveExample.astro`。预览加载维护在仓库里的独立 HTML，展开代码展示的也是同一份源文件。样例在带沙箱的 iframe 中运行，不执行读者输入的代码，也不请求 TaskHub 的真实登录或邮件接口。
+
+## 日历：发现内容与检索内容是两种形式
+
+本站有两种日历，目的不同。它们都读取文章日期，不连接课程系统，也不是预约或事务管理工具。
+
+| 形式 | 真实入口 | 状态与行为 |
+| --- | --- | --- |
+| 首页「拾日历」 | `Calendar.astro` + `journal-calendar.ts` | 固定六行、周一开始；圆点标记发布日；选中一天显示文章入口 |
+| 手记「翻阅日历」 | `DiaryCalendar.astro` + `journal-archive.ts` | 按月份实际需要生成行数；显示符合当前检索条件的每日篇数；可筛选整月或单日 |
+| 自定义日期弹窗 | `JournalDatePicker.astro` + `journal-date-picker.ts` | 桌面对照双月，手机单月；草稿日期确认后才更新结果 |
+
+首页日历把已发布文章转换为 `{date, title, url}`，按日期建立索引。当天使用 `Asia/Shanghai` 计算；文章发布日期则按内容字段归一化。月份起始位置先将星期转换成“周一为 0”：
+
+```ts
+const start = (new Date(year, month, 1).getDay() + 6) % 7;
+const total = new Date(year, month + 1, 0).getDate();
+const cells = 42; // 首页固定六行，保持侧栏高度稳定
+// 第 i 个格子对应：i - start + 1
+```
+
+本站首页中，上下月的补位格子是非交互文字；本月日期是按钮。选中、今天、有记录三种状态分别表达，不能只用一种背景色混在一起。方向键移动一天或一周，Home / End 移动到一周两端，PageUp / PageDown 换月；只有当前日期按钮进入正常 Tab 顺序。
+
+归档则共用一份关键词、类型、起止日期、排序和页码状态。搜索范围是标题、简介、分类与标签，尚未做正文全文搜索。每页三篇是浏览器展示分页，所有文章摘要已在页面里；筛选不是网络按页加载。空日期显示空状态，不能自动跳到“最近有文章的一天”而隐藏没有结果的事实。
+
+日期弹窗中的选择先保留为草稿。点击“应用日期”才写入查询，取消与 Escape 不改变原筛选；范围包含两端日期，反向选择也要排序归一。键盘和焦点的设计可对照 [W3C 日期选择器示例](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/)，但参考示例不等于本站已通过完整无障碍认证。
+
+<LiveExample demo="calendar" />
+
+样例固定在 2026 年 10 月，提供两天演示记录，用于理解六行网格、选中和键盘移动。为减少代码，它允许直接选择补位日期，不包含本站归档的日期范围弹窗；实际组件的差异在上表中已标明。
+
+## 动效：页面转场、卡片进入和内容切换分别处理
+
+动画要解释一个变化：从哪里来、选择了谁、哪些内容保留下来。所有动画一起播放，反而会让人找不到正在操作的内容。
+
+| 场景 | 当前做法 | 负责的源码 |
+| --- | --- | --- |
+| 页面导航 | 离场 160ms、进场 260ms，保留顶部身份与导航指示 | `page-transitions.ts`、`page-transitions.css` |
+| 卡片第一次滚入 | 小幅位移配合透明度，只出现一次；首屏避免重复入场 | `atmosphere.ts` |
+| 项目 / 手记筛选 | 先改真实结果，再让保留的卡片从旧位置过渡到新位置 | `content-motion.ts` |
+| 分类选中 | 独立指示器跟随目标，不改变按钮自身尺寸 | `selection-motion.ts` |
+| 项目截图切换 | 保留旧图，等新图解码后替换；快速切换只接受最后一次 | `taskhub-case.ts` |
+| 放大图片 | 从图片位置展开，原生对话框承接焦点与关闭 | `image-viewer-motion.ts` |
+
+卡片筛选用的位置过渡通常叫 FLIP：先读旧位置，更新布局后读新位置，以两者差值作为动画起点，再回到实际位置。布局立即成为最终结果，动画只改变视觉偏移。连续点击时从当前视觉位置接续，而不是把旧动画排成队列。
+
+本站使用 `createMotionScope` 管理页面上的动画：检查减少动态效果、站内开关与页面可见性，路由离开时取消动画。`page-lifecycle.ts` 为每次页面挂载创建 `AbortController`，在 `astro:before-swap` 清理；新的页面在 `astro:page-load` 挂载。这个生命周期比“多加几段 transition”更影响稳定性，见 [Astro 导航文档](https://docs.astro.build/en/guides/view-transitions/)。
+
+<LiveExample demo="card-filter" />
+
+试着切换“项目复盘 / 全部”，观察保留的卡片与重新出现的卡片。样例保留中断与减少动态效果判断，省略全站指示器、分页和路由状态。性能方面优先改变 transform 与 opacity，避免每帧改宽高；依据是 [web.dev 动画指南](https://web.dev/articles/animations-guide)，具体效果仍需在实际设备上检查。
+
+## 背景与音乐：用真实状态驱动氛围
+
+`ImageScene.astro` 从 `scene-images.json` 中读取不同栏目、区域和时间段的资源。它有尺寸与响应式图片信息，首屏可以优先加载，页脚按需加载。浏览器按本机时间选晨、昼、暮、夜，也可以读取有效期内的手动选择。深色阅读主题与风景时段分别管理，并不是“深色主题必定夜景”。
+
+花瓣、薄雾、光点是独立装饰层，关闭氛围或页面不可见时应停下。文字上方有遮罩与渐隐，目的仍是保证信息可读。这里不需要让每个元素响应鼠标，更不能把整个正文放在视差变换里。
+
+音乐模式涉及 `MusicPlayer.astro`、`music-player.ts`、`music-display.ts` 与 `music-study.ts`：音频元素跨页面保留，显示形态可在小播放器与专注状态间切换。歌词跟随播放进度，用户手动滚动歌词后暂缓自动跟随；缓冲、暂停和错误要根据音频事件处理，不能点了“播放”就永远显示正在播放。
+
+**当前跳动条是播放状态装饰，不是实时频谱。** 没有依据将它描述为 FFT 分析或按真实频率驱动的可视化。要做真实频谱，需要另外接入 Web Audio 的分析节点，处理跨域音源与性能预算，属于下一步。
+
+<LiveExample demo="music-state" />
+
+切换“播放 / 缓冲 / 暂停”可以看到状态差异。样例没有音源，因此按钮只模拟事件；真实播放器应由 `playing`、`waiting`、`pause` 和 `error` 等媒体事件驱动同样的显示规则。
+
+## 参考网站：借用具体方法，不补写虚构的设计过程
+
+项目文档已记录 Maggie Appleton 与 Gwern 的参考。这里结合本次重新核对的页面，把“参考什么”说具体；无法从源码证明的历史决策，不写成当时已经完成的研究。
+
+| 参考 | 可学习的部分 | 在本站如何转化 |
+| --- | --- | --- |
+| [Maggie Appleton 的 Garden](https://maggieappleton.com/garden) | 以主题与内容形态组织记录 | 手记按项目、学习、知识、随想组织，标签横向关联 |
+| [Gwern 的设计说明](https://gwern.net/design) | 公开解释内容站的设计、阅读工具与实现取舍 | 长文提供目录、出处、可折叠补充信息；保留本站中文风格 |
+| [W3C APG](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/) | 日期选择的键盘路径与焦点处理 | 将选择日期、取消、确认、归还焦点分开验证 |
+| [Astro 官方文档](https://docs.astro.build/en/guides/styling/) | 组件边界、样式与路由生命周期 | 决定代码结构，不充当视觉模板 |
+
+这些参考帮助解释信息组织与行为，没有证据表明本站复制了它们的页面。樱花风景、砖红强调色与字体搭配，应根据本站已有资源和真实阅读效果来判断。
+
+## 验证与下一步：让文章也可以被复核
+
+这次复盘的可复核入口如下。路径均相对于博客仓库，样例不能替代这些实际模块：
+
+| 要核对的结论 | 源码位置 |
+| --- | --- |
+| 页面骨架与详情页的页脚差异 | `src/layouts/SiteLayout.astro`、`src/layouts/BlogPost.astro` |
+| 首屏与底部的图片图层 | `src/components/Hero.astro`、`Footer.astro`、`ImageScene.astro` |
+| 桌面容器、首页列与字体 | `src/styles/global.css`、`home.css`、`typography.css` |
+| 文章如何进入网站 | `src/content.config.ts`、`src/pages/blog/[...slug].astro` |
+| 两类日历与日期草稿 | `src/scripts/journal-calendar.ts`、`journal-archive.ts`、`journal-date-picker.ts` |
+| 动画中断、路由清理与播放状态 | `src/scripts/content-motion.ts`、`page-lifecycle.ts`、`music-player.ts` |
+| 本文的可运行样例 | `src/examples/retrospectives/`、`src/components/LiveExample.astro` |
+
+发布前先构建，再从文章目录定位到样例、展开预览、操作控件、查看源码、返回手记筛选。桌面与手机都要检查长表格、完整代码、主题切换和页面返回；关闭动态效果后，操作仍应成立。样例中的登录与邮件只演示显示状态，不进行真实账户或投递验收。
+
+下一步可以继续补充单独的源码专题：图片解码失败如何保留旧画面、音乐歌词如何让出用户滚动、日期范围如何处理跨年。每篇解决一个可以复现的问题，留下实际代码、结果和边界，比把所有功能写成“完整支持”更有参考价值。

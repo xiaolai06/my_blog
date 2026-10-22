@@ -6,6 +6,8 @@ import {freeMusic} from '../data/free-music';
 import {setupPlayerDrag} from './music-drag';
 import {setupStudySpace} from './music-study';
 import {discoverRadio} from './music-radio';
+import {createMotionScope} from './content-motion';
+import {setupSelectionMotion} from './selection-motion';
 
 const element = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const player=element<HTMLElement>('music-player');
@@ -46,6 +48,18 @@ let lyricLines:LyricLine[]=[];
 let lyricIndex=-2;
 let shuffle=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const motionController=new AbortController(),motion=createMotionScope(reduced,motionController.signal);
+setupSelectionMotion(player.querySelector('.music-library-tabs'),'button','[aria-pressed=true]',reduced,motionController.signal);
+const lyricResumeTimers=new Map<HTMLElement,number>(),lyricPausedUntil=new WeakMap<HTMLElement,number>();
+let buffering=false,loadingTimer=0;
+for(const container of [lyrics,expandedLyrics]){
+ const pauseFollow=()=>{
+  lyricPausedUntil.set(container,performance.now()+4000);clearTimeout(lyricResumeTimers.get(container));
+  lyricResumeTimers.set(container,window.setTimeout(()=>{lyricPausedUntil.delete(container);lyricResumeTimers.delete(container);lyricIndex=-2;syncLyrics();},4000));
+ };
+ container.addEventListener('wheel',pauseFollow,{passive:true});container.addEventListener('touchstart',pauseFollow,{passive:true});
+ container.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key))pauseFollow();});
+}
 const safe=(value:string)=>value.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]!);
 const time=(value:number)=>Number.isFinite(value)&&value>=0?`${Math.floor(value/60)}:${String(Math.floor(value%60)).padStart(2,'0')}`:'0:00';
 const icon=(name:'heart'|'close'|'arrow')=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${{heart:'M20.8 8.8c0 5.2-8.8 10-8.8 10s-8.8-4.8-8.8-10A4.8 4.8 0 0 1 12 6.7a4.8 4.8 0 0 1 8.8 2.1Z',close:'m6 6 12 12M6 18 18 6',arrow:'M5 12h14m-6-6 6 6-6 6'}[name]}"/></svg>`;
@@ -76,6 +90,7 @@ function updateFavorite(){
   favorite.title=current?.favorite?'取消收藏当前歌曲':'收藏当前歌曲';
 }
 function setLyrics(source?:string,emptyMessage?:string){
+  lyricResumeTimers.forEach(timer=>clearTimeout(timer));lyricResumeTimers.clear();lyricPausedUntil.delete(lyrics);lyricPausedUntil.delete(expandedLyrics);
   lyricLines=source?parseLrc(source):[];lyricIndex=-2;
   const isInstrumental=Boolean(current?.instrumental&&!source),isLive=Boolean(current?.live);
   const message=emptyMessage||(isLive?'直播电台 · 让声音持续陪伴':isInstrumental?'纯音乐，无人声歌词':'暂未找到歌词，可在线查找或导入 LRC');
@@ -96,7 +111,7 @@ function syncLyrics(){
   lyricIndex=index;
   for(const container of [lyrics,expandedLyrics])container.querySelectorAll<HTMLElement>('[data-line]').forEach((line,i)=>{
       line.classList.toggle('is-current',i===index);
-      if(i===index){line.setAttribute('aria-current','true');if(container.clientHeight)container.scrollTo({top:line.offsetTop-container.clientHeight/2+line.offsetHeight/2,behavior:reduced.matches?'instant':'smooth'});}
+      if(i===index){line.setAttribute('aria-current','true');if(container.clientHeight&&(lyricPausedUntil.get(container)||0)<performance.now())container.scrollTo({top:line.offsetTop-container.clientHeight/2+line.offsetHeight/2,behavior:motion.enabled()?'smooth':'instant'});}
       else line.removeAttribute('aria-current');
     });
 }
@@ -152,6 +167,7 @@ function nextTrack(direction=1){
 }
 function toggleFavorite(track:MusicTrack){
   const saved=ensureInLibrary(track);saved.favorite=!saved.favorite;save(saved);updateFavorite();renderList();
+  if(saved.favorite){const icon=current?.id===track.id?favorite.querySelector<HTMLElement>('svg'):list.querySelector<HTMLElement>(`[data-favorite="${CSS.escape(track.id)}"] svg`);if(icon)motion.play(icon,[{transform:'scale(1)'},{transform:'scale(1.22)',offset:.45},{transform:'scale(1)'}],{duration:240});}
 }
 function removeTrack(id:string){
   const index=library.findIndex(track=>track.id===id);if(index<0)return;
@@ -183,6 +199,7 @@ async function importFiles(selected:File[]){
 function setView(next:'discover'|'radio'|'playlist'|'favorites'){
   searchRequest?.abort();radioRequest?.abort();searchForm.hidden=true;searchToggle.setAttribute('aria-expanded','false');view=next;status.textContent='';renderList();
   if(next==='radio')void loadRadio();
+  else motion.play(list,[{opacity:.55,translate:'0 5px'},{opacity:1,translate:'0 0'}],{duration:200});
 }
 async function loadRadio(){
   radioRequest?.abort();const request=new AbortController();radioRequest=request;
@@ -268,13 +285,19 @@ searchForm.addEventListener('submit',async event=>{
 });
 for(const container of [lyrics,expandedLyrics])container.addEventListener('click',event=>{const line=(event.target as HTMLElement).closest<HTMLElement>('[data-line]');const lyric=line&&lyricLines[Number(line.dataset.line)];if(lyric&&Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,lyric.time+(current?.lyricOffset||0)));});
 audio.addEventListener('loadedmetadata',()=>{element('duration').textContent=current?.live?'直播':time(audio.duration);seek.disabled=Boolean(current?.live)||!Number.isFinite(audio.duration);if(current)void loadLyrics(current);});
-audio.addEventListener('play',()=>{player.classList.add('is-playing');play.setAttribute('aria-label','暂停');play.title='暂停';syncMusicState();if('mediaSession' in navigator)navigator.mediaSession.playbackState='playing';});
-audio.addEventListener('pause',()=>{player.classList.remove('is-playing');player.dataset.loading='false';play.setAttribute('aria-label','播放');play.title='播放';syncMusicState();if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused';});
-audio.addEventListener('waiting',()=>{player.dataset.loading='true';});
-audio.addEventListener('playing',()=>{player.dataset.loading='false';});
+function setBuffering(waiting:boolean){
+ buffering=waiting;clearTimeout(loadingTimer);player.dataset.loading='false';
+ if(waiting)loadingTimer=window.setTimeout(()=>{if(buffering&&!audio.paused)player.dataset.loading='true';},280);
+ syncMusicState();
+}
+audio.addEventListener('play',()=>{player.classList.add('is-playing');play.setAttribute('aria-label','暂停');play.title='暂停';setBuffering(audio.readyState<3);if('mediaSession' in navigator)navigator.mediaSession.playbackState='playing';});
+audio.addEventListener('pause',()=>{player.classList.remove('is-playing');setBuffering(false);play.setAttribute('aria-label','播放');play.title='播放';if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused';});
+audio.addEventListener('waiting',()=>setBuffering(true));
+audio.addEventListener('playing',()=>setBuffering(false));
+audio.addEventListener('emptied',()=>setBuffering(false));
 audio.addEventListener('timeupdate',()=>{element('current-time').textContent=time(audio.currentTime);const progress=!current?.live&&Number.isFinite(audio.duration)&&audio.duration>0?audio.currentTime/audio.duration*100:0;seek.value=String(Math.round(progress*10));seek.style.setProperty('--range-value',`${progress}%`);if(document.body.classList.contains('music-mode'))syncLyrics();});
 audio.addEventListener('ended',()=>nextTrack());
-audio.addEventListener('error',()=>{player.dataset.loading='false';syncMusicState();if(current)status.textContent='这首歌暂时无法播放，可换一首或重新添加文件。';});
+audio.addEventListener('error',()=>{setBuffering(false);if(current)status.textContent='这首歌暂时无法播放，可换一首或重新添加文件。';});
 seek.addEventListener('input',()=>{if(Number.isFinite(audio.duration)&&audio.duration>0)audio.currentTime=Number(seek.value)/1000*audio.duration;});
 function syncVolume(){
   volume.style.setProperty('--range-value',`${audio.muted?0:audio.volume*100}%`);element<HTMLElement>('volume-value').textContent=audio.muted?'静音':`${Math.round(audio.volume*100)}%`;
@@ -286,8 +309,9 @@ volume.addEventListener('input',()=>{audio.volume=Number(volume.value)/100;audio
 element('mute-toggle').addEventListener('click',()=>{audio.muted=!audio.muted;syncVolume();});
 
 function syncMusicState(){
-  shell.classList.toggle('is-playing',!audio.paused);
-  document.documentElement.dataset.musicPlaying=String(!audio.paused);
+  const flowing=!audio.paused&&!audio.ended&&!audio.error&&!buffering&&audio.readyState>=3;
+  shell.classList.toggle('is-playing',flowing);
+  document.documentElement.dataset.musicPlaying=String(flowing);
   document.documentElement.dataset.musicSelected=String(Boolean(current));
   document.querySelectorAll<HTMLElement>('[data-dock-music-play]').forEach(button=>{
     const label=!current?'播放精选':audio.paused?'继续音乐':'暂停音乐';button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(!audio.paused));
@@ -353,3 +377,4 @@ if('mediaSession'in navigator){
   for(const [action,handler] of Object.entries({play:()=>void audio.play().catch(()=>{}),pause:()=>audio.pause(),previoustrack:()=>nextTrack(-1),nexttrack:()=>nextTrack()}))try{navigator.mediaSession.setActionHandler(action as MediaSessionAction,handler);}catch{}
 }
 window.addEventListener('pagehide',event=>{if(event.persisted)return;searchRequest?.abort();lyricRequest?.abort();manualLyricRequest?.abort();radioRequest?.abort();for(const url of objectUrls)URL.revokeObjectURL(url);});
+window.addEventListener('pagehide',event=>{if(!event.persisted){motionController.abort();clearTimeout(loadingTimer);lyricResumeTimers.forEach(timer=>clearTimeout(timer));}});

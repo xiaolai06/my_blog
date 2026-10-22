@@ -1,5 +1,45 @@
 # 手记与知识：内容组织
 
+## 2026-10-22 外层展示恢复
+
+手记首页继续使用原有分类“随想心得”和简洁卡片，不在列表额外展示原作者、AI 主题或 AI 协助标记。文章内页保留原文档案、引用、批注及 AI 说明。每页三篇、主题多选与日历检索继续保留。
+
+## 2026-10-21 随想内容改为阅读批注
+
+删除旧随想 `a-little-room-for-life.md`、`writing-about-code.md`，新建 `reading-simon-willison-ai-code.mdx` 与 `reading-addy-osmani-70-percent.mdx`。第四类界面名称保持“随想心得”，阅读批注作为文章内容形式；内部 `essay` ID 保留以兼容现有 URL、样式和筛选逻辑。总数仍为八篇，每类两篇，每页三篇。
+
+来源优先原作者网站及其可访问的原文：Simon Willison 的上下文与代码验证文章（2025-03-11）、Addy Osmani 的 AI 编程文章（2024-12-04）。两篇仅作必要的英文短摘，中文译意、本地主张与具体练习分开标注；70% 不写成统一测试结果、成功率或当下模型能力指标。不复制原作者图片，不虚构作者对本站的评审、认可或合作。
+
+可选 `reading` 字段记录原作者、作者页、原文标题与链接、原文发布日期、资料核对日期，以及 `aiTopic`、`aiAssisted`。文章开篇明确标注 AI 主题与协助整理，原文档案说明 AI 参与检索、翻译、起草，避免误称博主的原创文字或作者亲历。`ReadingSource.astro` 展示档案，`ReadingExcerpt.astro` 分开显示引文和中文译意；本站批注紧接在每处引文后。引用与批注均无脚本也能阅读。
+
+## 2026-10-21 学习笔记与主题联合检索
+
+当前公开手记共八篇，四种类型各两篇，每页三篇。按本轮取舍，删除项目复盘 `ui-selection-for-content-sites.md` 和旧学习笔记 `python-asyncio-task-boundaries.md`、`python-types-and-validation.md`；学习笔记改为 `fastapi-from-zero.mdx` 与 `taskhub-web-stack.mdx`。下文早期数量与内容名是版本记录。
+
+主题索引使用多选按钮与 `aria-pressed`，再次点击取消；默认“任一匹配”取并集，可切换“同时包含”取交集。主题精确匹配文章标签，再与类型、关键词、日期组合。URL 用重复 `topic` 参数记录选择，例如 `/blog/?topic=FastAPI&topic=DNS`；`match=all` 表示同时包含。刷新、返回、文章内页返回与分页保留条件；改变主题后回到第一页。“清空选择”仅清除主题。日历计数同步使用主题、分类与关键词条件。主题列表桌面最高 250px、手机 230px，超出后内部滚动，采用主题色滚动条并允许键盘聚焦滚动。
+
+FastAPI 教学工程位于 `src/examples/fastapi-notes/`，正文通过 raw 导入渲染同一份代码。完整下载包位于 `public/examples/fastapi-notes.zip`；修改示例后运行 `python scripts/package-learning-examples.py` 重新打包，脚本只收录白名单文件并逐个核对内容，不收录真实 `.env`、数据库、缓存或虚拟环境。依赖范围与本次精确验证快照分别保存。2026-10-21，Windows / Python 3.12.14 下十项行为测试通过；测试使用临时 SQLite、模拟 Key 与 TestClient lifespan，不调用远端业务。当前 Starlette 发出 httpx 适配器弃用提示，后续依赖升级时重新核对。
+
+TaskHub 笔记依据本地 `heikesong` 源码与 package.json，只读核对。重点解释 Next.js、React、TanStack Query、Zustand、Express、Zod、Prisma 6 与 SQLite，附具体文件入口、数据流和官方出处；教学片段、源码事实、待验证风险分别标注。没有修改 TaskHub 工程，也没有运行其真实数据迁移或业务操作。
+
+## 2026-10-21 复盘内容与交互样例
+
+保留 `/blog/from-idea-to-project/`，将原来的最小搭建教程改写为本站真实模块复盘，文件改为 MDX。新增 `/blog/taskhub-auth-email/`，从 TaskHub 实际验证码、邮件与认证路径展开；公开文章现为九篇，数量由集合查询生成。TaskHub 源码只读检查，没有读取密钥或业务数据库，没有在本轮修改该项目。
+
+技术结论按“源码事实、教学简化、改进建议、验收计划”区分。参考网站标明具体借鉴点，不把本次检索补写为历史设计过程；不把注释、函数名或模拟预览当作运行证明。具体复核入口见 `docs/retrospective-content-review.md`。
+
+MDX 可使用交互样例：
+
+```mdx
+import LiveExample from '../../components/LiveExample.astro';
+
+<LiveExample demo="calendar" />
+```
+
+支持 `blog-shell`、`card-filter`、`calendar`、`music-state`、`taskhub-login`、`email-settings`。源文件位于 `src/examples/retrospectives/*.html`，注册于 `src/data/retrospective-demos.ts`；显示代码与预览均读取同一份文件。静态端点生成独立 HTML，带 noindex；文章展开时才加载沙箱 iframe，收起或离开页面即卸载。样例仅允许执行自身脚本，不允许同源访问、表单提交、弹窗或顶层导航。Astro 7 开发服务器会阻止不透明源的子资源请求，风景样例由宿主页读取公开 WebP 并通过消息传入；样例核对消息来源、类型与数据格式，未放宽沙箱权限。
+
+新增样例应给出准确范围、操作说明、对照源码和固定演示数据。认证与邮件样例禁止连接真实服务或填写真实凭据；建议中的 UI 必须标明尚未应用到原项目。新增后核对构建、预览状态、代码复制、主题、减少动态效果、键盘和窄屏溢出。
+
 ## 2026-10-20 内容整理
 
 内容按四类组织，每类一篇完整主文与一篇专题补充，共八篇，保留既有链接。主文分别完整介绍手记站从零搭建、Python 索引工具实战、Coding Agent 系统结构，以及需求到验收的交付方法；补充篇聚焦 UI 选型、运行时校验、概念对照和技术写作。Python 主文提供完整源码、示例数据、八个测试与下载包，所有长文都有章节导航和原始出处。
@@ -23,7 +63,7 @@
 | `project` | 项目复盘 | 重点结论、主题图、关联项目、编号章节 | 背景 → 方案与取舍 → 实现 → 验证与边界 → 下一步 |
 | `learning` | 学习笔记 | 学习要点、步骤、代码与复制工具 | 要解决的问题 → 概念 → 最小示例 → 实践 → 易错点 |
 | `knowledge` | 知识归档 | 快速查阅、概念定义、表格、资料与出处 | 适用场景 → 核心概念 → 对照表或方法 → 边界 → 出处 |
-| `essay` | 随想心得 | 安静的配图、舒展的段落、简化的章节 | 自由写作，使用二级标题组织长文即可 |
+| `essay` | 随想心得 | 原文档案、短摘、译意与批注 | 选文理由 → 必要短摘 → 本站批注与例子 → 保留意见 → 原文出处 |
 
 `category` 是更细的主题，例如“前端学习”“技术写作”“生活碎片”；`tags` 是跨类型的检索线索。旧文章没有 `type` 时会根据 category 推断，无法归类时按随想呈现。
 
@@ -56,5 +96,19 @@
 - [Gwern 的网站设计说明](https://gwern.net/design)：参考内容优先、长文目录与窄屏阅读的处理方式。
 
 配色、风景、插画和中文排版延续本站，不复制参考站点的视觉设计。
+
+## 实践指南与示意图（2026-10-21）
+
+知识归档保留 `astro-server-deployment.mdx` 与 `duckdns-domain-https.mdx` 两篇实践指南。按最新内容取舍，`coding-agent-context-and-tools.md` 与 `python-scripts-vs-coding-agents.md` 已转为草稿，不进入公开路由、列表、搜索或 RSS；公开正文也不再链接这两篇。当前公开数量以本文顶部最新整理为准，每页三篇，分类筛选后重新计算页数。
+
+DNS 指南现在覆盖查询与缓存、公网入口、HTTPS 身份与验证、DuckDNS 动态更新、Caddy 与 acme.sh 两条维护路线、自动续期、过期恢复和独立监测。有效期调整、邮件通知、限流等时效信息标明核对日期，并链接官方公告；不能把 90 天或固定第 60 天续期当作永远成立的策略。命令要标明 Bash / PowerShell、账户与权限前提，不将教学配置写成已部署记录。
+
+`GuideDiagram.astro` 提供 `delivery`、`network`、`challenge`、`dns`、`lifecycle`、`recovery` 六种原理示意。文字是实际 HTML，手机变为纵向流程，禁用脚本仍可阅读；流程分别表示查询、两种挑战和证书维护，不把独立验证方式画成串行步骤。
+
+三个实践预览由 `LiveExample.astro` 承载，源文件位于 `src/examples/retrospectives/`：`deployment-check.html`、`certificate-lab.html` 与 `certificate-renewal.html`。续期练习提供正常、凭据失效、任务停跑、旧证书未卸载、TXT 冲突和边缘证书未更新六个固定情景；“通过”与天数均明确为模拟。新增样例使用 `referenceLabel` 标明原理依据；旧复盘继续显示源码依据。练习不查询 DNS、更新地址、连接服务器或签发证书。
+
+预览可以发送 `blog-demo-resize` 和纯数值高度。父页仅接受当前已展开 iframe 的 `event.source`，高度限制为 240–1800px；监听器随页面生命周期取消。保持 `sandbox="allow-scripts"`，不添加 same-origin、forms 或 popups 权限。
+
+技术资料优先引用项目官方文档；发布前核对端口、A / AAAA、验证方式与 Token 使用说明。当前两篇的服务器系统是明确标注的 Ubuntu / Debian 示例，不代表用户真实服务器环境已经确认。
 
 

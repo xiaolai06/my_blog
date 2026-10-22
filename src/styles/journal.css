@@ -116,7 +116,29 @@
 :root .archive-topic-panel{padding:17px 16px 18px}
 :root .archive-topic-panel>summary{display:flex;justify-content:space-between;align-items:center;list-style:none;cursor:pointer;font:600 15px/1.8 var(--sans)}
 :root .archive-topic-panel[open]>summary>svg{transform:rotate(180deg)}
-:root .archive-topics{display:flex;flex-wrap:wrap;gap:8px;padding-top:16px}
+:root .archive-topic-panel>summary>span{display:flex;align-items:center;gap:9px}
+:root .archive-topic-panel>summary small{font:500 11px/1.6 var(--sans);color:var(--muted)}
+:root .archive-topic-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 9px;flex-wrap:wrap}
+:root .archive-topic-mode{display:inline-flex;border:1px solid var(--line);border-radius:11px;padding:3px;background:var(--bg)}
+:root .archive-topic-mode button{padding:5px 9px;min-height:32px;border-radius:8px;color:var(--muted);font:550 11px/1.6 var(--sans)}
+:root .archive-topic-mode button[aria-pressed=true]{color:var(--accent);background:var(--surface);box-shadow:0 1px 5px var(--card-shadow)}
+:root .archive-topic-clear{min-height:32px;color:var(--accent);font:500 11px/1.6 var(--sans);padding:4px}
+:root .archive-topic-clear:disabled{color:var(--muted);opacity:.55;cursor:default}
+:root .archive-topic-hint{font:11px/1.8 var(--sans);color:var(--muted);margin:0 0 12px}
+:root .archive-topic-scroll{max-height:250px;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--accent) 48%,var(--surface)) var(--bg);scrollbar-gutter:stable;padding:3px 6px 5px 3px;border-radius:10px}
+:root .archive-topic-scroll::-webkit-scrollbar{width:6px}
+:root .archive-topic-scroll::-webkit-scrollbar-track{background:var(--bg);border-radius:6px}
+:root .archive-topic-scroll::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--accent) 45%,var(--surface));border:1px solid var(--surface);border-radius:6px}
+:root .archive-topic-scroll:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+:root .archive-topics{display:flex;flex-wrap:wrap;gap:8px;align-content:start}
+:root .archive-topics button.journal-tag{position:relative;cursor:pointer;min-height:32px;white-space:normal;text-align:left;max-width:100%;border-radius:8px;overflow-wrap:anywhere;transition:background-color .16s,border-color .16s}
+:root .archive-topics .journal-tag>svg{display:none;flex-shrink:0}
+:root .archive-topics button.journal-tag[aria-pressed=true]{border-color:var(--tag-ink);background:color-mix(in srgb,var(--tag-ink) 15%,var(--surface));box-shadow:inset 0 0 0 .5px var(--tag-ink)}
+:root .archive-topics button.journal-tag[aria-pressed=true]>svg{display:block}
+:root .archive-topics button.journal-tag[aria-pressed=true]>span{display:none}
+:root .archive-topics button.journal-tag:hover{border-color:var(--tag-ink)}
+@media(max-width:600px){:root .archive-topic-scroll{max-height:230px}:root .archive-topics button.journal-tag{min-height:40px}:root .archive-topic-mode button,:root .archive-topic-clear{min-height:40px}}
+@media(prefers-reduced-motion:reduce){:root .archive-topics button.journal-tag{transition:none}}
 /* Shared custom topic chips, distinct from content-type badges. */
 :root .journal-tag{--tag-ink:#8f5265;display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid color-mix(in srgb,var(--tag-ink) 19%,var(--surface));border-radius:4px;background:color-mix(in srgb,var(--tag-ink) 6%,var(--surface));color:var(--tag-ink);font:550 12px/1.65 var(--sans);text-decoration:none;white-space:nowrap}
 :root .journal-tag[data-tone=sage]{--tag-ink:#4f7061}:root .journal-tag[data-tone=blue]{--tag-ink:#586d92}:root .journal-tag[data-tone=amber]{--tag-ink:#8c6838}

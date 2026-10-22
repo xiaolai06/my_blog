@@ -1,0 +1,362 @@
+---
+title: "读懂 TaskHub 的 Web 技术栈：从 Next.js 页面到数据库与缓存"
+description: "以真实任务流程拆解 Next.js、React、TanStack Query、Zustand、Express、Zod 与 Prisma 6 的职责，结合创建、分页、乐观更新和部署说明它们怎样协作。"
+pubDate: 2026-10-21T13:29:00Z
+category: Web 全栈开发
+type: learning
+relatedProject: taskhub
+tags: [TaskHub, Next.js, React, Express, Prisma, Web 开发, 数据库, 接口测试]
+readingTime: 36
+draft: false
+cover: /images/taskhub.webp
+coverCaption: TaskHub 项目主题插画；正文依据本地源码组织，流程图是教学示意
+summary:
+  - TaskHub 不是一个单独框架：Next.js / React 呈现页面，Express 承担业务 API，Prisma 6 访问 SQLite。
+  - 页面状态、共享登录视图和服务端查询缓存分别管理，不能把三份数据同时当成唯一真相。
+  - 以创建任务为主线，追踪表单、mutation、API client、认证、Zod、Service、Prisma 和缓存刷新。
+  - 类型约束、输入校验、身份验证与资源授权各有职责；查询必须在后端限定用户的数据范围。
+  - 区分当前源码、教学摘录与建议；构建成功不等于类型检查、权限与线上业务都已验收。
+resources:
+  - title: React · 状态管理
+    url: https://react.dev/learn/managing-state
+  - title: Next.js · Server 与 Client Components
+    url: https://nextjs.org/docs/app/getting-started/server-and-client-components
+  - title: Next.js · rewrite 代理
+    url: https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites
+  - title: Next.js · TypeScript 构建检查
+    url: https://nextjs.org/docs/app/api-reference/config/next-config-js/typescript
+  - title: TanStack Query v5 · Query Keys
+    url: https://tanstack.com/query/latest/docs/framework/react/guides/query-keys
+  - title: TanStack Query v5 · 缓存失效
+    url: https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation
+  - title: TanStack Query v5 · 乐观更新
+    url: https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates
+  - title: Zustand · Store 与状态
+    url: https://zustand.docs.pmnd.rs/learn/getting-started/introduction
+  - title: Express 5 · 路由
+    url: https://expressjs.com/en/guide/routing/
+  - title: Express 5 · 错误处理
+    url: https://expressjs.com/en/guide/error-handling/
+  - title: Zod · 运行时校验
+    url: https://zod.dev/basics
+  - title: Prisma ORM v6 · 数据模型
+    url: https://www.prisma.io/docs/orm/v6/prisma-schema/data-model/models
+  - title: Prisma ORM v6 · 事务
+    url: https://www.prisma.io/docs/orm/v6/prisma-client/queries/transactions
+  - title: Base UI · 组件定位
+    url: https://base-ui.com/react/overview/about
+  - title: Prisma · 6.9.0 源码参考
+    url: https://github.com/prisma/prisma/tree/6.9.0
+  - title: TanStack Query · 开源实现
+    url: https://github.com/TanStack/query
+  - title: TaskHub · 本站项目说明
+    url: /projects/taskhub/
+---
+
+import GuideDiagram from '../../components/GuideDiagram.astro';
+
+## 先确定我们在学习哪一个项目
+
+本文以 **TaskHub（智汇轻营）** 为例，也就是本站展示的项目、任务与经营工作台。它的实际源码位于本地项目 `heikesong`，核对日期为 **2026 年 10 月 21 日**。
+
+本篇是围绕真实工程的框架学习笔记：先解释各部分职责，再沿“创建一条任务，列表跟着更新”走完一条链路，最后讨论扩展、测试与部署。源码片段会明确标成摘录或教学简化；改进建议不代表已经在 TaskHub 落地。核对只读取源码与包配置，没有读取真实 `.env`、数据库、客户数据，也没有调用线上业务接口。
+
+如果想实际跑一个 Python API，可先读 [FastAPI 完整实践](/blog/fastapi-from-zero/)。这两篇可以比较边界：相同的是请求、校验、业务与数据流；不同的是语言生态和项目组织，不能把 TaskHub 的 Express 后端写成 FastAPI。
+
+## 从技术名词表，变成一张职责地图
+
+| 技术 | 在 TaskHub 中的职责 | 不应交给它什么 |
+| --- | --- | --- |
+| TypeScript | 帮助编辑器与编译器检查类型关系 | 直接信任浏览器传来的 JSON |
+| React 19 | 用组件、props 与状态描述交互界面 | 直接访问服务器数据库或保存秘密 |
+| Next.js 16 App Router | 页面、布局、构建、资源与运行时边界 | 自动替独立 Express API 完成业务授权 |
+| Tailwind CSS 4 / Base UI | 样式与组件交互基础 | 替后端验证业务权限 |
+| React Hook Form / Zod | 表单状态与运行时输入约束 | 把前端校验当作后端可以省略的理由 |
+| TanStack Query v5 | 查询缓存、加载 / 错误状态、失效与重查 | 当成永久数据库 |
+| Zustand v5 | 当前工程中组织登录视图与相关动作 | 以客户端 user 对象证明请求身份 |
+| Express 5 / Zod 3 | API 路由、中间件、请求校验与响应 | 替 Service 自动理解项目归属 |
+| Prisma 6 / SQLite | 类型化查询、关系与持久存储 | 自动保证每个查询都限定当前用户 |
+
+前端 `package.json` 声明 Next.js `16.2.6`、React `19.2.4`；后端声明 Express `^5.1.0`、Prisma `^6.9.0`。带 `^` 的是依赖范围，实际安装以各自 lockfile 为准。前端 Zod 为 4 系，后端为 3 系，因此错误字段与 API 使用不能不看版本就相互复制。本篇 Prisma 引用专门指向 **v6 文档**，避免把新版数据库客户端示例套到当前项目。
+
+<GuideDiagram variant="webstack" />
+
+## 目录是一张导航图，不是架构本身
+
+下列是本文会追踪的真实入口；为便于学习，只列出相关文件，没有声称覆盖整个仓库。
+
+```text
+frontend/
+├─ next.config.ts
+└─ src/
+   ├─ app/layout.tsx
+   ├─ components/providers/QueryProvider.tsx
+   ├─ components/ui/button.tsx
+   ├─ hooks/useTasks.ts
+   ├─ hooks/useAuth.ts
+   └─ lib/api.ts
+backend/
+├─ prisma/schema.prisma
+└─ src/
+   ├─ server.ts
+   ├─ app.ts
+   ├─ routes/index.ts
+   ├─ routes/task.routes.ts
+   ├─ middleware/auth.ts
+   ├─ middleware/validate.ts
+   ├─ validators/task.schema.ts
+   ├─ services/task.service.ts
+   └─ utils/response.ts
+```
+
+`app.ts` 负责装配请求中间件与路由，`server.ts` 负责数据库连接、监听、后台任务与关闭。这个区分让“应用怎么处理请求”与“进程怎么运行”容易分别阅读。当前 Prisma 实例从 `server.ts` 导出，Service 再导入它；这是现有耦合点，测试时需要留意导入的副作用。未来可以把客户端单独放到基础设施模块，但本文不擅自修改工程。
+
+目录名本身不保证职责成立。一个叫 LoginForm 的文件可能是占位，一个真正的页面也可能已经包含大量业务逻辑。阅读时应从页面实际 import、请求路径和导出函数继续追踪，而不是靠文件名下结论。
+
+## Next.js 与 React：页面、布局和交互边界
+
+React 关注组件和状态如何决定界面；Next.js 在其上组织路由、布局与构建。App Router 中的 `page.tsx` 是页面入口，`layout.tsx` 可以为一组页面提供共同结构。本项目根布局将 `QueryProvider`、主题 Provider 和通知组件放到页面外层，让相关页面共享上下文。
+
+默认 Server Component 可以在服务器执行，不应在其中直接使用浏览器事件和本地存储；使用 `useState`、点击处理、Query Hook 的交互部分通常属于 Client Component。`'use client'` 声明客户端模块边界，**不意味着首屏完全不在服务器预渲染**，也不意味着其导入的任何代码都能安全包含秘密。两种组件的职责见 [Next.js 官方说明](https://nextjs.org/docs/app/getting-started/server-and-client-components)。
+
+TaskHub 的 QueryProvider 是 Client Component，使用惰性 `useState` 建立稳定的 QueryClient，避免每次渲染都丢弃整份缓存。下面是源码的核心结构，省略了部分默认选项：
+
+```tsx
+'use client';
+import {useState} from 'react';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+
+export function QueryProvider({children}: {children: React.ReactNode}) {
+  const [client] = useState(() => new QueryClient());
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+```
+
+让 Provider 的实例稳定，不等于服务端所有用户应共享一个全局缓存。账号切换时还应设计清理或隔离用户相关查询，避免上个账号的私有数据闪现。这是需要针对登录流程验证的要求，不能只因页面上有 Provider 就宣称已经解决。
+
+## 三类状态：先判断它从哪里来、由谁负责更新
+
+| 状态 | 合适的位置 | 生命周期 |
+| --- | --- | --- |
+| 弹窗开关、输入中的标题 | 组件 state / 表单 | 当前交互阶段 |
+| 当前登录用户视图、跨页面共享动作 | 当前工程的 Zustand `useAuth` | 页面共享，但服务端仍需验证 Cookie / Token |
+| 项目列表、任务详情、统计 | TanStack Query 查询缓存 | 服务端为准，按 key、过期与失效策略更新 |
+| 数据归属、任务状态和金额 | 数据库与业务服务 | 持久保存并受服务端规则约束 |
+
+把 API 列表复制到 Zustand，再复制到组件 state，往往产生三份互相矛盾的“最新数据”。优先从查询缓存派生展示数据；暂存表单草稿时，要明确何时初始化、何时丢弃、服务端更新后是否提示冲突。React 的[状态组织说明](https://react.dev/learn/managing-state)强调减少冗余状态；[Zustand 文档](https://zustand.docs.pmnd.rs/learn/getting-started/introduction)解释 Store 的使用方式，两者不替你决定业务数据的权威来源。
+
+`useAuth.ts` 中有 user、isLoading、登录、退出与 fetchUser 等动作。客户端 user 有值，只说明界面缓存的状态；篡改客户端 Store 不能获得后端身份，也不能绕过项目 owner 检查。
+
+## 查询缓存：queryKey 是数据身份，不只是一个名字
+
+真实 `useTasks.ts` 用不同 key 区分项目任务与带筛选的列表：
+
+```ts
+['tasks', 'project', projectId]
+['tasks', 'list', params]
+```
+
+如果页码、项目、状态参与了 queryFn 请求，它们也需要进入 key。否则“第二页”和“第一页”可能错误共享同一缓存槽。相同查询 key 可以复用结果，但这不是跨权限的授权方案；用户范围变化也应纳入隔离和清理设计。Key 的序列化规则见 [TanStack Query 文档](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys)。
+
+当前项目任务查询用了 `enabled: !!projectId`，避免 ID 还没有准备好时发送无意义请求；列表将 params 转成 URLSearchParams。Provider 默认 staleTime 为 30 秒，列表查询单独设置为两分钟；这些只控制缓存新鲜判断，不表示数据两分钟内无法主动刷新。网络状态、错误与空数组也要分别显示，不能把请求失败伪装成“没有任务”。
+
+这里的缓存与 Next.js 的服务器缓存、浏览器 HTTP 缓存是不同层。清掉 Query 缓存不一定清掉代理缓存；设置 HTTP no-store 也不会自动删除 React Query 里已存在的对象。
+
+## 创建任务：从表单提交到数据库返回
+
+<GuideDiagram variant="dataflow" />
+
+以输入标题和选择所属项目为例：
+
+1. 表单收集用户意图；前端约束减少无效提交。
+2. `useCreateTask` 的 mutation 调用 API client。
+3. API client POST JSON 并携带凭据。
+4. Express 验证身份、限制频率、校验字段。
+5. Service 检查项目属于当前用户，再调用 Prisma 创建任务。
+6. API 返回业务响应；前端成功后让相关缓存失效并重查。
+
+源码中 `useCreateTask` 的核心是：
+
+```ts
+export function useCreateTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateTaskInput) => api.post('/tasks', data),
+    onSuccess: () => {
+      qc.invalidateQueries({queryKey: ['tasks']});
+      qc.invalidateQueries({queryKey: ['projects']});
+    },
+  });
+}
+```
+
+这段是项目 Hook 的摘录，依赖已有 QueryProvider、api 和类型定义，不是可单独复制运行的完整应用。`onSuccess` 更新了任务与项目两个范围，因为创建任务可能同时影响项目汇总。失效通常会使活动查询重取，但不等于所有隐藏页面都立刻完成刷新。若业务要求刷新完成后才显示下一步，应按需要等待相关异步结果，并明确失败反馈。[官方缓存失效说明](https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation)解释了这个区别。
+
+按钮 pending 应来自 mutation 的实际生命周期；成功后才清空表单，失败时保留输入并说明原因。多次点击、网络重试或重复业务动作，还需要视具体接口考虑幂等，而不是仅依赖“按钮禁用了一次”。
+
+## API client 与代理：为什么请求写 /api，却去了另一个进程
+
+`frontend/src/lib/api.ts` 的默认基址是 `/api`，可由 `NEXT_PUBLIC_API_URL` 覆盖。`request` 使用 `credentials: 'include'`，统一处理 JSON 与业务错误，成功后返回 `json.data`。因此 Hook 消费的是解包后的业务数据，不应再误读成一层 `success/data`。
+
+开发脚本的前端端口是 **3002**，Express 默认端口是 **3001**。`next.config.ts` 仅在开发环境把 `/api/:path*` rewrite 到 `http://localhost:3001/api/:path*`。浏览器请求同源 `/api/tasks`，Next.js 再转交 Express；这属于代理，不是把任务 API 搬进了 Next.js Route Handler。行为可查 [rewrite 文档](https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites)。
+
+```text
+浏览器 http://localhost:3002
+  → /api/tasks
+  → 开发 rewrite
+  → Express http://localhost:3001/api/tasks
+```
+
+当前生产配置注释说明由 Nginx 处理 API 代理；本文核对了应用配置，没有据此断言在线反向代理的具体内容。生产需确保 `/api` 仍到正确后端，前端路由去 Next.js，并正确处理 Cookie、转发协议与流式响应。
+
+`NEXT_PUBLIC_` 变量会进入可供浏览器使用的构建配置，不能存后端密钥。若直接跨源调用后端，就还要核对 CORS 允许的 origin、方法、头和 Cookie 属性。项目后端 CORS 允许方法目前没有列出 PATCH，而任务状态接口使用 PATCH；这是直接跨源部署需要补查的配置点。开发同源 rewrite 成功，不能证明这个跨源组合也成功。
+
+客户端拿到 HTML 而不是 JSON 时，先看请求 URL、代理和响应 Content-Type。它可能收到前端 404 / 登录页，问题未必在数据库。真实 API client 已为非 JSON 响应提供专门提示，这是把网络层与业务层错误区分开的例子。
+
+## Express：中间件顺序决定请求经历什么
+
+`app.ts` 依次装配安全头、CORS、请求日志、压缩、JSON 解析、Cookie 解析，再挂载 `/api` 路由与最后的错误处理。`routes/index.ts` 中，任务入口是：
+
+```ts
+router.use('/tasks', auth, apiLimit, taskRoutes);
+```
+
+任务模块接到的 `/` 对应外部 `/api/tasks`。鉴权中间件验证 Cookie 或 Authorization 中的 JWT，将 userId 写入请求上下文；参数校验中间件再按 Zod Schema 解析 Body。路由捕获错误后调用 `next(err)`，让统一错误处理器生成响应。[Express 路由](https://expressjs.com/en/guide/routing/)与[错误处理文档](https://expressjs.com/en/guide/error-handling/)说明了方法匹配和传播方式。
+
+需要理解四种不同约束：
+
+| 检查 | 回答的问题 | 例子 |
+| --- | --- | --- |
+| 类型检查 | 开发时调用是否符合声明 | mutation 是否传了 projectId |
+| 运行时校验 | 不可信请求值是否合法 | title 是否存在、limit 是否超界 |
+| 身份验证 | 请求代表哪个身份 | JWT 的签名和有效期 |
+| 资源授权 | 此身份是否能操作这条记录 | project.ownerId 是否等于服务端 userId |
+
+Cookie 的 HttpOnly 限制脚本读取，不自动解决 CSRF；JWT 验证通过也不自动检查 Session 是否撤销。认证与邮箱细节另见 [TaskHub 登录复盘](/blog/taskhub-auth-email/)，不在本篇重新复制所有认证实现。
+
+## Zod：让请求进入业务前有明确形状
+
+真实创建 Schema 约束标题 1–200 字符、描述最多 1000 字符，并限定任务状态和优先级，estimatedHours 不小于 0。下面是字段的简化摘录：
+
+```ts
+const createTaskSchema = z.object({
+  title: z.string().min(1).max(200),
+  projectId: z.string().min(1),
+  status: z.enum(['TODO', 'IN_PROGRESS', 'DONE', 'BLOCKED'])
+    .optional().default('TODO'),
+  estimatedHours: z.number().min(0).optional().default(0),
+});
+```
+
+`.min(1)` 不会自动去除空白；全空格标题仍需要 trim 或额外规则。这是现有约束的边界，不把“使用 Zod”写成已经完成全部业务校验。查询参数来自 URL 字符串，项目用 `z.coerce.number()` 解析 page、limit 并限制范围；不能直接把字符串页码当数字参与计算。
+
+`validate` 会把解析后的 body 交给后续函数，而不是验证原值后继续使用原值。对 query / params，Express 5 的 getter 行为不同，现有通用中间件写入自定义 validated 属性；任务列表则自行 safeParse 查询并使用 parsed.data。读路由时要看它实际使用哪一路，不能统一假设 `req.query` 已被覆盖。
+
+[Zod 基础文档](https://zod.dev/basics)解释 Schema 与 parse / safeParse；当前文档主要展示新版，后端 Zod 3 的错误属性应对照它的实际依赖与代码，避免混用 `errors` / `issues` 等细节。
+
+## Service 与 Prisma：持久化前还有业务判断
+
+真实 `taskService.create` 在写入前先查项目归属，逻辑核心如下；省略了任务其他字段与 include：
+
+```ts
+const project = await prisma.project.findFirst({
+  where: {id: data.projectId, ownerId: userId},
+});
+if (!project) return null;
+
+return prisma.task.create({
+  data: {title: data.title, projectId: data.projectId,
+    status: data.status ?? 'TODO',
+    estimatedHours: data.estimatedHours ?? 0},
+});
+```
+
+`userId` 来自服务端验证，不由请求体指定。查询列表也通过 `project: {ownerId: userId}` 限定范围；用户提交一个看似合法的 projectId，不代表拥有它。父任务、负责人等关联 ID 也需要独立校验其允许范围，不能因为主项目校验过，就默认所有外键都安全；本文没有据此宣称现有流程已通过越权审计。
+
+`schema.prisma` 定义 Project、Task 等模型。Project 关联 owner；Task 关联 project、可选 assignee 与 parent，并定义常用查询索引。SQLite 是实际数据库，Prisma Schema 是模型描述，Prisma Client 是生成的访问接口，三者各有职责。模型和关系可对照 [Prisma v6 文档](https://www.prisma.io/docs/orm/v6/prisma-schema/data-model/models)。
+
+金额如项目预算、成本记录在 Schema 中以整数“分”存储，展示时转换成“元”，减少浮点小数误差；工时和进度仍是另一种数值语义，不应对所有数值统一乘除 100。
+
+列表目前使用 skip / take 并单独 count。`Promise.all` 可以并发发起两个查询，但**不是数据库事务**，并发写入时两次查询不一定来自同一个一致快照。若业务需要严格一致的结果与总数，要按数据库能力设计事务或分页策略，而不是只看代码里用了 await。
+
+## 删除和状态切换：哪些变化需要一起成功
+
+`task.service.ts` 删除任务时，在 `$transaction([...])` 中组织相关成本记录、子任务和任务删除，表达这一组删除要一起提交或失败。随后父任务进度更新发生在事务外；因此不能把整个删除业务都描述成一个完全原子的操作。事务边界要覆盖真正需要保持的业务不变量，见 [Prisma v6 事务说明](https://www.prisma.io/docs/orm/v6/prisma-client/queries/transactions)。
+
+状态更新也有业务含义：DONE 写 completedAt，离开 DONE 清空完成时间，离开 BLOCKED 清理阻塞原因，子任务变化可能触发父任务进度重算。只把按钮改成绿色，不能代替这些关联变化。
+
+评审时应提出具体问题：父任务更新失败后是否允许任务本身已经提交？两个并发更新谁覆盖谁？重复删除该如何响应？需要长期可靠性的写入，还可能需要版本号、幂等键、事务与后台补偿。它们是按业务风险选择的机制，不是换一个 ORM 就自然拥有的特性。
+
+## 乐观更新：让界面先动，也让失败有回去的路
+
+普通更新 Hook 成功后失效任务与项目缓存；状态更新 `useUpdateTaskStatus` 更积极，源码执行四个阶段：
+
+1. **onMutate**：取消相关旧查询，保存当前缓存快照。
+2. **立即更新缓存**：把对应任务状态临时改为目标状态。
+3. **onError**：用快照恢复，向用户说明失败。
+4. **onSettled**：失效任务、项目与近期任务缓存，重新取得服务端结果。
+
+这就是乐观更新，不是“请求发出就一定成功”。它适合可恢复的小改动；涉及金额、批量写入或不可撤销动作时，应先评估风险与交互反馈。当前 Hook 对数组和列表分页对象做了处理，但嵌套子任务是否同步、并发 mutation 是否互相覆盖快照，都需要相应测试，不能从顶层列表的一次成功推断出来。[TanStack Query 乐观更新](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates)给出缓存快照与回滚的基本模式。
+
+在浏览器复现时可以人为降低网络速度，观察 pending、乐观状态与最终结果；让请求失败后再看是否回滚。这样的证据比只看页面切换流畅更有意义。
+
+## 如何增加一个业务模块：按纵向切片扩展
+
+假设增加“工作日志”，可以按下面顺序完成一条最小流程。它是扩展示例，不表示当前仓库已经存在这些文件。
+
+| 步骤 | 要产出的东西 | 完成时怎么确认 |
+| --- | --- | --- |
+| 先写契约 | 日志字段、用户范围、创建与列表行为 | 列出成功和拒绝条件 |
+| 数据模型 | WorkLog 与 owner / project 关系 | 在独立开发库应用迁移并查结构 |
+| Schema | 创建体、筛选、分页与更新约定 | 错误输入被拒绝且不写库 |
+| Service | 用户范围、关联检查与事务 | 跨用户、无效项目和回滚测试 |
+| Route | 方法、挂载位置、状态码与错误 | 使用测试客户端核对响应 |
+| API client / Hook | 类型、queryKey、mutation 与失效范围 | 切换筛选、提交后列表重查 |
+| 页面 | 表单、列表、空状态与错误恢复 | 完成一条可重复的端到端流程 |
+
+先完成“创建并重新读到自己的日志”，再做图表、拖拽和批量操作。目录可以沿现有工程风格扩展，但不要先复制整个任务模块再保留所有用不到的字段。公共组件复用交互，领域服务复用规则，它们是不同层次的复用。
+
+## 本地启动与构建：分清开发环境和真实数据
+
+如果已经拿到同一仓库，应在**独立开发副本和新数据库**中操作，先阅读仓库说明，再配置必需的 DATABASE_URL、JWT_SECRET 和 ENCRYPTION_KEY。不要让学习命令连接线上数据库，本文也不复制任何现有秘密。AI、邮件等外部服务可留在后续专题，不是理解任务 CRUD 的前提。
+
+前后端有各自的 package-lock，使用各自目录安装。以下为本地准备流程，不会由本篇自动执行：
+
+```text
+backend 目录：
+  npm ci
+  npm run db:generate
+  npm run db:push       # 仅新建的独立教学 / 开发库
+  npm run dev          # 默认 3001
+
+frontend 目录（另一个终端）：
+  npm ci
+  npm run dev          # 脚本指定 3002
+```
+
+`db:generate` 生成客户端代码，不创建业务表；`db:push` 同步结构，不等于有版本历史的生产迁移。生产结构变更需要按项目制定迁移、备份与回滚方案。不要把“能启动 Prisma Studio”当作业务数据和权限已经正确。
+
+前端目前配置 `typescript.ignoreBuildErrors: true`，所以 **next build 成功不代表 TypeScript 已通过**；应单独执行现有 `npm run typecheck` 和 lint。这个配置的含义见 [Next.js TypeScript 文档](https://nextjs.org/docs/app/api-reference/config/next-config-js/typescript)。后端则有自己的 build 与 test:run。本文只读核对这些脚本，没有借内容编写去修改或运行线上 TaskHub。
+
+## 用一张验收矩阵，区分“能看”和“能用”
+
+| 层次 | 最有价值的测试 | 能发现的问题 |
+| --- | --- | --- |
+| Schema | 空白、越界、错误日期、缺失关联 ID | 格式约束缺漏 |
+| Service + 独立数据库 | 当前用户可访问、另一用户被拒绝 | 对象级越权与归属错误 |
+| Route | 401 / 400 / 404 / 201、响应结构 | 中间件顺序与契约漂移 |
+| Hook / 缓存 | 改筛选后 key 变化、提交后失效、失败回滚 | stale UI、串缓存与乐观状态失真 |
+| 页面 | 校验提示、重复提交、网络失败后保留草稿 | 流程中断与错误恢复缺口 |
+| 部署 | /api 代理、Cookie、PATCH 预检、流式连接 | 本地通过但线上链路不成立 |
+
+前端分页需要把 page 和 limit 发到服务端，切换项目或筛选后通常回到第一页；总数变小时也要处理页码越界。日期输入、服务端解析和数据库时区应有一致约定。复杂表格不是只替换一个组件，就能自动补齐这些数据行为。
+
+Express 后台进程还承担定时工作，重启与多副本可能影响调度；不要把单进程定时器当成分布式任务平台。涉及流式接口时还要检验代理缓冲、连接中断与取消传播，本篇没有因此扩展为 AI 服务接入教程。
+
+## 排错顺序与可继续深入的资料
+
+看到“创建失败”，按证据缩小范围：浏览器是否真的发出请求 → URL 和方法是否正确 → 响应是 JSON 还是 HTML → 身份与输入是否被拒绝 → Service 是否找到了允许操作的项目 → 数据库是否提交 → 前端缓存是否重新读取。每一步都能对应本文的一层，不必同时重写页面和数据库。
+
+可以用三个问题自测：为什么修改客户端 userId 不能改变自己的数据范围？为什么 POST 成功后列表仍可能旧？为什么 Prisma 查询并发不等于事务？如果能指出具体文件、条件和验收方法，就已经从记住名词走向理解系统协作。
+
+阅读顺序建议是 [React 状态](https://react.dev/learn/managing-state) → [Next.js 组件边界](https://nextjs.org/docs/app/getting-started/server-and-client-components) → [Query Keys](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys) → [Express 路由](https://expressjs.com/en/guide/routing/) → [Prisma v6 模型](https://www.prisma.io/docs/orm/v6/prisma-schema/data-model/models)。需要研究实现时可查看 [TanStack Query](https://github.com/TanStack/query)与 [Prisma 6.9.0](https://github.com/prisma/prisma/tree/6.9.0)；本文没有给本地 TaskHub 编造一个未经确认的公开仓库地址。登录与邮件另有[专题复盘](/blog/taskhub-auth-email/)，项目背景见 [TaskHub 项目页](/projects/taskhub/)。

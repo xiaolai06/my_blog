@@ -9,6 +9,9 @@
     "fonts": "node scripts/update-fonts.mjs",
     "dev": "astro dev",
     "build": "astro build",
+    "build:release": "node scripts/build-release.mjs",
+    "check:site": "node scripts/check-site.mjs",
+    "test:release": "node --test scripts/site-url.test.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },

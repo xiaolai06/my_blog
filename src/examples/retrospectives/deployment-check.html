@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>部署验收 · 教学样例</title>
+<style>
+ :root{--bg:#f5f3ef;--surface:#fffdf9;--ink:#302d2b;--muted:#6c655f;--line:#dfd9d0;--accent:#914b40;--soft:#f4e7e0;--good:#276448;--bad:#a23835;color-scheme:light}
+ *{box-sizing:border-box}body{margin:0;padding:22px 16px;background:var(--bg);color:var(--ink);font:14px/1.7 system-ui,sans-serif}
+ main{max-width:650px;margin:auto}header{display:flex;gap:16px;align-items:center;margin-bottom:18px}.icon{display:grid;place-items:center;width:44px;height:44px;background:var(--soft);color:var(--accent);border-radius:12px;flex-shrink:0}svg{width:24px;height:24px}h1{font-size:20px;margin:0}p{margin:4px 0}header p,.disclaimer{color:var(--muted);font-size:12px}
+ label{display:block;font-weight:600;margin-bottom:7px}select,button{font:inherit;min-height:44px;border-radius:9px}select{width:100%;min-width:0;padding:9px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}button{border:0;padding:9px 18px;background:var(--accent);color:white;cursor:pointer;font-weight:600}button:hover{filter:brightness(1.09)}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}.actions{display:flex;gap:12px;align-items:center;margin:14px 0}.actions span{font-size:12px;color:var(--muted)}
+ ol{list-style:none;padding:0;margin:18px 0;display:grid;gap:8px}li{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}.number{font-size:11px;color:var(--muted)}li strong{font-size:13px}li small{display:block;font-size:12px;color:var(--muted)}.state{font-size:11px;color:var(--muted);white-space:nowrap}li[data-state="pass"] .state{color:var(--good)}li[data-state="fail"] .state{color:var(--bad)}
+ .feedback{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface);padding:15px 17px;border-radius:10px}.feedback strong{font-size:14px}.feedback p{font-size:13px}.feedback code{display:block;padding:10px;margin-top:10px;overflow:auto;background:var(--bg);font:12px/1.8 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.disclaimer{margin-top:14px}.reveal{animation:appear 180ms ease-out}@keyframes appear{from{opacity:.4;transform:translateY(3px)}}
+ :root[data-theme="dark"]{--bg:#1d2328;--surface:#262d33;--ink:#f0e9de;--muted:#b9b2a9;--line:#44494d;--accent:#a85a4b;--soft:#47332e;--good:#9ed5b3;--bad:#ffb6ab;color-scheme:dark}
+ @media(prefers-reduced-motion:reduce){.reveal{animation:none}}:root[data-motion="off"] .reveal{animation:none}
+ @media(max-width:420px){body{padding:18px 12px}.actions{align-items:flex-start;flex-direction:column}li{padding:10px;gap:7px;grid-template-columns:24px minmax(0,1fr) auto}h1{font-size:18px}}
+</style>
+<main>
+ <header><div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M12 6.5h5M12 17.5h5"/></svg></div><div><h1>上线之前，逐层确认</h1><p>看见成功页面之前，还有哪些检查需要通过？</p></div></header>
+ <label for="scenario">选择练习场景</label>
+ <select id="scenario"><option value="ready">全部配置正确</option><option value="url">构建时忘记设置 SITE_URL</option><option value="root">文件已上传，站点根目录指错</option><option value="dns">域名还指向旧公网 IP</option><option value="firewall">443 被安全组拦截</option></select>
+ <div class="actions"><button type="button" id="run">模拟验收</button><span>固定情景数据 · 不访问你的服务器</span></div>
+ <ol id="checks" aria-label="部署检查顺序"></ol>
+ <section class="feedback" role="status" aria-live="polite" aria-atomic="true"><strong id="headline">准备好后，开始模拟验收</strong><p id="message">每一层都要有可观察的结果，上一层通过也不能替代下一层。</p><code id="command" hidden></code></section>
+ <p class="disclaimer">这里的“通过”只代表演示设定。实际结果请使用正文命令，在本机、服务器和外部网络分别验证。</p>
+</main>
+<script>
+ const params=new URLSearchParams(location.search);
+ document.documentElement.dataset.theme=params.get('theme')==='dark'?'dark':'light';
+ document.documentElement.dataset.motion=params.get('motion')||'on';
+ const stages=[['构建与正式地址','dist 内包含页面与正确 canonical'],['发布目录','current 指向包含 index.html 的版本'],['本机 Web 服务','Caddy 配置有效，能够读取文件'],['公网 DNS','A / AAAA 指向预期入口'],['公网 HTTPS','外部 443 可达，证书与域名匹配']];
+ const cases={
+  ready:{fail:-1,title:'模拟通过：可以进入人工验收',message:'再用手机移动网络打开首页、文章和静态资源；确认 RSS、404 与刷新直达均正常。',command:'curl -I https://your-name.duckdns.org/\ncurl -I https://your-name.duckdns.org/blog/'},
+  url:{fail:0,title:'构建地址需要修正',message:'网页可能打开，但 canonical、RSS 或 sitemap 仍含 localhost。用正式 SITE_URL 重新构建，再上传新产物。',command:'$env:SITE_URL = "https://your-name.duckdns.org"\nnpm run build'},
+  root:{fail:1,title:'检查 current 与文件读取权限',message:'指向 dist 的父目录会找不到首页。站点根目录应直接包含 index.html；还要确认 caddy 用户有读取与目录穿越权限。',command:'readlink -f /srv/my-blog/current\nsudo -u caddy test -r /srv/my-blog/current/index.html'},
+  dns:{fail:3,title:'先修正 DNS，再处理证书',message:'比较解析结果与实际公网入口。动态 IP 变化后应让 DuckDNS 更新；等待缓存刷新，别只看控制台保存成功。',command:'dig +short A your-name.duckdns.org\ndig +short AAAA your-name.duckdns.org'},
+  firewall:{fail:4,title:'服务已就绪，公网入口仍被拦截',message:'本机访问成功不代表外网可达。检查云安全组、系统防火墙；家庭主机还要检查路由器转发与运营商限制。',command:'sudo ss -lntp\n# 在另一条网络执行：\ncurl -I --connect-timeout 10 https://your-name.duckdns.org/'}
+ };
+ const list=document.querySelector('#checks'),scenario=document.querySelector('#scenario');
+ function render(result){
+  list.replaceChildren(...stages.map(([title,detail],index)=>{
+   const item=document.createElement('li');
+   item.dataset.state=!result?'pending':index<result.fail||result.fail===-1?'pass':index===result.fail?'fail':'pending';
+   const number=document.createElement('span');number.className='number';number.textContent=String(index+1).padStart(2,'0');
+   const copy=document.createElement('div'),strong=document.createElement('strong'),small=document.createElement('small');strong.textContent=title;small.textContent=detail;copy.append(strong,small);
+   const status=document.createElement('span');status.className='state';status.textContent={pending:'待检查',pass:'✓ 通过',fail:'! 待修正'}[item.dataset.state];item.append(number,copy,status);return item;
+  }));
+ }
+ function feedback(title,message,command){document.querySelector('#headline').textContent=title;document.querySelector('#message').textContent=message;const code=document.querySelector('#command');code.textContent=command||'';code.hidden=!command;}
+ scenario.addEventListener('change',()=>{render();feedback('场景已切换，等待模拟验收','从第一处失败开始处理，再重新检查后续步骤。');});
+ document.querySelector('#run').addEventListener('click',()=>{const result=cases[scenario.value];render(result);feedback(result.title,result.message,result.command);list.classList.remove('reveal');void list.offsetWidth;list.classList.add('reveal');});
+ render();
+ // Report content height only; the parent accepts messages from this frame.
+ if(parent!==window)new ResizeObserver(()=>parent.postMessage({type:'blog-demo-resize',height:Math.ceil(document.body.getBoundingClientRect().height)+2},'*')).observe(document.body);
+</script>
+</html>

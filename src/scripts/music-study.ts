@@ -1,7 +1,10 @@
 import { setupMusicDisplay } from './music-display';
 import { setupFloatingPanelDrag } from './music-drag';
+import {createMotionScope} from './content-motion';
 
 export function setupStudySpace(audio: HTMLAudioElement, shell: HTMLElement) {
+  const controller=new AbortController(),motion=createMotionScope(matchMedia('(prefers-reduced-motion: reduce)'),controller.signal);
+  window.addEventListener('pagehide',event=>{if(!event.persisted)controller.abort();});
   const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const key = 'sakura-study-session';
   let minutes = 25, remaining = minutes * 60000, endAt = 0, completed = false;
@@ -18,6 +21,15 @@ export function setupStudySpace(audio: HTMLAudioElement, shell: HTMLElement) {
   const custom = el<HTMLInputElement>('focus-custom-minutes');
   const customForm = el<HTMLFormElement>('focus-custom-form');
   const display = setupMusicDisplay(shell);
+  function celebrate(){
+    const anchor=el('study-focus');
+    if(!motion.enabled()||!document.body.classList.contains('music-mode')||!anchor.getClientRects().length||document.documentElement.dataset.musicAmbience==='off')return;
+    for(let i=0;i<6;i++){
+      const petal=document.createElement('i');petal.className='music-completion-petal';petal.setAttribute('aria-hidden','true');anchor.append(petal);
+      const animation=motion.play(petal,[{opacity:0,transform:`translate(0,0) rotate(${i*45}deg)`},{opacity:.8,offset:.2},{opacity:0,transform:`translate(${(i-2.5)*20}px,${-35-i%3*12}px) rotate(${i*45+90}deg)`}],{duration:650,delay:i*20});
+      if(animation)animation.finished.then(()=>petal.remove(),()=>petal.remove());else petal.remove();
+    }
+  }
   setupFloatingPanelDrag(el('study-focus'),[el<HTMLButtonElement>('focus-drag'),el<HTMLButtonElement>('focus-time-drag')],{key:'sakura-study-focus-position',resetIds:['focus-position-reset','focus-position-reset-dialog']});
   custom.value = String(minutes);
   function save() { try { sessionStorage.setItem(key, JSON.stringify({minutes,remaining,endAt,completed,rounds,roundDate})); } catch {} }
@@ -28,7 +40,7 @@ export function setupStudySpace(audio: HTMLAudioElement, shell: HTMLElement) {
     if (today !== roundDate) { rounds = 0; roundDate = today; save(); }
     if (endAt) {
       remaining = Math.max(0,endAt-Date.now());
-      if (!remaining) { endAt = 0; completed = true; rounds++; save(); el('focus-announcement').textContent = `已完成 ${minutes} 分钟专注，休息一下吧。音乐继续播放。`; }
+      if (!remaining) { endAt = 0; completed = true; rounds++; save(); el('focus-announcement').textContent = `已完成 ${minutes} 分钟专注，休息一下吧。音乐继续播放。`;celebrate(); }
     }
     const seconds = Math.ceil(remaining/1000);
     el('focus-remaining').textContent = `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
@@ -68,8 +80,9 @@ export function setupStudySpace(audio: HTMLAudioElement, shell: HTMLElement) {
   customForm.addEventListener('submit',event=>{event.preventDefault();if(custom.reportValidity())setDuration(custom.valueAsNumber);});
   el('focus-reset').addEventListener('click',()=>{endAt=0;remaining=minutes*60000;completed=false;save();render();el('focus-announcement').textContent='本轮专注计时已重置';});
   shell.querySelectorAll<HTMLElement>('[data-open-focus]').forEach(button=>button.addEventListener('click',()=>{render();dialog.showModal();}));
-  const syncSound=()=>{const playing=!audio.paused;el('room-sound-label').textContent=playing?'音乐正在轻轻流动':'让音乐陪你一会儿';el('room-sound-label').parentElement!.setAttribute('aria-label',playing?'音乐正在播放':'音乐已暂停');};
+  const syncSound=()=>{const playing=document.documentElement.dataset.musicPlaying==='true',waiting=!audio.paused&&!playing&&!audio.error;el('room-sound-label').textContent=playing?'音乐正在轻轻流动':waiting?'正在准备声音…':'让音乐陪你一会儿';el('room-sound-label').parentElement!.setAttribute('aria-label',playing?'音乐正在播放':waiting?'音乐正在缓冲':'音乐已暂停');};
   audio.addEventListener('play',syncSound);audio.addEventListener('pause',syncSound);
+  document.addEventListener('sakura:music-state',syncSound);
   document.addEventListener('astro:page-load',render);document.addEventListener('visibilitychange',render);
   window.setInterval(render,1000);render();syncSound();
 }

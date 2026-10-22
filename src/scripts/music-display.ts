@@ -1,3 +1,4 @@
+import {cancelContentMotion,createMotionScope} from './content-motion';
 type Widget = 'player' | 'clock' | 'focus';
 type DisplayPreferences = {
   player: boolean; clock: boolean; focus: boolean; ambience: boolean; date: boolean; seconds: boolean;
@@ -24,6 +25,9 @@ export function setupMusicDisplay(shell: HTMLElement) {
     sessionStorage.removeItem('sakura-music-wallpaper-only');
   } catch {}
   const widgets: Record<Widget,HTMLElement> = {player:el('music-player'),clock:el('study-clock'),focus:el('study-focus')};
+  const controller=new AbortController(),motion=createMotionScope(matchMedia('(prefers-reduced-motion: reduce)'),controller.signal);
+  const closing=new Set<Widget>(),revisions:Record<Widget,number>={player:0,clock:0,focus:0};
+  window.addEventListener('pagehide',event=>{if(!event.persisted)controller.abort();});
   const dialog = el<HTMLDialogElement>('focus-dialog');
   const toggles = {player:el<HTMLButtonElement>('room-music-toggle'),focus:el<HTMLButtonElement>('room-focus-toggle')};
   function save() { try { localStorage.setItem(key,JSON.stringify({...preferences,version:2})); } catch {} }
@@ -50,7 +54,7 @@ export function setupMusicDisplay(shell: HTMLElement) {
   function apply() {
     for (const name of ['player','clock','focus'] as const) {
       const expanded = preferences[name];
-      widgets[name].dataset.widgetMinimized = String(!expanded);
+      widgets[name].dataset.widgetMinimized = String(!expanded&&!closing.has(name));
       const restore = widgets[name].querySelector<HTMLButtonElement>('[data-show-widget]');
       if(restore){
         restore.hidden = expanded;
@@ -82,8 +86,16 @@ export function setupMusicDisplay(shell: HTMLElement) {
     renderClock();
   }
   function setWidget(name: Widget, expanded: boolean, source?:HTMLElement) {
+    const widget=widgets[name],token=++revisions[name],visible=!!widget.getClientRects().length,style=getComputedStyle(widget);
+    const from={opacity:visible?style.opacity:'0',translate:visible?style.translate:'0 8px'};
+    cancelContentMotion(widget);
     if (!expanded) widgets[name].querySelectorAll<HTMLDetailsElement>('details[open]').forEach(details=>details.open=false);
+    if(!expanded&&name!=='clock'&&visible&&motion.enabled())closing.add(name);else closing.delete(name);
     preferences[name] = expanded; save(); apply();
+    widget.inert=closing.has(name);
+    const animation=name==='clock'&&!expanded?undefined:motion.play(widget,[from,{opacity:expanded?1:0,translate:expanded?'0 0':'0 6px'}],{duration:expanded?220:150});
+    const settle=()=>{if(revisions[name]!==token)return;closing.delete(name);widget.inert=false;apply();};
+    if(animation)animation.finished.then(settle,settle);else settle();
     if (!dialog.open) {
       const selector = expanded ? '[data-minimize-widget], #clock-settings-button' : '[data-show-widget]';
       const target = source?.getClientRects().length ? source : name!=='clock' ? toggles[name] : Array.from(widgets[name].querySelectorAll<HTMLButtonElement>(selector)).find(button=>button.getClientRects().length>0);

@@ -11,7 +11,7 @@ const tags=[...new Set(posts.flatMap(post=>post.data.tags))];
 const pageCount=Math.max(1,Math.ceil(posts.length/journalPageSize));
 const sorts=[{id:'newest',label:'最新发布'},{id:'oldest',label:'最早发布'},{id:'updated',label:'最近更新'}];
 ---
-<SiteLayout journalPage title="手记" description="从项目架构与 UI 选型，到 Python 与 Coding Agent。用代码、对照与出处，记录可复用的工程知识。">
+<SiteLayout journalPage title="手记" description="从项目设计与 Python 实践，到服务器部署、DNS 与 HTTPS。用步骤、示意图和原始资料，把技术的来龙去脉讲清楚。">
  <main id="main-content" class="container journal-collection" data-journal-archive>
   <nav class="breadcrumb" aria-label="当前位置"><a href="/">首页</a><Icon name="chevron" size={14}/><span aria-current="page">手记</span></nav>
   <header class="archive-intro"><div><span class="archive-eyebrow">ENGINEERING NOTES</span><h2>在实践里，理解技术的来龙去脉。</h2><p>从第一个可运行的例子，到一套说得清的实现。记录项目的设计过程、学习中的关键理解，以及值得回头查阅的方法。</p></div><div class="archive-library-stat"><strong>{posts.length.toString().padStart(2,'0')}</strong><span>篇手记 · {journalTypes.length} 种视角</span></div></header>
@@ -40,7 +40,13 @@ const sorts=[{id:'newest',label:'最新发布'},{id:'oldest',label:'最早发布
    </section>
    <aside class="archive-rail" aria-label="日期与主题检索">
     <DiaryCalendar dates={posts.map(post=>post.data.pubDate.toISOString().slice(0,10))}/>
-    {tags.length>0&&<details class="archive-topic-panel" open><summary><span>主题索引</span><Icon name="down-chevron" size={16}/></summary><div class="archive-topics">{tags.map(tag=><a href={`/blog/?q=${encodeURIComponent(tag)}`} data-journal-topic={tag} class="journal-tag" data-tone={journalTagTone(tag)}><span aria-hidden="true">#</span>{tag}<small>{posts.filter(post=>post.data.tags.includes(tag)).length}</small></a>)}</div></details>}
+    {tags.length>0&&<details class="archive-topic-panel" open>
+     <summary><span>主题索引<small data-topic-selection-count>可多选</small></span><Icon name="down-chevron" size={16}/></summary>
+     <div class="archive-topic-tools"><div class="archive-topic-mode" role="group" aria-label="主题匹配方式"><button type="button" data-topic-match="any" aria-pressed="true" disabled>任一匹配</button><button type="button" data-topic-match="all" aria-pressed="false" disabled>同时包含</button></div><button class="archive-topic-clear" type="button" data-clear-topics disabled>清空选择</button></div>
+     <p class="archive-topic-hint" id="journal-topic-help" data-topic-help>显示包含任一已选主题的记录，再次点击可取消。</p>
+     <div class="archive-topic-scroll" role="region" tabindex="0" aria-label="可滚动的主题列表" aria-describedby="journal-topic-help"><div class="archive-topics">{tags.map(tag=><button type="button" data-journal-topic={tag} class="journal-tag" data-tone={journalTagTone(tag)} aria-pressed="false" disabled><Icon name="check" size={12}/><span aria-hidden="true">#</span>{tag}<small>{posts.filter(post=>post.data.tags.includes(tag)).length}</small></button>)}</div></div>
+     <noscript><p class="archive-topic-hint">启用 JavaScript 后可组合主题筛选；下方文章仍可直接阅读。</p></noscript>
+    </details>}
     <a class="archive-rss" href="/rss.xml"><Icon name="rss" size={17}/>订阅更新<Icon name="arrow-up-right" size={16}/></a>
    </aside>
   </div>

@@ -1,0 +1,64 @@
+name: Build site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: 'Final HTTPS website origin (optional; overrides repository SITE_URL variable)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # This reserved origin is for CI verification only; it is never packaged.
+      SITE_URL: ${{ inputs.site_url || vars.SITE_URL || 'https://build-check.invalid' }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run test:release
+      - name: Verify the downloadable teaching example
+        run: python3 scripts/package-learning-examples.py --check
+      - name: Build for verification (domain not configured)
+        if: env.SITE_URL == 'https://build-check.invalid'
+        run: npm run build
+      - name: Build for publication (domain configured)
+        if: env.SITE_URL != 'https://build-check.invalid'
+        run: npm run build:release
+      - run: npm run check:site
+      - name: Package the website files
+        if: env.SITE_URL != 'https://build-check.invalid' && github.event_name != 'pull_request'
+        run: tar -czf site-dist.tar.gz -C dist .
+      - name: Save the publication package
+        if: env.SITE_URL != 'https://build-check.invalid' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: sakura-nook-site
+          path: site-dist.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+      - name: Explain the build result
+        shell: bash
+        run: |
+          if [ "$SITE_URL" = 'https://build-check.invalid' ]; then
+            printf '%s\n' 'Build and site checks passed. Configure the repository SITE_URL variable with the final HTTPS origin to generate a publication package.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '%s\n' 'Build and publication checks passed. Download sakura-nook-site from Artifacts; server upload is a separate step.' >> "$GITHUB_STEP_SUMMARY"
+          fi

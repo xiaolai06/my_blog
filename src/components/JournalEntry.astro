@@ -5,7 +5,7 @@ import {journalType,journalDate,journalTagTone} from '../data/journal';
 interface Props {post:CollectionEntry<'blog'>;initiallyHidden?:boolean}
 const {post,initiallyHidden=false}=Astro.props,type=journalType(post.data);
 ---
-<a class="journal-entry" hidden={initiallyHidden} href={`/blog/${post.id}/`} data-archive-entry data-entry-type={type.id} data-date={post.data.pubDate.toISOString().slice(0,10)} data-updated={(post.data.updatedDate??post.data.pubDate).toISOString()} data-search={`${post.data.title} ${post.data.description} ${post.data.category} ${type.label} ${post.data.tags.join(' ')}`}>
+<a class="journal-entry" hidden={initiallyHidden} href={`/blog/${post.id}/`} data-archive-entry data-entry-type={type.id} data-entry-tags={JSON.stringify(post.data.tags)} data-date={post.data.pubDate.toISOString().slice(0,10)} data-updated={(post.data.updatedDate??post.data.pubDate).toISOString()} data-search={`${post.data.title} ${post.data.description} ${post.data.category} ${type.label} ${post.data.tags.join(' ')}`}>
  <div class="entry-cover"><img src={post.data.cover} alt="" width="640" height="360" loading="lazy"/></div>
  <div class="entry-content">
   <div class="entry-meta"><span class="entry-kind"><Icon name={type.icon} size={15}/>{type.label}</span><span class="entry-subject">{post.data.category}</span><time datetime={post.data.pubDate.toISOString()}>{journalDate(post.data.pubDate)}</time></div>

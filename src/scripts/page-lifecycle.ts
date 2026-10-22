@@ -5,6 +5,7 @@ import {setupThemePreference} from './theme-preference';
 import {setupJournalArchive} from './journal-archive';
 import {setupJournalReader} from './journal-reader';
 import {setupPageTransitions} from './page-transitions';
+import {setupLiveExamples} from './live-examples';
 
 setupThemePreference();
 setupPageTransitions();
@@ -19,6 +20,7 @@ function mountPage(){
   // Reading and retrieval mount independently of the decorative scene controls.
   setupJournalArchive(controller.signal);
   setupJournalReader(controller.signal);
+  setupLiveExamples(controller.signal);
   mountedBody=document.body;
   setupVideoScenes();
   setupSceneDock();

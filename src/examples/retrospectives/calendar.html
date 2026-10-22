@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>日历 · 固定数据样例</title>
+<style>
+:root {
+  --bg:#f8f6f2;
+  --surface:#fffdfb;
+  --ink:#302d30;
+  --muted:#706a70;
+  --line:#e8e2dc;
+  --accent:#a65347;
+  color-scheme:light
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  padding:20px;
+  background:var(--bg);
+  color:var(--ink);
+  font:14px/1.8 system-ui,sans-serif
+}
+.calendar {
+  max-width:390px;
+  margin:auto;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:20px;
+  background:var(--surface)
+}
+header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px
+}
+h1 {
+  font-size:17px;
+  margin:0
+}
+button {
+  font:inherit;
+  cursor:pointer;
+  background:none;
+  border:0;
+  color:inherit;
+  border-radius:8px;
+  min-height:40px;
+  min-width:36px
+}
+.week,.days {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:3px;
+  text-align:center
+}
+.week {
+  margin:12px 0 6px;
+  font-size:12px;
+  color:var(--muted)
+}
+.days button {
+  position:relative;
+  aspect-ratio:1;
+  min-width:0;
+  padding:0
+}
+.days button.outside {
+  color:var(--muted);
+  opacity:.55
+}
+.days button[aria-pressed=true] {
+  background:var(--accent);
+  color:var(--surface)
+}
+.days button[data-record]:after {
+  content:'';
+  position:absolute;
+  bottom:5px;
+  left:calc(50% - 2px);
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:currentColor
+}
+button:focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:1px
+}
+button:hover {
+  box-shadow:inset 0 0 0 1px var(--accent)
+}
+#note {
+  font-size:13px;
+  padding-top:14px;
+  margin:12px 0 0;
+  border-top:1px solid var(--line)
+}
+small {
+  color:var(--muted);
+  display:block;
+  margin-top:8px;
+  font-size:11px
+}
+html[data-theme=dark] {
+  --bg:#1b1d23;
+  --surface:#23262d;
+  --ink:#ede9e5;
+  --muted:#b5afb7;
+  --line:#373941;
+  --accent:#e2a594;
+  color-scheme:dark
+}
+@media(max-width:380px) {
+  body {
+    padding:10px
+  }
+  .calendar {
+    padding:16px
+  }
+}
+</style>
+<section class="calendar" aria-label="演示日历">
+<header>
+<h1 id="month" aria-live="polite">
+</h1>
+<div>
+<button id="prev" aria-label="上个月">←</button>
+<button id="next" aria-label="下个月">→</button>
+</div>
+</header>
+<div class="week" aria-hidden="true">
+<span>一</span>
+<span>二</span>
+<span>三</span>
+<span>四</span>
+<span>五</span>
+<span>六</span>
+<span>日</span>
+</div>
+<div class="days" role="group" aria-label="选择日期，可用方向键">
+</div>
+<p id="note" role="status" aria-live="polite">
+</p>
+<small>演示记录：2026 年 10 月 20、21 日。圆点表示有记录。</small>
+</section>
+<script>
+document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light';
+const entries={'2026-10-20':['博客搭建复盘'],'2026-10-21':['TaskHub 登录与邮件']};
+let year=2026,month=9,selected='2026-10-21';
+const days=document.querySelector('.days');
+const dateKey=date=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+function render(focus=false){
+ document.querySelector('#month').textContent=`${year} 年 ${month+1} 月`;
+ const offset=(new Date(year,month,1).getDay()+6)%7;
+ days.replaceChildren();
+ for(let i=0;i<42;i++){
+  const date=new Date(year,month,1-offset+i),key=dateKey(date),records=entries[key]||[];
+  const button=document.createElement('button');button.type='button';button.textContent=date.getDate();button.dataset.date=key;
+  button.classList.toggle('outside',date.getMonth()!==month);button.tabIndex=key===selected?0:-1;
+  button.setAttribute('aria-pressed',String(key===selected));button.setAttribute('aria-label',`${key}，${records.length} 条演示记录`);
+  if(records.length)button.dataset.record='true';
+  button.addEventListener('click',()=>select(date));days.append(button);
+ }
+ document.querySelector('#note').textContent=selected+' · '+(entries[selected]?.join('、')||'这一天暂无演示记录');
+ if(focus)days.querySelector('[tabindex="0"]')?.focus();
+}
+function select(date){selected=dateKey(date);year=date.getFullYear();month=date.getMonth();render(true);}
+days.addEventListener('keydown',event=>{
+ const button=event.target.closest('[data-date]');if(!button)return;
+ const [y,m,d]=button.dataset.date.split('-').map(Number),date=new Date(y,m-1,d);
+ const week=(date.getDay()+6)%7;
+ const shift={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7,Home:-week,End:6-week}[event.key];
+ if(shift===undefined)return;event.preventDefault();date.setDate(date.getDate()+shift);select(date);
+});
+function move(delta){const date=new Date(year,month+delta,1);year=date.getFullYear();month=date.getMonth();selected=dateKey(date);render();}
+document.querySelector('#prev').addEventListener('click',()=>move(-1));
+document.querySelector('#next').addEventListener('click',()=>move(1));render();
+</script>
+</html>

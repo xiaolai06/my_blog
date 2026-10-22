@@ -12,6 +12,11 @@ const blog=defineCollection({
  summary:z.array(z.string()).max(6).default([]),
  relatedProject:z.enum(['orulink','taskhub','clotheshub']).optional(),
  coverCaption:z.string().optional(),
+    reading:z.object({
+      author:z.string(),authorUrl:z.string().url(),originalTitle:z.string(),originalUrl:z.string().url(),
+      originalDate:z.coerce.date(),checkedDate:z.coerce.date(),
+      aiTopic:z.boolean().default(false),aiAssisted:z.boolean().default(false)
+    }).optional(),
  resources:z.array(z.object({title:z.string(),url:z.string().refine(url=>/^https?:\/\//.test(url)||(url.startsWith('/')&&!url.startsWith('//')),'Use an http(s) URL or a site-relative path')})).default([])
  })
 });

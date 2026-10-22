@@ -4,6 +4,7 @@ import {setupInteractionMotion} from './interaction-motion';
 import { setupAtmosphere } from './atmosphere';
 import {setSiteTheme} from './theme-preference';
 import {createDisclosureMotion} from './disclosure-motion';
+import {capturePositions,createMotionScope} from './content-motion';
 export function setupSiteUI(){
 const controller=new AbortController();
 const signal=controller.signal;
@@ -31,12 +32,18 @@ listen(window.matchMedia('(min-width:761px)'),'change',e=>{if(e.matches)closeMen
 document.querySelectorAll<HTMLElement>('[data-project-section]').forEach(section=>{
  const filters=section.querySelectorAll<HTMLButtonElement>('[data-filter]');
  const cards=section.querySelectorAll<HTMLElement>('.project-card');
+ const applyFilter=(filter:string)=>{
+  filters.forEach(b=>{const active=b.dataset.filter===filter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
+  let count=0;cards.forEach(card=>{card.hidden=filter!=='全部'&&card.dataset.category!==filter;if(!card.hidden)count++;});
+  const status=section.querySelector('.filter-status');if(status)status.textContent=filter+'，共 '+count+' 个项目';
+ };
+ const savedFilter=history.state?.sakuraProjectFilter;
+ if(savedFilter&&Array.from(filters).some(button=>button.dataset.filter===savedFilter))applyFilter(savedFilter);
  filters.forEach(button=>button.addEventListener('click',()=>{
   if(button.getAttribute('aria-pressed')==='true')return;
-  const previous=new Map(Array.from(cards).filter(card=>!card.hidden).map(card=>[card,card.getBoundingClientRect()]));
-  filters.forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
-  let count=0;cards.forEach(card=>{card.hidden=button.dataset.filter!=='全部'&&card.dataset.category!==button.dataset.filter;if(!card.hidden)count++;});
-  const status=section.querySelector('.filter-status');if(status)status.textContent=button.dataset.filter+'，共 '+count+' 个项目';
+  const previous=capturePositions(cards);
+  applyFilter(button.dataset.filter!);
+  history.replaceState({...history.state,sakuraProjectFilter:button.dataset.filter},'',location.href);
   section.dispatchEvent(new CustomEvent('projects:filtered',{detail:{previous}}));
  },{signal}));
 });
@@ -47,13 +54,16 @@ const searchMotion=createDisclosureMotion(dialog,reduced,signal);
 const search=document.querySelector<HTMLInputElement>('#site-search');
 const results=dialog?.querySelector<HTMLElement>('.search-results');
 const index:SearchEntry[]=JSON.parse(dialog?.dataset.index||'[]');
+const searchResultsMotion=createMotionScope(reduced,signal);
 function renderSearch(){
  if(!results||!search)return;
+ searchResultsMotion.cancelAll();
  const words=search.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
  const matched=index.filter(item=>words.every(word=>(item.title+' '+item.description+' '+item.keywords).toLocaleLowerCase().includes(word)));
  results.replaceChildren();
- if(!matched.length){const empty=document.createElement('p');empty.className='search-empty';empty.textContent='暂时没有找到，试试别的关键词吧。';results.append(empty);return;}
+ if(!matched.length){const empty=document.createElement('p');empty.className='search-empty';empty.textContent='暂时没有找到，试试别的关键词吧。';results.append(empty);if(searchMotion.isOpen())searchResultsMotion.play(results,[{opacity:.65},{opacity:1}],{duration:120});return;}
  matched.forEach(item=>{const a=document.createElement('a');a.className='search-result';a.href=item.url;const type=document.createElement('span');type.textContent=item.type;const title=document.createElement('h3');title.textContent=item.title;const description=document.createElement('p');description.textContent=item.description;a.append(type,title,description);results.append(a);});
+ if(searchMotion.isOpen())searchResultsMotion.play(results,[{opacity:.65},{opacity:1}],{duration:120});
 }
 function closeSearch(){searchMotion.setOpen(false);}
 function openSearch(){if(dialog&&!searchMotion.isOpen()){closeMenu();renderSearch();searchMotion.setOpen(true);search?.focus({preventScroll:true});}}
@@ -75,7 +85,7 @@ setupJournalCalendar(signal);
 
 setupInteractionMotion(reduced,signal);
 const motionButtons=document.querySelectorAll<HTMLButtonElement>('[data-motion-toggle]');
-const syncAtmosphere=setupAtmosphere(reduced);
+const syncAtmosphere=setupAtmosphere(reduced,signal);
 function syncMotion(){
  syncAtmosphere();
  const off=root.dataset.motion==='off'||reduced.matches;

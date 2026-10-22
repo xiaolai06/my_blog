@@ -22,6 +22,26 @@ pnpm-debug.log*
 # local browser diagnostics and generated preview screenshots
 .playwright-cli/
 artwork/previews/
+output/
+tmp/
+
+# local runtimes, databases and Python example caches
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+
+# local deployment packages
+site-dist.tar.gz
 
 # macOS-specific files
 .DS_Store

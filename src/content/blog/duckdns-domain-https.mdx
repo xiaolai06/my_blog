@@ -1,0 +1,662 @@
+---
+title: "DNS 与 HTTPS 完整实践：从 DuckDNS 解析到证书自动续期"
+description: "沿着 DNS 查询、缓存与公网入口理解 HTTPS，实践 DuckDNS、Caddy 和 DNS-01，再完成自动续期、证书过期恢复与外部监测。附流程图、故障练习和官方资料。"
+pubDate: 2026-10-21T11:46:00Z
+category: 域名与 HTTPS
+type: knowledge
+tags: [DuckDNS, DNS, HTTPS, 证书, 公网 IP, Caddy]
+readingTime: 38
+draft: false
+cover: /images/journal-river-night.webp
+coverCaption: 域名与网络学习的主题插画；流程图和故障情景为教学示意
+summary:
+  - DuckDNS 提供免费子域名与动态 DNS；它不会代理流量、开放端口或穿透运营商 NAT。
+  - 先确认公网入口，再配置 A / AAAA，最后选择 HTTP、TLS-ALPN 或 DNS 验证方式。
+  - HTTP-01 依赖公网 80，DNS-01 通过 TXT 验证；证书通过与网站可访问需要分别验收。
+  - 续期会签发一张新证书；Caddy 自动加载，独立 ACME 客户端还需安装证书并重载服务。
+  - 证书过期时先区分验证失败、任务停跑与服务仍用旧证书，再修复、恢复并从外网检查。
+  - 以实际有效期与客户端策略安排续期，用外部探测监测正在提供的证书，不能依赖到期邮件。
+resources:
+  - title: RFC 1034 · DNS 委派与缓存
+    url: https://www.rfc-editor.org/rfc/rfc1034
+  - title: Let’s Encrypt · ACME 如何工作
+    url: https://letsencrypt.org/how-it-works/
+  - title: Caddy · 自动 HTTPS 与续期
+    url: https://caddyserver.com/docs/automatic-https
+  - title: Caddy · 服务运行与配置
+    url: https://caddyserver.com/docs/running
+  - title: Caddy · 数据目录
+    url: https://caddyserver.com/docs/conventions#data-directory
+  - title: Let’s Encrypt · 2027 年默认有效期调整
+    url: https://letsencrypt.org/2026/10/07/64-day-certs
+  - title: Let’s Encrypt · 到期提醒邮件停止服务
+    url: https://letsencrypt.org/2025/01/22/ending-expiration-emails
+  - title: Let’s Encrypt · 签发与失败重试限制
+    url: https://letsencrypt.org/docs/rate-limits/
+  - title: acme.sh · 证书安装与自动续期
+    url: https://github.com/acmesh-official/acme.sh
+  - title: acme.sh · 命令参数
+    url: https://github.com/acmesh-official/acme.sh/wiki/Options-and-Params
+  - title: OpenSSL · s_client 连接诊断
+    url: https://docs.openssl.org/3.0/man1/openssl-s_client/
+  - title: OpenSSL · x509 证书检查
+    url: https://docs.openssl.org/3.0/man1/openssl-x509/
+  - title: Prometheus · Blackbox Exporter 开源项目
+    url: https://github.com/prometheus/blackbox_exporter
+  - title: Prometheus · 外部探测配置指南
+    url: https://prometheus.io/docs/guides/multi-target-exporter/
+  - title: DuckDNS · 免费动态 DNS
+    url: https://www.duckdns.org/
+  - title: DuckDNS · IP 与 TXT 更新 API
+    url: https://www.duckdns.org/spec.jsp
+  - title: DuckDNS · 常见问题
+    url: https://www.duckdns.org/faqs.jsp
+  - title: Let’s Encrypt · 验证方式
+    url: https://letsencrypt.org/docs/challenge-types/
+  - title: Let’s Encrypt · IPv6 验证
+    url: https://letsencrypt.org/docs/ipv6-support/
+  - title: Let’s Encrypt · 测试签发环境
+    url: https://letsencrypt.org/docs/staging-environment/
+  - title: Caddy DuckDNS · 模块与配置
+    url: https://github.com/caddy-dns/duckdns
+  - title: acme.sh · DuckDNS 插件
+    url: https://github.com/acmesh-official/acme.sh/wiki/dnsapi#27-use-duckdnsorg-api
+  - title: RFC 6598 · 运营商共享地址空间
+    url: https://www.rfc-editor.org/rfc/rfc6598
+  - title: frp · 有公网中转端的内网代理
+    url: https://github.com/fatedier/frp
+---
+
+import LiveExample from '../../components/LiveExample.astro';
+import GuideDiagram from '../../components/GuideDiagram.astro';
+
+## 先把三个容易混淆的结果分开
+
+本文沿用 **DuckDNS** 作为免费方案。它的地址形式是 `your-name.duckdns.org`，服务名称不是 Docker；部署是否使用容器，与域名解析没有直接关系。资料核对日期为 **2026 年 10 月 21 日**，示例域名、地址和 Token 均为占位内容，不代表已经替读者配置或签发。
+
+完成 [上一篇服务器部署](/blog/astro-server-deployment/) 后，接下来依次确认：
+
+1. **解析正确**：DNS 返回你预期的公网地址。
+2. **网络可达**：外部访问者能连接该地址的站点端口。
+3. **HTTPS 有效**：服务器提供与访问域名匹配、受信任且未过期的证书。
+
+这三项不互相替代。DNS 保存成功，不代表路由器已转发；拿到证书，也不代表公网请求已经能进来。
+
+<GuideDiagram variant="network" />
+
+第一次跟着做，可以先完成解析、公网入口与 Caddy 配置；已有站点的读者可以直接从目录进入续期或过期恢复。文中的 Linux 命令以 Ubuntu / Debian 的 Bash、systemd 服务为例；`dig`、`openssl`、`curl` 需要预先安装。没有连接真实域名的交互练习可直接在本页预览。
+
+## DNS 到底怎样找到服务器：权威记录、递归与缓存
+
+输入 `https://your-name.duckdns.org/` 时，浏览器需要先取得地址，再建立连接。**DNS 回答“到哪里连接”，TLS 证明“连接的这个名称是否可信”，HTTP 才负责“返回哪一页”。** DNS 不会读取博客的 `/blog/` 路径，也不会为网站签发证书。
+
+<GuideDiagram variant="dns" />
+
+可以把这里的角色分成三种：
+
+| 角色 | 保存或查找什么 | 出错时会看到什么 |
+| --- | --- | --- |
+| 权威 DNS | 域名管理方发布的记录，本例由 DuckDNS 提供 | 更新到错误 IP、记录缺失，或者权威服务无响应 |
+| 递归解析器 | 替客户端查找答案，并按 TTL 缓存 | 权威已更新，但某些网络还得到旧记录 |
+| 本机与浏览器 | 也可能缓存之前的查询结果 | 同一网络不同设备看到不同结果 |
+
+**TTL 是缓存允许复用答案的时长，不是“全球同步倒计时”。** 例如某解析器缓存了一条 TTL 为 300 秒的旧记录，在缓存剩余寿命结束前仍可能返回旧 IP。这个数值只是教学示例，不代表 DuckDNS 实际可配置或当前公布的 TTL。查询失败也可能被负缓存，因此先创建记录再等待重查，比连续更换设置更容易定位问题。委派、递归和缓存的原始定义见 [RFC 1034](https://www.rfc-editor.org/rfc/rfc1034)。
+
+在服务器 Bash 中查看带 TTL 的答案，比只输出地址更有帮助：
+
+```bash
+dig your-name.duckdns.org A +noall +answer
+dig your-name.duckdns.org AAAA +noall +answer
+dig +short NS duckdns.org
+# 将占位值换成上一步返回的某台权威服务器
+dig @AUTHORITATIVE_NS your-name.duckdns.org A +noall +answer
+```
+
+`+answer` 输出里的 TTL 单位是秒。比较同一种记录、同一个名称的权威答案与当前递归答案：权威也错，就修复发布记录；权威已对、递归还旧，就检查缓存与查询路径。清空自己电脑的缓存只影响自己，不会清空运营商或别人的解析器。
+
+迁移服务器时，旧入口最好继续提供一段时间的站点与有效证书，等旧缓存自然失效。若域名提供商允许调整 TTL，应在迁移前提前调整并等待原 TTL 经过；修改记录后再降低 TTL，无法缩短已经缓存的旧答案寿命。
+
+## 免费方案的边界：能得到什么，还要准备什么
+
+[DuckDNS 官网](https://www.duckdns.org/)提供免费动态 DNS：在共享的 `duckdns.org` 下选择一个可用子域名，把地址更新为自己的 IP。它适合学习部署、个人服务和动态公网 IP 场景。你得到的是子域名使用与更新能力，不是注册了一个自己独立持有的顶级域名。
+
+| 名称 | 解决的问题 | 不负责的部分 |
+| --- | --- | --- |
+| DuckDNS | 把域名解析到 IP；支持 API 更新 | 不托管博客、不代理 HTTPS、不替你映射端口 |
+| DDNS 更新任务 | 公网 IP 改变后修正记录 | 不保证这个 IP 接受外部入站 |
+| Web 服务器 | 返回网页与资源，处理站点 Host | 不决定运营商是否给你公网地址 |
+| ACME 客户端 | 证明域名控制权，申请与续期证书 | 不修复错误的 DNS、网络或代理配置 |
+| 公网服务器 / 中转端 | 提供可被访问的入口 | 仍需要管理、防火墙、带宽与持续运行 |
+
+“免费”主要指这里的子域名与可使用的证书服务，服务器、带宽或中转资源可能产生费用。重要长期站点也应考虑共享域名的品牌、可迁移性与服务依赖；将来换独立域名时，要重新构建本站正式 URL、配置解析与证书。
+
+## 先判断你有没有可入站的公网入口
+
+### 云服务器：看公网地址与安全组
+
+以云控制台分配的公网 IP 为准，不要把服务器 `ip addr` 中的私网地址直接填进 DNS。弹性公网地址可能通过平台 NAT 映射给实例，是否能访问还由安全组、系统防火墙与服务监听决定。通常无需再配置家用路由器转发。
+
+### 家庭主机：比较路由器 WAN 与出口地址
+
+先在路由器后台看 WAN IPv4，再与外部看到的出口地址比较。`10.0.0.0/8`、`172.16.0.0/12`、`192.168.0.0/16` 属于私有地址；`100.64.0.0/10` 即 `100.64.0.0–100.127.255.255` 是 [RFC 6598 定义的共享地址空间](https://www.rfc-editor.org/rfc/rfc6598)。WAN 处于这些范围时，说明前面还有一层网络设备或运营商 NAT，不能默认自己拥有可直接入站的公网 IPv4。
+
+WAN 与出口不同也可能是自家光猫加路由器的双重 NAT；若两层都由自己管理，可以分别设置转发或合理调整网络模式。运营商 CGNAT 则不能只靠家里一条端口转发解决。即使 WAN 与出口相同，也还要从外部验证端口；地址看起来公开，并不保证运营商允许入站。
+
+家庭主机需要固定内网地址，例如路由器 DHCP 静态租约，然后配置：
+
+```text
+公网 TCP 80  →  内网主机 192.168.1.20:80
+公网 TCP 443 →  内网主机 192.168.1.20:443
+```
+
+这里的内网 IP 只是示例。把外部 8080 映射到内部 80，可以用于自己带端口访问，但 **HTTP-01 仍然从公网 80 发起**，不会自动改用 8080。IPv6 通常不做这类 IPv4 NAT 转发，但需要正确的全局地址、入站防火墙与真实的 IPv6 连通性。只有 IPv6 入口的站点，也不能保证没有 IPv6 的访客可以访问。
+
+如果确认没有公网入站入口，可申请可用的公网地址，改用云服务器，或考虑 [frp](https://github.com/fatedier/frp) 这类开源代理。frp 需要自己控制的公网中转端与相应配置；它解决转发，不凭空提供免费的公网服务器。纯静态博客优先放到稳定的托管入口，通常比维持家庭穿透链路更容易维护。
+
+## 创建子域名，并让解析指向实际入口
+
+登录 [DuckDNS](https://www.duckdns.org/)，选择可用名称，创建自己的 `your-name.duckdns.org`。在它的地址设置中填写服务器公网 IPv4；只有真的提供 IPv6 服务时才配置对应 AAAA。
+
+| 记录 | 示例含义 | 检查重点 |
+| --- | --- | --- |
+| A | 域名 → 公网 IPv4 | 不填 `192.168…` 等局域网地址 |
+| AAAA | 域名 → 全局 IPv6 | 必须同样能到达正确站点，不能留旧主机地址 |
+| TXT | 域名验证等文本信息 | DNS-01 使用本轮挑战值，不是公网 IP |
+| CNAME | 名称 → 另一个名称 | 不是端口转发；普通 CNAME 也不自动等于挑战委派 |
+
+自己的 DuckDNS 子域名不需要去域名注册商修改 `duckdns.org` 的 NS；这一层由服务方管理。只有另外购买了独立域名，才会涉及那个域名的注册商与 DNS 托管。
+
+在 Windows PowerShell 查看解析：
+
+```powershell
+Resolve-DnsName your-name.duckdns.org -Type A
+Resolve-DnsName your-name.duckdns.org -Type AAAA
+```
+
+Linux 可安装发行版提供的 `dnsutils`，然后检查：
+
+```bash
+dig +short A your-name.duckdns.org
+dig +short AAAA your-name.duckdns.org
+```
+
+预期 A 是自己的公网 IPv4；不使用 IPv6 时，AAAA 应没有错误记录。再用不同网络或递归解析器交叉确认。控制台已更新、本地仍旧，可能是缓存；A 与 AAAA 指向不同机器则是另一类问题，不能只等缓存。
+
+## IP 会变化时，让 DDNS 自动更新
+
+固定公网 IP 可以先手动配置，不必额外引入定时更新。动态 IP 则需要在 **正确的网络出口** 定期更新记录。[DuckDNS API](https://www.duckdns.org/spec.jsp) 在 `ip` 留空时识别请求来源的 IPv4；如果请求经由 VPN、代理或错误主机发出，识别出的可能不是站点入口。自动识别也无法突破 CGNAT，IPv6 则需显式管理。
+
+下面给出 Ubuntu / Debian 的小型定时任务。它与 Caddy 分工：**DDNS 更新 IP，ACME DNS 插件更新挑战 TXT**。Token 请在服务器编辑器中填写到权限受限的文件，不写进博客源码、截图或命令历史。
+
+### 配置请求与结果判断
+
+```bash
+sudo install -d -m 700 /etc/duckdns
+sudo install -m 600 /dev/null /etc/duckdns/update.conf
+sudo nano /etc/duckdns/update.conf
+```
+
+文件内容如下。`domains` 只填自己的名称部分，不含 `.duckdns.org`；Token 替换为账户实际值，保留 HTTPS：
+
+```ini
+url = "https://www.duckdns.org/update?domains=your-name&token=YOUR_DUCKDNS_TOKEN&ip="
+ipv4
+fail
+silent
+show-error
+connect-timeout = 10
+max-time = 30
+```
+
+再用 `sudo nano /usr/local/sbin/update-duckdns` 写入脚本：
+
+```bash
+#!/bin/sh
+set -eu
+reply=$(curl --config /etc/duckdns/update.conf)
+case "$reply" in
+  OK) printf '%s\n' 'DuckDNS update accepted' ;;
+  *) printf '%s\n' 'DuckDNS update rejected; check configuration' >&2; exit 1 ;;
+esac
+```
+
+```bash
+sudo chmod 755 /usr/local/sbin/update-duckdns
+sudo /usr/local/sbin/update-duckdns
+```
+
+正常时输出 accepted。这里检查了响应正文：DuckDNS 返回 `KO` 时，HTTP 请求仍可能成功结束，所以不能只看 curl 的退出码。脚本不打印含 Token 的完整 URL；排错时也不要直接开 `curl -v` 后把日志贴到公开地方。
+
+### 交给 systemd 定时运行
+
+创建 `/etc/systemd/system/duckdns-update.service`：
+
+```ini
+[Unit]
+Description=Update the blog DuckDNS address
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/update-duckdns
+```
+
+创建 `/etc/systemd/system/duckdns-update.timer`：
+
+```ini
+[Unit]
+Description=Refresh the blog dynamic DNS
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+RandomizedDelaySec=20s
+
+[Install]
+WantedBy=timers.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now duckdns-update.timer
+sudo systemctl start duckdns-update.service
+systemctl list-timers duckdns-update.timer
+sudo journalctl -u duckdns-update.service -n 20 --no-pager
+```
+
+应看到下次运行时间与 accepted 反馈，再独立查询 A 记录验证结果。定时任务存在不代表上次更新成功。若有多个设备同时用不同出口更新同一域名，记录可能来回变化；为一个域名选一个明确的更新来源。
+
+这套脚本只管理 IPv4。已有 AAAA 不会因为没有填写 `ipv6` 就自动消失；需要在确认用途后单独修正。API 中的 `clear=true` 会清除地址，不要把它当普通更新参数随手加入。
+
+## HTTPS 证明了什么，证书里又有什么
+
+DNS 指向的地址可以改变，但浏览器仍然按地址栏里的**域名**检查证书。CA（证书颁发机构）在验证域名控制权后签发证书；私钥留在你控制的服务端，TLS 握手让服务端证明它持有与证书匹配的私钥。证书本身可以公开，私钥和 DuckDNS Token 不可以。
+
+| 要检查的内容 | 为什么影响访问 | 常见误判 |
+| --- | --- | --- |
+| SAN 中的域名 | 访问名称必须在证书覆盖范围内 | 给域名签了证书，直接用 IP 打开仍可能名称不匹配 |
+| `notBefore` / `notAfter` | 当前时间要落在有效区间 | 服务端或客户端时钟错误，被误认为签发失败 |
+| 证书链与信任 | 浏览器需要把站点证书验证到受信任的根 | 只部署叶子证书，部分客户端缺中间证书而失败 |
+| 证书对应的私钥 | 服务必须能证明身份，并有权读取密钥 | 文件已换，配置仍指向另一把私钥 |
+| SNI 与终止 TLS 的入口 | 同一 IP 可以服务多个域名 | 查错虚拟主机，或只更新源站、漏掉 CDN / 反向代理 |
+
+这里申请的域名验证证书证明域名控制权，不证明站点经营者身份、业务可靠性或内容安全。HTTPS 也不能修复应用漏洞。ACME 是将控制权验证和签发自动化的协议；验证、证书请求的关系可对照 [Let’s Encrypt 的工作原理](https://letsencrypt.org/how-it-works/)。
+
+## HTTPS 签发：先选对验证路线
+
+ACME 验证是在证明域名控制权，并不是测试整个网站功能。下面按 [Let’s Encrypt 验证文档](https://letsencrypt.org/docs/challenge-types/)整理三种常见方式：
+
+| 方式 | 证书机构看什么 | 必要条件与限制 |
+| --- | --- | --- |
+| HTTP-01 | `http://域名/.well-known/acme-challenge/挑战标识` | 公网 TCP 80 可达，路径返回正确内容；不能用于通配符证书 |
+| TLS-ALPN-01 | TCP 443 上特定的 TLS 验证响应 | ACME 客户端控制对应 TLS 入口；普通静态文件无法代替 |
+| DNS-01 | `_acme-challenge.域名` 的 TXT | 能更新 DNS 并等待传播；可用于通配符，不依赖网站入站 80 |
+
+<GuideDiagram variant="challenge" />
+
+标准 Caddy 已支持前两种自动验证；公网条件正常时可沿用上一篇配置。仅仅 80 不通，并不代表任何自动签发都绝对失败：443 能正确到达 Caddy 时，TLS-ALPN-01 也可能工作。**下面的 DNS-01 是一条明确依赖 DNS API 的替代路线。**
+
+DNS-01 只需要客户端能访问 DNS API / ACME 服务，且证书机构能查询正确 TXT。它既不修复错误 A / AAAA，也不让 CGNAT 后的主机自动暴露到公网。正常访客仍需要可用的 HTTPS 入口。
+
+## 80 受限时，用 Caddy + DuckDNS 自动做 DNS 验证
+
+### 安装包含 DuckDNS 的 Caddy
+
+这是 **可选分支**，适合决定继续由 Caddy 管理证书的站点。标准安装包没有 DuckDNS 模块，直接粘贴 `dns duckdns` 会报模块不存在。应先按 [Caddy 安装文档](https://caddyserver.com/docs/install)与 [DuckDNS 模块仓库](https://github.com/caddy-dns/duckdns)准备定制二进制。
+
+在 [Caddy 官方下载页](https://caddyserver.com/download)选择 **Linux 与服务器实际架构**，添加 `github.com/caddy-dns/duckdns`，下载到服务器的工作目录，文件名假定为 `caddy`。`uname -m` 的 `x86_64` 通常对应 amd64，`aarch64` 对应 arm64。也可按 [xcaddy 官方构建说明](https://caddyserver.com/docs/build#xcaddy)自行构建并记录版本。
+
+```bash
+chmod +x ./caddy
+./caddy version
+./caddy list-modules | grep '^dns.providers.duckdns$'
+sha256sum ./caddy
+sudo install -m 755 ./caddy /usr/local/bin/caddy-duckdns
+```
+
+预期模块列表出现 `dns.providers.duckdns`。这里保留标准 `/usr/bin/caddy`，通过服务覆盖文件明确使用定制路径；避免只在终端跑了新版本，后台服务仍使用旧版本。保存下载来源、版本和摘要；以后需要单独维护这个定制二进制的安全更新，系统包升级不会自动更新它。
+
+### 给服务提供 Token，避免打印环境变量
+
+创建 root 可读的凭据文件：
+
+```bash
+sudo install -m 600 /dev/null /etc/caddy/duckdns.env
+sudo nano /etc/caddy/duckdns.env
+```
+
+填入这一行，不要提交到 Git：
+
+```ini
+DUCKDNS_API_TOKEN=YOUR_DUCKDNS_TOKEN
+```
+
+执行 `sudo systemctl edit caddy`，加入以下覆盖内容。系统管理器会读取环境文件；这里显式重写启动命令，**不带打印环境的 `--environ`**。这是为了避免把 Token 带进服务日志。
+
+```ini
+[Service]
+EnvironmentFile=/etc/caddy/duckdns.env
+ExecStart=
+ExecStart=/usr/local/bin/caddy-duckdns run --config /etc/caddy/Caddyfile --adapter caddyfile
+ExecReload=
+ExecReload=/usr/local/bin/caddy-duckdns reload --config /etc/caddy/Caddyfile --adapter caddyfile --force
+```
+
+`EnvironmentFile` 与启动命令覆盖方式来自 [Caddy 的 systemd 配置说明](https://caddyserver.com/docs/running#environment-variables)。账户 Token 可能影响该账户下多个子域名；只放在可信主机，备份与日志同样需要控制访问。
+
+### 修改站点配置并验证
+
+备份 Caddyfile，然后把对应站点块调整为以下配置；已有其他站点块继续保留：
+
+```text
+your-name.duckdns.org {
+    root * /srv/my-blog/current
+    encode zstd gzip
+    tls {
+        dns duckdns {env.DUCKDNS_API_TOKEN}
+    }
+    file_server
+    handle_errors 404 {
+        rewrite * /404.html
+        file_server
+    }
+}
+```
+
+先加载凭据校验，再让 systemd 重新读取覆盖配置并重启。这次涉及启动程序与环境变更，需要 restart；日常只改站点配置则用 reload。验证命令只读取自己刚创建、root 管理的环境文件，不输出其中内容：
+
+```bash
+sudo bash -c 'set -a; . /etc/caddy/duckdns.env; set +a; exec /usr/local/bin/caddy-duckdns validate --config /etc/caddy/Caddyfile --adapter caddyfile'
+sudo systemctl daemon-reload
+sudo systemctl restart caddy
+sudo systemctl is-active caddy
+sudo journalctl -u caddy -n 80 --no-pager
+```
+
+DNS-01 过程中插件会创建并清理挑战 TXT。**签发完成后 TXT 不存在通常正常**；不要在完成后查询不到 TXT，就断言本轮验证没有发生。最终仍要用浏览器与 `curl -I https://自己的域名/` 验证正在提供的证书。
+
+单个博客通常只需精确域名证书，不必一开始就申请 `*.your-name.duckdns.org`。通配符证书不覆盖父名称本身，证书的通配范围也不等同于 DNS 解析已经配置。DuckDNS 的 TXT 会被其下多级子域共享；按 [API 说明](https://www.duckdns.org/spec.jsp)与 [插件实现](https://github.com/acmesh-official/acme.sh/blob/master/dnsapi/dns_duckdns.sh)，应避免不同客户端并发写入同一组挑战记录。
+
+## 哪些开源工具适合什么问题
+
+| 项目 | 适合的情况 | 需要承担的维护 |
+| --- | --- | --- |
+| [Caddy](https://github.com/caddyserver/caddy) | 新建静态博客，希望 Web 与证书统一管理 | 服务、数据目录、网络验证路径 |
+| [caddy-dns/duckdns](https://github.com/caddy-dns/duckdns) | 保留 Caddy，通过 DuckDNS API 做 DNS-01 | 定制二进制、Token、DNS 传播；不负责定时更新 A |
+| [acme.sh](https://github.com/acmesh-official/acme.sh) | 已有 Nginx 等 Web 服务，只想补 DNS 证书自动化 | 安装、计划任务、证书部署与 reload hook |
+| [frp](https://github.com/fatedier/frp) | 内网服务需要经可控制的公网服务器转发 | 公网中转端、访问控制、带宽与链路；不代替 ACME |
+
+选择一个证书管理者即可。不要让 Caddy 与 acme.sh 同时争相为同一域名更新共享 TXT，或同时监听 80 / 443 做独立挑战。
+
+已有 Nginx 的读者，可按 acme.sh 官方说明完成安装、账户注册与自动任务配置后，使用其 DuckDNS 插件。下面只是 **签发环节**，不是完整的 Nginx 部署；在可信 Bash 会话中交互读取 Token，避免明文写进历史：
+
+```bash
+read -r -s -p 'DuckDNS token: ' DuckDNS_Token
+printf '\n'
+export DuckDNS_Token
+~/.acme.sh/acme.sh --issue --server letsencrypt \
+  --dns dns_duckdns -d your-name.duckdns.org --keylength ec-256
+unset DuckDNS_Token
+```
+
+这里显式选择 Let’s Encrypt，避免依赖客户端默认 CA。插件会保存续期所需的凭据；`unset` 仅清理当前会话，不会删除其内部配置。保护 `~/.acme.sh/` 及备份文件，后续还需按官方 `--install-cert` 流程将证书部署到 Web 服务的固定路径，并配置权限合适的 reload hook。**不要直接让 Nginx 引用 acme.sh 的内部工作目录，也不要把一次签发成功当作续期已经验收。** [官方证书安装说明](https://github.com/acmesh-official/acme.sh#3%EF%B8%8F%E2%83%A3-install-the-certificate-to-apachenginx)解释了这一步。
+
+## “路由不正确”时，沿着错误逐层查
+
+错误提示常把多个原因压成一句 unauthorized 或 validation failed。先看日志里的具体挑战类型、域名、返回内容与时间，再按表排查，避免反复重签。
+
+| 具体反馈 | 更可能属于哪一层 | 下一步检查 |
+| --- | --- | --- |
+| `NXDOMAIN` / no valid A records | 名称或 DNS | 拼写、子域是否创建、记录是否发布；DNS-01 则看挑战 TXT 查询 |
+| `SERVFAIL` | DNS 查询或权威服务异常 | 换解析器并查权威响应；先恢复可解析性 |
+| `Timeout during connect` | 公网入口 | 安全组、系统防火墙、路由器转发、CGNAT 或运营商封锁 |
+| `Connection refused` | 地址可达但无服务接收，或主动拒绝 | 监听端口、服务状态与防火墙 reject 规则 |
+| HTTP-01 `Invalid response` / 404 | 验证请求到了错误路径或主机 | Host、A / AAAA、反代、登录拦截与重写规则 |
+| `Incorrect TXT record` | DNS-01 值错误或旧缓存 | Token、域名所属账户、本轮值、传播与并发客户端 |
+| `module not registered: dns.providers.duckdns` | Caddy 运行程序 | 检查实际服务路径和该二进制的模块列表 |
+| DNS API `KO` / authentication error | 凭据或更新参数 | Token、账户内子域名、是否混入完整后缀；不要公开凭据 |
+| 证书已签发，浏览器仍失败 | 服务证书或访问入口 | SNI、完整证书链、服务是否加载新证书、443 是否可达 |
+| `rateLimited` / too many failed authorizations | CA 重试限制 | 修复根因后按提示等待，调试使用测试环境 |
+
+### 查 A 与 AAAA，不只看 IPv4
+
+```bash
+dig +short A your-name.duckdns.org
+dig +short AAAA your-name.duckdns.org
+curl -4 -I --connect-timeout 10 https://your-name.duckdns.org/
+curl -6 -I --connect-timeout 10 https://your-name.duckdns.org/
+```
+
+`curl -6` 的测试机自己必须有 IPv6，否则失败不能证明远端配置错误。双栈域名签发时，[Let’s Encrypt 会优先尝试 IPv6](https://letsencrypt.org/docs/ipv6-support/)；若另一台 IPv6 主机返回了错误挑战内容，不会简单因为 IPv4 正确就一定成功。不提供 IPv6 时修正或移除错误 AAAA，而不是反复改 IPv4。
+
+### 区分 DNS 传播与服务路由
+
+```bash
+dig +short NS duckdns.org
+dig TXT _acme-challenge.your-name.duckdns.org
+# 将下面占位值替换成上一条查到的权威 NS 名称
+dig @AUTHORITATIVE_NS TXT _acme-challenge.your-name.duckdns.org
+sudo journalctl -u caddy -n 80 --no-pager
+```
+
+在验证正在进行时，比较权威 DNS 与递归查询。权威已有新值、递归仍旧，多半要等待传播；两边都不对则检查更新来源。DuckDNS 插件自身使用的解析器还必须能从服务器访问；模块 README 提供 `resolver` 配置，受限网络中应选择真实可达的解析器，不能随便写一个地址期待跳过验证。
+
+HTTP-01 则检查请求是否到达正确的虚拟主机、挑战路径是否被应用登录页或 SPA 重写接管。Caddy 自动管理挑战时不需要自己往博客目录塞一个伪造 Token；随手访问不存在的挑战路径得到 404，也不能单独证明自动验证路由有问题。
+
+### 调试与正式签发分开
+
+频繁调试可使用 [Let’s Encrypt staging 环境](https://letsencrypt.org/docs/staging-environment/)。例如在 Caddyfile 顶部的全局配置块中临时设置：
+
+```text
+{
+    acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+```
+
+如果已有全局块，合并设置，不要重复放多个。测试证书默认不受浏览器信任，出现信任警告是预期；验证链路稳定后移除测试 CA 配置，校验、重载并确认正式证书实际提供。无需删除整个 Caddy 数据目录来“重新开始”，也不应在故障未修复前不断强制续期。
+
+<LiveExample demo="certificate-lab" />
+
+## 证书会到期：续期不是修改原证书的日期
+
+证书签发后，其有效期已经确定。所谓续期，是客户端按策略重新申请一张证书，再让站点提供新证书。它仍可能需要域名验证；第一次成功时临时打开的端口、临时导出的 Token、手工填写的 TXT，都不能保证下一轮无人值守成功。
+
+<GuideDiagram variant="lifecycle" />
+
+一次维护闭环包含四项证据：**任务在运行、验证能完成、新证书已部署、外部访问确实拿到新证书**。日志里的“签发成功”只证明其中一段。
+
+### 不要把“90 天、到第 60 天续期”写死
+
+截至本文核对日期，Let’s Encrypt 已宣布 **2027 年 2 月 10 日**起，默认签发与续期证书的有效期调整为 **64 天**，也有更短周期的配置。其 staging 环境已在 **2026 年 10 月 14 日**切换到 64 天。这不意味着已有的有效证书被撤销。客户端支持 ARI（ACME Renewal Information）时，可以参考 CA 给出的续期窗口；版本能力应查实际客户端文档。见 [官方有效期调整公告](https://letsencrypt.org/2026/10/07/64-day-certs)。
+
+所以，**定时检查可以每天运行，真正申请由客户端依据证书和续期策略决定**；不要自行写一个“每 60 天强制签一次”的计划。监控也要读取真实 `notAfter`，而不是用安装日期加上想当然的 90 天。
+
+### 路线 A：让 Caddy 管理整个生命周期
+
+前面的 Caddy 配置把站点服务和证书管理交给同一个进程。保持它正常运行，由它安排续期并加载结果；一般不需要额外建一个强制续期 cron。你要维护的是它能够持续工作的条件：
+
+1. **实际服务仍在运行。** 检查 systemd，不只检查当前终端能否运行 `caddy`。
+2. **实际启动程序仍带 DuckDNS 模块。** 升级定制二进制时继续检查模块，不能误换回不含插件的标准构建。
+3. **凭据由服务长期读取。** 交互终端里 `export` 过变量，不代表 systemd 或重启后的服务会继承它。
+4. **数据目录可写并持久保存。** 其中包含证书、私钥和账户状态，不是可随意清空的缓存。官方 systemd 服务通常使用 `/var/lib/caddy` 下的数据；容器部署应按其运行方式挂载持久卷。
+5. **验证路径与出站连接仍有效。** DNS API、DNS 查询、ACME 接口和系统时间都需要正常；若使用 HTTP / TLS 验证，对应公网入口也要保留。
+
+以下命令只观察服务，不输出凭据文件内容：
+
+```bash
+sudo systemctl is-enabled caddy
+sudo systemctl is-active caddy
+sudo systemctl show caddy -p ExecStart
+/usr/local/bin/caddy-duckdns list-modules | grep dns.providers.duckdns
+sudo journalctl -u caddy --since '24 hours ago' --no-pager
+timedatectl status
+```
+
+预期是服务按你的运维策略随系统启动、当前 active、启动路径指向含插件的程序，且没有持续的 renewal、DNS API 或权限错误。并非每天都会签发新证书，因此“今天没有续期成功日志”不等于失败。反过来，也不能仅因进程 active 就判定证书健康。行为与数据目录见 [Caddy 自动 HTTPS](https://caddyserver.com/docs/automatic-https)及[数据目录说明](https://caddyserver.com/docs/conventions#data-directory)。
+
+只改 Caddyfile 时先用前文加载环境的命令校验，再 `sudo systemctl reload caddy`；修改了服务环境或二进制覆盖时，按前文 daemon-reload / restart 流程应用。Caddy 自己管理的证书不需要用 acme.sh 再复制一遍。
+
+### 路线 B：acme.sh 签发，Nginx 加载
+
+这一支适合**已经在使用 Nginx，并已经按官方方式安装 acme.sh**的读者。它与前面的 Caddy 方案二选一。上文显式用了 `--keylength ec-256`，所以下面的安装与续期也用 `--ecc` 选择同一张 ECC 证书。
+
+先为已有 Nginx 站点确定固定的部署路径，例如 `/etc/nginx/tls/your-name/`。管理员应提前建立目录、限制私钥读取权限，并让运行 ACME 的账户具有写入目标文件和执行所需重载命令的权限。**以下命令必须由同一个已安装客户端、且已具备这些权限的账户运行**；普通账户不能直接写 `/etc/nginx`，也不要临时加 `sudo` 后误用另一套 home 与账户状态。
+
+```bash
+~/.acme.sh/acme.sh --install-cert -d your-name.duckdns.org --ecc \
+  --key-file /etc/nginx/tls/your-name/key.pem \
+  --fullchain-file /etc/nginx/tls/your-name/fullchain.pem \
+  --reloadcmd 'nginx -t && systemctl reload nginx'
+```
+
+在已有 Nginx HTTPS 站点块中，证书配置应对应同一组路径：
+
+```nginx
+ssl_certificate     /etc/nginx/tls/your-name/fullchain.pem;
+ssl_certificate_key /etc/nginx/tls/your-name/key.pem;
+```
+
+首次建立 HTTPS 站点时要协调文件生成与配置加载：先确保安装命令已复制出证书，再验证并加载引用这些文件的 Nginx 配置；不要把两个路径放进配置后，在文件尚不存在时反复重载。这里展示的是证书接入片段，监听、站点根目录与访问控制仍沿用你的完整 Nginx 配置。
+
+`--install-cert` 会记录部署路径和重载命令，后续更新沿用它们；重载前的 `nginx -t` 能阻止有语法问题的配置被加载。hook 失败仍需处理，不能认为证书文件更新就完成了部署。这个流程与 cron 行为见 [acme.sh 官方 README](https://github.com/acmesh-official/acme.sh)。
+
+接着检查**安装 ACME 的那个账户**的计划任务，别只看 root 或另一个用户的 crontab：
+
+```bash
+crontab -l
+~/.acme.sh/acme.sh --list
+~/.acme.sh/acme.sh --cron --home "$HOME/.acme.sh"
+```
+
+正常安装会建立定时检查；如果你明确改用 systemd timer，则验收那个 timer，不重复安装两套任务。`--cron` 会检查证书并在符合条件时续期，输出 skip / not due 可以是正常结果。不要为追求一条“成功”日志反复加 `--force`。命令含义见 [参数文档](https://github.com/acmesh-official/acme.sh/wiki/Options-and-Params)。
+
+手工每次复制 TXT 的 DNS 模式适合学习原理，不构成无人值守续期。生产维护应使用可自动更新 TXT 的 API 插件，确保它保存的 Token 在计划任务环境仍有效；手动测试成功后，再验收定时器和部署 hook。
+
+## 已经过期怎么办：先识别失败位置，再恢复
+
+证书过期不等于域名使用权或解析记录到期。旧证书不能改日期“救活”，但只要仍控制域名、满足 CA 策略并修复验证条件，通常可以重新签发。过期期间，正常校验的浏览器与 API 客户端会拒绝连接；不要把关闭校验当作修复。
+
+<GuideDiagram variant="recovery" />
+
+### 第一步：看外部正在提供什么
+
+在**另一条网络上的 Linux / macOS Bash**执行；`timeout` 是 Linux 常见工具，macOS 默认未安装时可去掉该前缀，但要注意连接可能等待较久：
+
+```bash
+set -o pipefail
+timeout 15 openssl s_client \
+  -connect your-name.duckdns.org:443 \
+  -servername your-name.duckdns.org </dev/null \
+  | openssl x509 -noout -subject -issuer -dates \
+      -ext subjectAltName -fingerprint -sha256
+
+curl -I --connect-timeout 10 --max-time 20 https://your-name.duckdns.org/
+```
+
+第一组命令用于**读取远端叶子证书信息**，不代表已经完成受信任校验；`-servername` 确保发送正确 SNI。查看 `notAfter`、SAN 与 SHA-256 指纹，再用不带 `-k` 的 curl 验证 HTTPS。连接失败或根本没有证书时，先处理服务与网络，不要把空输出解读为有效。选项依据为 [OpenSSL s_client](https://docs.openssl.org/3.0/man1/openssl-s_client/)与 [x509](https://docs.openssl.org/3.0/man1/openssl-x509/)。
+
+如果前面使用 Nginx，也可在服务器读取**部署文件**，与远端比较：
+
+```bash
+openssl x509 -in /etc/nginx/tls/your-name/fullchain.pem \
+  -noout -dates -fingerprint -sha256
+```
+
+若磁盘日期已新、远端日期仍旧，优先查重载、SNI、负载均衡节点或 CDN。若两边都旧，再查续期任务与验证。这里的 Nginx 文件路径不适用于 Caddy 的内部存储；Caddy 方案先从服务日志和远端证书排查，不手工覆盖其内部文件。
+
+### 第二步：把现场对应到恢复动作
+
+| 现场 | 根因方向 | 恢复方式 |
+| --- | --- | --- |
+| 日志显示 DNS API 拒绝 | Token 已更换、账户或子域名不对应 | 在实际客户端的凭据位置更新，保护文件权限后重试验证 |
+| 多天没有任务记录 | 服务停掉、cron 被移除、timer 未启用 | 恢复原来的服务或任务，确认运行账户与客户端 home |
+| TXT 写入成功但 CA 读到旧值 | 传播、错误权威、同域名并发客户端 | 核对本轮值与权威答案，处理并发并等待缓存，不反复重签 |
+| HTTP / TLS 挑战连接失败 | 换了 IP、端口被关、AAAA 错站 | 修复解析和入口；确需改 DNS-01 时完整配置 API 插件 |
+| 新证书文件已生成，外部仍旧 | hook 失败、配置指错、节点漏更新 | 验证并重载实际 TLS 终止服务，逐个入口核对 |
+| 只有某些设备报告过期 | 客户端时钟、信任库或不同入口 | 对比时间、完整证书链、IPv4 / IPv6 和不同解析答案 |
+| 出现 rate limit / Retry-After | 之前重试过多 | 停止循环，先排根因，再按 CA 返回的时间恢复 |
+
+**恢复 Caddy：** 修复对应凭据、端口或权限后，按配置变更类型校验并重载 / 重启原服务。自动管理会按其重试策略继续申请；跟踪实际日志。不要删除数据目录或不断重启以刺激签发，也不要启动第二个客户端竞争同一域名。
+
+**恢复 acme.sh：** 在原账户、原 home 下修复问题，然后针对这张证书执行一次普通续期：
+
+```bash
+~/.acme.sh/acme.sh --renew -d your-name.duckdns.org --ecc
+```
+
+已过期的证书本应满足续期条件。若客户端显示未到期，但访客看到过期，回到“文件与实际入口不一致”排查，不要直接强制申请。自动部署 hook 失败时，修好权限或 Nginx 配置后，可重新执行前文 `--install-cert`，部署已签好的证书并重载，无需为同一张文件再签一次。CA 拒绝时按[速率限制说明](https://letsencrypt.org/docs/rate-limits/)和实际错误处理。
+
+### 第三步：确认恢复完成，并补回自动化
+
+重新从外部访问精确域名，确认受信任连接、证书覆盖名称、有效期和站点内容都正确。有 AAAA 或多个节点，就分别检查；经过 CDN 时，访问者拿到的是边缘证书，源站证书与边缘证书需要分别维护。只有单个进程内存还保存旧证书时，重载才是对应动作；盲目清浏览器缓存不能替代服务端修复。
+
+最后记录故障发生时间、根因、恢复操作、远端新证书信息与下一次任务状态。手工救回一次，只解决当前中断；定时任务、凭据和外部告警都恢复，才闭合了维护流程。
+
+<LiveExample demo="certificate-renewal" />
+
+## 让告警早于过期：监测实际入口，不只监测文件
+
+Let’s Encrypt 已在 **2025 年 6 月 4 日停止证书到期提醒邮件服务**。注册 ACME 账户或留下邮箱，不等于拥有到期告警；应自行安排监测与通知。见[官方停止通知公告](https://letsencrypt.org/2025/01/22/ending-expiration-emails)。
+
+个人站点至少保留两种信号：一是客户端的续期失败、部署 hook 失败；二是从另一网络探测公开 URL 的有效性与剩余证书时间。前者帮助定位，后者覆盖“文件新但服务旧”“某台节点漏更新”等盲区。监控尽量独立于网站所在主机，避免整台服务器停机时连告警也一起停。
+
+### 本机文件检查适合什么场景
+
+下面只适合已有 Nginx 固定部署文件的例子，检查它在接下来 7 天内是否仍有效：
+
+```bash
+openssl x509 -in /etc/nginx/tls/your-name/fullchain.pem \
+  -checkend 604800 -noout
+```
+
+退出码为 0 表示该文件的到期时间晚于这个阈值；非 0 还可能是读取或解析错误，需要看错误信息。它不检查公开端口、不验证域名匹配，也不保证远端使用同一张证书，因此不能单独作为整站健康结论。7 天只是示例阈值，短周期证书需要另定策略。
+
+### 用开源探测器监测外部 HTTPS
+
+已有 Prometheus 的团队可以接入 [prometheus/blackbox_exporter](https://github.com/prometheus/blackbox_exporter)，对站点做 HTTP / TLS 探测。按[官方多目标探测指南](https://prometheus.io/docs/guides/multi-target-exporter/)配置 URL、探测模块与 Prometheus 抓取目标后，再使用下面的 PromQL；这里展示查询含义，不是完整监控部署清单。
+
+```text
+# 远端证书链中最早到期证书的剩余天数
+(probe_ssl_earliest_cert_expiry - time()) / 86400
+
+# 探测失败：可能包含网络、TLS、HTTP 状态等原因
+probe_success == 0
+
+# 另行检查抓取是否正常；实际环境应加对应 job / instance 筛选
+up == 0
+```
+
+探测目标应为 `https://your-name.duckdns.org/`，保留证书和主机名校验，不开启 `insecure_skip_verify` 来消除告警。证书指标缺失不等于没有风险，要同时看探测失败与抓取失败。需要双栈验收时分别配置 IPv4、IPv6 探测；单次成功可能只覆盖其中一路。
+
+如果使用的是数十天有效期证书，可以把“剩余 14 天预警、7 天升级”作为起点；几天有效期的证书不能照搬，应结合实际寿命、ARI / 客户端续期窗口和恢复所需时间调整。通知要配置接收人、重复间隔并做一次测试，避免只有图表，没有任何人收到异常。
+
+## 资料怎么串起来：从原理到实现
+
+下面这条阅读路径可以帮助区分“协议要求”“工具行为”和“本站示例”，每项都指向原始资料；完整参考链接还列在文末。
+
+| 要核对的问题 | 优先读的原始资料 | 本文对应部分 |
+| --- | --- | --- |
+| 为什么解析有缓存、权威与递归的区别 | [RFC 1034](https://www.rfc-editor.org/rfc/rfc1034) | DNS 查询与迁移 |
+| DuckDNS 更新参数、OK / KO 与 TXT 的行为 | [DuckDNS API](https://www.duckdns.org/spec.jsp) | DDNS、DNS-01 与并发问题 |
+| CA 为什么验证 80 或 TXT | [Let’s Encrypt 挑战类型](https://letsencrypt.org/docs/challenge-types/) | 签发路线与故障表 |
+| Caddy 如何自动申请和更新 | [自动 HTTPS](https://caddyserver.com/docs/automatic-https)、[DuckDNS 模块源码](https://github.com/caddy-dns/duckdns) | Caddy 配置与持续运行条件 |
+| DNS 插件怎样写 TXT，证书如何部署 | [dns_duckdns.sh](https://github.com/acmesh-official/acme.sh/blob/master/dnsapi/dns_duckdns.sh)、[acme.sh README](https://github.com/acmesh-official/acme.sh) | Nginx 分支与 hook |
+| 证书时长、限流与测试环境是否变化 | [有效期公告](https://letsencrypt.org/2026/10/07/64-day-certs)、[限制说明](https://letsencrypt.org/docs/rate-limits/)、[staging](https://letsencrypt.org/docs/staging-environment/) | 续期策略与安全调试 |
+| 如何独立观察正在服务的证书 | [OpenSSL x509](https://docs.openssl.org/3.0/man1/openssl-x509/)、[Blackbox Exporter](https://github.com/prometheus/blackbox_exporter) | 过期恢复与外部监测 |
+
+流程图是依据这些资料整理的教学示意；两个交互练习只使用固定情景，不代表真实网络测量。真实环境的 CA、客户端版本、系统服务与网络条件不同，应以实际配置、错误信息及原始文档为准。
+
+## 保留一张可以回查的运行记录
+
+正式使用后，维护下面这些观察项，比记住一次成功截图更有价值：
+
+| 观察项 | 正常反馈 | 异常后先看什么 |
+| --- | --- | --- |
+| DDNS 更新任务 | 最近一次 accepted，A 与入口一致 | 定时器、出口 IP、账户 Token |
+| 外部 HTTPS | 从另一网络访问 200，域名证书受信任 | DNS、443、站点 Host 与证书 |
+| 证书自动更新 | 服务日志无持续续期失败 | API 凭据、验证路径、DNS 传播与时间同步 |
+| 页面元信息 | canonical / RSS / sitemap 是正式域名 | `SITE_URL` 与最近一次构建 |
+| 配置备份 | Web 配置、发布版本、必要凭据分开保管 | Token 泄露时按账户入口轮换并更新所有使用处 |
+
+DNS 验证通常不需要在自己服务器上开放入站 53；权威 DNS 由 DuckDNS 提供。也不需要把博客开发端口暴露出去。最终保留的是一条能解释清楚的链路：**名称解析正确 → 公网入口可达 → 站点响应正确 → HTTPS 与续期正常**。

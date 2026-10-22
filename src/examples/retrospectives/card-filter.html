@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>卡片筛选 · 位置过渡</title>
+<style>
+:root {
+  --bg:#f8f6f2;
+  --surface:#fffdfb;
+  --ink:#302d30;
+  --muted:#706a70;
+  --line:#e8e2dc;
+  --accent:#a65347;
+  color-scheme:light
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  padding:24px;
+  font:14px/1.8 system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink)
+}
+nav {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:20px
+}
+button {
+  font:inherit;
+  cursor:pointer;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:8px 16px;
+  min-height:44px;
+  background:var(--surface);
+  color:var(--ink)
+}
+button[aria-pressed=true] {
+  background:var(--accent);
+  color:var(--surface);
+  border-color:var(--accent)
+}
+.cards {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px
+}
+.card {
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:18px;
+  background:var(--surface);
+  transition:translate 220ms cubic-bezier(.23,1,.32,1)
+}
+.card[hidden] {
+  display:none
+}
+.card h2 {
+  font-size:18px;
+  margin:10px 0
+}
+.card p {
+  font-size:13px;
+  margin:0;
+  color:var(--muted)
+}
+.card span {
+  color:var(--accent);
+  font-size:12px
+}
+.card:focus-visible,button:focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:3px
+}
+@media(hover:hover) {
+  .card:hover {
+    translate:0 -3px
+  }
+}
+#count {
+  color:var(--muted);
+  font-size:12px
+}
+html[data-theme=dark] {
+  --bg:#1b1d23;
+  --surface:#23262d;
+  --ink:#ede9e5;
+  --muted:#b5afb7;
+  --line:#373941;
+  --accent:#e2a594;
+  color-scheme:dark
+}
+@media(max-width:480px) {
+  body {
+    padding:16px
+  }
+  .cards {
+    grid-template-columns:1fr
+  }
+  .card {
+    padding:12px 16px
+  }
+  .card h2 {
+    font-size:16px;
+    margin:0
+  }
+  .card p {
+    display:none
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .card {
+    transition:none
+  }
+}
+html[data-motion=off] .card {
+  transition:none
+}
+</style>
+<nav aria-label="样例分类">
+<button data-filter="all" aria-pressed="true">全部</button>
+<button data-filter="project" aria-pressed="false">项目复盘</button>
+<button data-filter="learning" aria-pressed="false">学习笔记</button>
+</nav>
+<div class="cards">
+<article class="card" tabindex="0" data-type="project">
+<span>01 / 项目复盘</span>
+<h2>博客搭建</h2>
+<p>内容结构与阅读体验</p>
+</article>
+<article class="card" tabindex="0" data-type="learning">
+<span>02 / 学习笔记</span>
+<h2>异步任务</h2>
+<p>一次只解决一个问题</p>
+</article>
+<article class="card" tabindex="0" data-type="project">
+<span>03 / 项目复盘</span>
+<h2>TaskHub</h2>
+<p>从登录链路开始</p>
+</article>
+</div>
+<p id="count" role="status" aria-live="polite">显示 3 条演示记录</p>
+<script>
+const params=new URLSearchParams(location.search);
+document.documentElement.dataset.theme=params.get('theme')||'light';
+document.documentElement.dataset.motion=params.get('motion')||'on';
+const cards=[...document.querySelectorAll('.card')];
+const animations=new Map();
+document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
+ // Read current visual positions before cancelling an interrupted animation.
+ const before=new Map(cards.filter(card=>!card.hidden).map(card=>[card,card.getBoundingClientRect()]));
+ animations.forEach(animation=>animation.cancel());animations.clear();
+ document.querySelectorAll('[data-filter]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+ cards.forEach(card=>card.hidden=button.dataset.filter!=='all'&&card.dataset.type!==button.dataset.filter);
+ const visible=cards.filter(card=>!card.hidden);
+ const after=new Map(visible.map(card=>[card,card.getBoundingClientRect()]));
+ if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&params.get('motion')!=='off'){
+  visible.forEach(card=>{
+   const old=before.get(card),next=after.get(card);
+   const frames=old?[{transform:`translate(${old.x-next.x}px,${old.y-next.y}px)`},{transform:'translate(0,0)'}]:[{opacity:.3,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}];
+   const animation=card.animate(frames,{duration:240,easing:'cubic-bezier(.23,1,.32,1)'});
+   animations.set(card,animation);
+  });
+ }
+ document.querySelector('#count').textContent=`显示 ${visible.length} 条演示记录`;
+}));
+</script>
+</html>

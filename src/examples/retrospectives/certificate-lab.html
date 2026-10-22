@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>域名与证书 · 教学样例</title>
+<style>
+ :root{--bg:#f1f4f3;--surface:#fffefa;--ink:#273732;--muted:#5c6c66;--line:#d5dfd9;--accent:#356a55;--soft:#e5eee7;--warn:#80511c;--bad:#9e3832;color-scheme:light}
+ *{box-sizing:border-box}body{margin:0;padding:22px 16px;background:var(--bg);color:var(--ink);font:14px/1.75 system-ui,sans-serif}main{max-width:650px;margin:auto}h1{font-size:20px;margin:0 0 5px}.intro,small{font-size:12px;color:var(--muted)}.intro{margin:0 0 18px}fieldset{border:0;padding:0;margin:0 0 16px;min-width:0}legend,label{font-weight:600;font-size:13px;margin-bottom:7px}legend{padding:0}label{display:block}.methods{display:flex;gap:10px}.method{display:flex;gap:8px;align-items:center;min-height:48px;flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);cursor:pointer;margin:0}.method:has(input:checked){border-color:var(--accent);background:var(--soft)}input{accent-color:var(--accent);width:16px;height:16px;flex-shrink:0}select,button{font:inherit;min-height:44px;border-radius:9px}select{width:100%;padding:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}button{border:0;padding:9px 18px;background:var(--accent);color:white;font-weight:600;cursor:pointer;margin:14px 0}button:hover{filter:brightness(1.1)}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+ .route{display:flex;gap:6px;align-items:center;padding:15px;background:var(--surface);border:1px solid var(--line);border-radius:10px;font-size:12px;overflow-wrap:anywhere}.route span{flex:1;text-align:center}.route b{color:var(--muted)}.results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.result{padding:15px;background:var(--surface);border:1px solid var(--line);border-radius:10px}.result small{display:block}.result strong{font-size:15px}.result[data-state="pass"] strong{color:var(--accent)}.result[data-state="warn"] strong{color:var(--warn)}.result[data-state="fail"] strong{color:var(--bad)}.explain{padding:15px 17px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;background:var(--surface)}.explain p{margin:0;font-size:13px}.explain code{display:block;font:12px/1.9 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:10px}.disclaimer{color:var(--muted);font-size:12px;margin:12px 0 0}
+ :root[data-theme="dark"]{--bg:#1c2523;--surface:#25322d;--ink:#e8f0e9;--muted:#b2c4b9;--line:#44574d;--accent:#a5d5b7;--soft:#334a3e;--warn:#f0cb8b;--bad:#ffb8ac;color-scheme:dark}:root[data-theme="dark"] button{background:#387155;color:#fff}
+ @media(max-width:420px){body{padding:18px 12px}.methods{flex-direction:column}.results{grid-template-columns:1fr}.route{padding:12px 7px;gap:3px;font-size:11px}h1{font-size:18px}}
+</style>
+<main>
+ <h1>证书签发，与网站访问</h1><p class="intro">切换验证方式，观察同一个网络问题会影响哪一层。</p>
+ <fieldset><legend>验证方式</legend><div class="methods"><label class="method"><input type="radio" name="method" value="http" checked>HTTP-01 · 读取网页</label><label class="method"><input type="radio" name="method" value="dns">DNS-01 · 查询 TXT</label></div></fieldset>
+ <label for="scenario">网络与配置情景</label><select id="scenario"><option value="ready">DNS、端口与 TXT 都正确</option><option value="blocked80">只有公网 80 被拦截，443 可达</option><option value="cgnat">位于 CGNAT 后，无公网入站入口</option><option value="aaaa">A 正确，AAAA 指向另一台主机</option><option value="route">80 可达，但挑战路径返回错误内容</option><option value="txt">网站可达，但 TXT 仍是上一轮的值</option></select>
+ <button id="run" type="button">模拟验证</button>
+ <div class="route" id="route" aria-label="验证流程"><span>证书机构 CA</span><b aria-hidden="true">→</b><span>公网 TCP 80</span><b aria-hidden="true">→</b><span>挑战路径内容</span></div>
+ <div role="status" aria-live="polite" aria-atomic="true">
+  <div class="results"><div class="result" id="cert"><small>域名控制权验证</small><strong>等待模拟</strong></div><div class="result" id="visit"><small>HTTPS 网络入口</small><strong>等待模拟</strong></div></div>
+  <div class="explain"><p id="message">先选择情景，再点击模拟。证书验证通过，不等于网站已经能从公网打开。</p><code id="command" hidden></code></div>
+ </div>
+ <p class="disclaimer">离线教学模型，不查询 DNS、不调用 DuckDNS、不申请证书。HTTP-01 的结果不代表 Caddy 的 TLS-ALPN-01 尝试；“入口可达”也不代表已部署了有效证书。</p>
+</main>
+<script>
+ const params=new URLSearchParams(location.search);document.documentElement.dataset.theme=params.get('theme')==='dark'?'dark':'light';
+ const methods=document.querySelectorAll('[name="method"]'),scenario=document.querySelector('#scenario');
+ const cases={
+  ready:{http:true,dns:true,visit:'pass',text:'两种验证都具备条件。正式上线仍要检查证书域名、完整证书链和自动续期。',command:'curl -I https://your-name.duckdns.org/'},
+  blocked80:{http:false,dns:true,visit:'pass',text:'HTTP-01 需要外部 TCP 80。DNS-01 可以通过 TXT 验证；已有可用的 443 入口，部署有效证书后才能完成 HTTPS 访问。',command:'dig +short TXT _acme-challenge.your-name.duckdns.org'},
+  cgnat:{http:false,dns:true,visit:'fail',text:'DNS-01 可以证明域名控制权，但不会穿透 CGNAT。需要申请可入站的公网地址、改用云主机，或部署有公网中转端的隧道。',command:'# 比较路由器 WAN 地址与出口公网 IPv4\n# 100.64.0.0/10 属于运营商共享地址空间'},
+  aaaa:{http:false,dns:true,visit:'warn',text:'此情景中 IPv6 主机返回错误内容，HTTP-01 失败。DNS-01 可成功，但 IPv6 访客仍可能访问错站；修正 AAAA 或在不使用 IPv6 时移除它。',command:'dig +short AAAA your-name.duckdns.org\ncurl -6 -I https://your-name.duckdns.org/'},
+  route:{http:false,dns:true,visit:'pass',text:'端口通了，但错误的虚拟主机或重写规则接管了挑战路径。修复验证路由，或选择自动更新 TXT 的 DNS-01；不需要重做域名注册。',command:'sudo journalctl -u caddy -n 80 --no-pager'},
+  txt:{http:true,dns:false,visit:'pass',text:'DNS-01 读取到旧 TXT，暂不能证明本轮控制权。检查 Token、所属子域名、权威 DNS 与传播状态，避免两个签发客户端同时覆盖 TXT。',command:'dig +short TXT _acme-challenge.your-name.duckdns.org'}
+ };
+ function method(){return document.querySelector('[name="method"]:checked').value;}
+ function setResult(id,state,value){const card=document.querySelector(id);card.dataset.state=state;card.querySelector('strong').textContent=value;}
+ function reset(){const dns=method()==='dns';const route=document.querySelector('#route');const labels=dns?['ACME 客户端写 TXT','证书机构查询 DNS','匹配本轮挑战值']:['证书机构 CA','公网 TCP 80','挑战路径内容'];route.querySelectorAll('span').forEach((node,index)=>node.textContent=labels[index]);setResult('#cert','pending','等待模拟');setResult('#visit','pending','等待模拟');document.querySelector('#message').textContent='选项已更新，请重新模拟。验证路线与网站入口分别判断。';document.querySelector('#command').hidden=true;}
+ methods.forEach(input=>input.addEventListener('change',reset));scenario.addEventListener('change',reset);
+ document.querySelector('#run').addEventListener('click',()=>{const result=cases[scenario.value];const pass=result[method()];setResult('#cert',pass?'pass':'fail',pass?'✓ 验证通过（模拟）':'! 验证失败（模拟）');setResult('#visit',result.visit,{pass:'入口可达（模拟）',fail:'! 公网无法入站',warn:'! IPv6 可能错站'}[result.visit]);document.querySelector('#message').textContent=result.text;const code=document.querySelector('#command');code.textContent=result.command;code.hidden=false;});
+ if(parent!==window)new ResizeObserver(()=>parent.postMessage({type:'blog-demo-resize',height:Math.ceil(document.body.getBoundingClientRect().height)+2},'*')).observe(document.body);
+</script>
+</html>

@@ -10,7 +10,7 @@ summary:
   - 固定规则优先脚本；路径不确定的仓库任务可用 Agent，但仍需预算和验收。
 tags: [Coding Agent, Python, 概念辨析]
 readingTime: 6
-draft: false
+draft: true
 cover: /images/journal-journey.webp
 resources:
   - title: "Anthropic · Building effective agents"

@@ -1,0 +1,284 @@
+---
+title: "把这座博客部署到服务器：从构建产物到上线验收"
+description: "以本站真实的 Astro 静态构建为起点，分步完成正式地址、文件发布、Caddy、端口放行、HTTPS、更新与回退，并按结果定位常见故障。"
+pubDate: 2026-10-21T11:45:00Z
+category: 网站部署
+type: knowledge
+tags: [Astro, 服务器, Caddy, 网站部署, 运维]
+readingTime: 19
+draft: false
+cover: /images/journal-journey.webp
+coverCaption: 部署学习的主题插画；文中流程图与练习为教学示意
+summary:
+  - 本站构建后是静态文件，服务器发布 dist 即可，不需要让 Astro 开发服务常驻公网。
+  - 按构建、上传、服务、DNS、HTTPS 的顺序验收；每一步都有预期结果与失败后的检查入口。
+  - 使用版本目录与 current 入口发布，保留上一个产物，更新失败时可以回退。
+  - 服务器部署与免费域名配置分成两篇；遇到公网、端口或签发问题可继续阅读 DuckDNS 专题。
+resources:
+  - title: Astro · 部署静态站点
+    url: https://docs.astro.build/en/guides/deploy/
+  - title: Astro · site 配置
+    url: https://docs.astro.build/en/reference/configuration-reference/#site
+  - title: Astro · preview 的用途
+    url: https://docs.astro.build/en/reference/cli-reference/#astro-preview
+  - title: Caddy · 官方安装
+    url: https://caddyserver.com/docs/install
+  - title: Caddy · 静态文件服务
+    url: https://caddyserver.com/docs/caddyfile/directives/file_server
+  - title: Caddy · systemd 服务管理
+    url: https://caddyserver.com/docs/running
+  - title: Ubuntu · 防火墙
+    url: https://ubuntu.com/server/docs/how-to/security/firewalls/
+  - title: Caddy · 自动 HTTPS
+    url: https://caddyserver.com/docs/automatic-https
+---
+
+import LiveExample from '../../components/LiveExample.astro';
+import GuideDiagram from '../../components/GuideDiagram.astro';
+
+## 先确定：这座博客究竟部署什么
+
+本文对照 **2026 年 10 月 21 日的本站代码**编写。`astro.config.mjs` 没有服务器适配器，页面与文章在构建时生成；`package.json` 的构建命令是 `astro build`。因此主路线是：**本地构建 → 上传 dist → Caddy 提供静态文件与 HTTPS**。这与需要 Node 后端、数据库、SMTP 的 TaskHub 部署不同。
+
+以下服务器命令以 **Ubuntu / Debian、systemd、已有 SSH 管理权限**为例，属于可实践的部署方案，并非本站已经在线运行的记录。服务器系统、真实 IP 与域名需要按自己的环境替换。免费域名如何准备，见配套的 [DuckDNS 与 HTTPS 指南](/blog/duckdns-domain-https/)。
+
+<GuideDiagram variant="delivery" />
+
+先把三个位置分清：
+
+| 位置 | 放什么 | 谁会读取 |
+| --- | --- | --- |
+| 本地项目目录 | 源码、MDX、依赖与资源 | 开发者、构建工具 |
+| 本地 `dist/` | 生成的 HTML、CSS、JS、图片、音视频 | 本地验收、上传工具 |
+| 服务器 `/srv/my-blog/current/` | 指向某次发布产物的软链接 | Caddy 静态服务 |
+
+上传整个源码仓库没有必要；`.env`、`.git`、`node_modules` 也不应成为可公开下载的站点文件。这里使用 `/srv`，避免把静态根目录放进普通用户的家目录后，遇到服务用户无法穿越目录的问题。[Caddy 的文件服务说明](https://caddyserver.com/docs/caddyfile/directives/file_server)有对应解释。
+
+## 上线前，把环境与端口列清楚
+
+准备一台可管理的服务器、一个指向公网入口的域名、SSH 登录方式，以及足够容纳本站图片和视频的磁盘空间。**只有免费域名不代表已经有免费服务器和带宽。** 本机负责构建时，服务器只运行 Caddy，不需要额外安装 Node。
+
+本文的 `203.0.113.10` 是文档示例地址，不能直接用于访问；`deploy` 代表你已经创建且可通过 SSH 登录的管理用户。`your-name.duckdns.org` 要换成自己实际申请的子域名。
+
+| 端口 / 方向 | 用途 | 建议放行范围 |
+| --- | --- | --- |
+| SSH 实际端口，常见 TCP 22 入站 | 上传与运维 | 仅管理者 IP；以 sshd 的实际配置为准 |
+| TCP 80 入站 | HTTP 跳转、HTTP-01 验证 | 主路线向访客与证书机构开放 |
+| TCP 443 入站 | 正常 HTTPS；也可能用于 TLS-ALPN 验证 | 向访客开放 |
+| UDP 443 入站 | 可选的 HTTP/3 | 可按需开放；基础 HTTPS 不依赖它 |
+| TCP 443 出站、DNS 出站 | ACME、更新请求、域名查询 | 出站受限的环境需允许相应目标与 DNS |
+| 4321 / 4324 等开发端口 | 本机开发或临时预览 | 不作为正式站点的公网入口 |
+| Caddy 管理接口，默认本机 2019 | 配置管理与 reload | 保持本机访问，不加入公网放行规则 |
+
+云服务器检查 **云安全组与系统防火墙**；家庭主机还需检查 **路由器公网入口与端口转发**。两种环境不是同一套操作。没有可入站的公网地址时，先看 [域名指南中的网络判断](/blog/duckdns-domain-https/#先判断你有没有可入站的公网入口)。
+
+如果使用 Ubuntu UFW，先用 `sudo ufw status verbose` 看当前状态。以下示例假定 SSH 确实使用 22，并把管理地址换成自己当前的公网 IP：
+
+```bash
+# 服务器 · Ubuntu / Debian；保留现有 SSH 会话
+sudo ufw allow from YOUR_ADMIN_PUBLIC_IP to any port 22 proto tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw status verbose
+```
+
+尚未启用 UFW 的机器，应先确认 SSH 规则正确，保留现有连接，再执行 `sudo ufw enable` 并用第二个终端验证登录。不要直接覆盖已有规则。云控制台仍要单独配置安全组；UFW 放行不能替代它。[Ubuntu 防火墙文档](https://ubuntu.com/server/docs/how-to/security/firewalls/)介绍了规则和启用方式。
+
+## 在本地生成带正式地址的产物
+
+### 先检查项目要求
+
+在项目根目录打开 PowerShell。当前仓库要求 Node **不低于 22.22.0**；这是当前 `package.json` 的要求，后续以仓库文件为准。
+
+```powershell
+node --version
+npm ci
+$env:SITE_URL = "https://your-name.duckdns.org"
+npm run build
+```
+
+使用 Bash 的构建机则写成：
+
+```bash
+npm ci
+SITE_URL=https://your-name.duckdns.org npm run build
+```
+
+`npm ci` 按锁文件安装依赖。正式地址要在 **构建前**传入：本站配置读取 `process.env.SITE_URL`，没有设置时回退到 `http://localhost:4321`。`SITE_URL` 是本站约定的环境变量名，不是上传后服务器自动替换 HTML 的机制。[Astro 的 site 配置](https://docs.astro.build/en/reference/configuration-reference/#site)决定了正式 URL 的生成依据。
+
+### 产物检查不能只看“构建成功”
+
+构建完成后，应能找到 `dist/index.html`、文章目录、`rss.xml`、`sitemap-index.xml`，以及 `_astro/` 和 `public/` 中复制出来的资源。
+
+```powershell
+Test-Path .\dist\index.html
+Select-String -Path .\dist\index.html -Pattern 'rel="canonical"'
+Select-String -Path .\dist\rss.xml -Pattern 'your-name.duckdns.org'
+```
+
+第一行应返回 `True`，canonical 与 RSS 应包含自己的正式域名。若还出现 localhost，修正 `SITE_URL` 后重建；只改 DNS 无法修正已经生成的 HTML。
+
+需要本地查看产物时可用 `npm run preview`，在它打印的地址检查首页、文章与资源，再结束临时预览。**preview 用于检查构建结果，正式托管交给 Web 服务器。** 这是 [Astro CLI 文档](https://docs.astro.build/en/reference/cli-reference/#astro-preview)明确的用途。
+
+## 在服务器安装并确认 Caddy
+
+主路线使用标准 Caddy，适合 DNS 与公网 80/443 都正常的情况。已有 Nginx、Apache 或其他反向代理时，先查看端口占用，决定保留哪一个作为入口，避免两个程序争抢同一端口：
+
+```bash
+sudo ss -lntp
+```
+
+全新 Ubuntu / Debian 可按 [Caddy 官方稳定仓库安装步骤](https://caddyserver.com/docs/install#debian-ubuntu-raspbian)操作。下面将下载与导入分开，便于检查来源；这是**首次添加仓库**的示例：
+
+```bash
+sudo apt update
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
+curl --fail --location --proto '=https' \
+  https://dl.cloudsmith.io/public/caddy/stable/gpg.key -o /tmp/caddy-stable.gpg.key
+curl --fail --location --proto '=https' \
+  https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt -o /tmp/caddy-stable.list
+sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg /tmp/caddy-stable.gpg.key
+sudo install -m 644 /tmp/caddy-stable.list /etc/apt/sources.list.d/caddy-stable.list
+sudo chmod 644 /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+sudo apt update
+sudo apt install -y caddy
+caddy version
+sudo systemctl status caddy --no-pager
+```
+
+正常结果是版本可读取、服务处于运行状态。若 80 已被占用，安装后服务可能启动失败；这时先协调端口，不要反复重装。已经添加过同名仓库或密钥时，核对现有文件即可，不必重复创建。
+
+## 上传：每次发布留一个可回退的版本
+
+### 本机打包与上传
+
+在刚才完成构建的 PowerShell 中执行。把示例用户名和 IP 替换为实际 SSH 目标；SSH 使用自定义端口时，`scp` 还需添加 `-P 实际端口`。
+
+```powershell
+$release = Get-Date -Format "yyyyMMdd-HHmmss"
+tar -C dist -czf "$release.tar.gz" .
+Get-FileHash "$release.tar.gz" -Algorithm SHA256
+scp "$release.tar.gz" deploy@203.0.113.10:/tmp/
+```
+
+记录输出的版本名与哈希。压缩包内应直接是 `index.html` 等内容，而不是再套一层 `dist/`。服务器上的 `sha256sum /tmp/版本名.tar.gz` 应与本机一致。
+
+### 服务器解包与切换入口
+
+以下是 **Bash**，在服务器执行。`release` 必须填写刚上传的真实文件名去掉 `.tar.gz` 后的部分；每次使用新的版本目录。
+
+```bash
+release=20261021-200000
+sha256sum "/tmp/$release.tar.gz"
+test ! -e "/srv/my-blog/releases/$release" || exit 1
+sudo install -d -m 755 /srv/my-blog/releases
+sudo install -d -m 755 "/srv/my-blog/releases/$release"
+sudo tar --extract --gzip --file="/tmp/$release.tar.gz" \
+  --directory="/srv/my-blog/releases/$release" --no-same-owner
+sudo chown -R root:root "/srv/my-blog/releases/$release"
+sudo find "/srv/my-blog/releases/$release" -type d -exec chmod 755 {} +
+sudo find "/srv/my-blog/releases/$release" -type f -exec chmod 644 {} +
+sudo -u caddy test -r "/srv/my-blog/releases/$release/index.html"
+```
+
+最后一行成功时没有输出，退出状态为 0。文件归 root 管理，Caddy 只需读取；不需要给目录 `777`。解包来源只应是自己构建并校验的产物。
+
+确认内容完整后切换：
+
+```bash
+sudo ln -sfn "releases/$release" /srv/my-blog/current.next
+sudo mv -Tf /srv/my-blog/current.next /srv/my-blog/current
+readlink -f /srv/my-blog/current
+```
+
+`current.next` 是本文约定的临时软链接名；`current` 必须是软链接或尚不存在，不能是已有的真实目录。Ubuntu / Debian 的 `mv -T` 在同一文件系统内替换链接入口，避免先删除入口留下空档。**第一次迁移已有站点时，先另行备份并核对目录结构，再采用这个约定。**
+
+## 让 Caddy 读取站点，再启用 HTTPS
+
+先备份现有 `/etc/caddy/Caddyfile`，再用编辑器打开。已有多站点配置时只添加自己的站点块，不要整文件覆盖。把示例域名替换为真实域名：
+
+```text
+your-name.duckdns.org {
+    root * /srv/my-blog/current
+    encode zstd gzip
+    file_server
+
+    handle_errors 404 {
+        rewrite * /404.html
+        file_server
+    }
+}
+```
+
+`root` 指向直接包含首页的目录；`file_server` 按生成的目录提供页面；压缩适用于文本资源。不存在的页面使用本站 `404.html`，仍保留 404 状态。Astro 已生成独立页面，**不要套用把所有路径改写到 index.html 的 SPA 配置**，否则文章错误路径也可能返回首页和 200。
+
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy
+sudo systemctl is-active caddy
+sudo journalctl -u caddy -n 80 --no-pager
+```
+
+预期先出现配置有效，再看到服务 `active`。配置校验只说明语法与加载条件满足，**不说明域名已解析、端口已放行或证书已签发**。后面还要做外部验证。[Caddy 服务管理文档](https://caddyserver.com/docs/running)说明了 reload 与日志入口。
+
+站点地址直接写域名会启用 Caddy 自动 HTTPS，负责申请、续期与 HTTP 跳转。不要加 `http://` 前缀来期待自动签发。标准 Caddy 可尝试 HTTP-01 / TLS-ALPN-01；如果公网条件受限，继续读 [DuckDNS 的 DNS-01 方案](/blog/duckdns-domain-https/#80-受限时用-caddy--duckdns-自动做-dns-验证)。[自动 HTTPS 文档](https://caddyserver.com/docs/automatic-https)解释了这些机制。
+
+## 验收：先本机，再从外部网络访问
+
+在服务器上，带正确的 Host / SNI 检查当前站点：
+
+```bash
+curl -I -H 'Host: your-name.duckdns.org' http://127.0.0.1/
+curl -I --resolve your-name.duckdns.org:443:127.0.0.1 \
+  https://your-name.duckdns.org/
+```
+
+HTTP 返回 308 到 HTTPS 通常正常；第二条检查本机的 HTTPS 站点与证书。不要把直接访问 IP 得到的默认证书或默认页面，当作域名站点的验收结果。
+
+接着在 **另一条网络** 执行，或用关闭 Wi-Fi 的手机打开页面：
+
+```bash
+curl -I --connect-timeout 10 https://your-name.duckdns.org/
+curl -I --connect-timeout 10 https://your-name.duckdns.org/blog/
+curl -I --connect-timeout 10 https://your-name.duckdns.org/not-a-real-page/
+```
+
+首页与归档应是 200，错误路径应是 404。浏览器还要检查一篇文章的刷新直达、代码预览、导航、暗色主题、图片与音乐资源。网络面板出现资源 404 时，先核对上传完整性与大小写；Linux 文件名区分大小写。
+
+<LiveExample demo="deployment-check" />
+
+## 出错时，用结果决定下一步
+
+| 观察到的结果 | 常见原因 | 下一步 |
+| --- | --- | --- |
+| 构建失败 | Node 版本、依赖锁、MDX 或资源引用错误 | 看构建的第一处错误；暂不上传失败产物 |
+| 页面可看，分享链接还含 localhost | 构建时正式地址未传入 | 修正 `SITE_URL`，重建并重新发布 |
+| `address already in use` | 80 / 443 被其他进程占用 | `ss -lntp`；确定统一入口，别同时启两个服务器 |
+| HTTP 403 / permission denied | 服务用户不能读文件或穿越目录 | 检查 `current` 目标与父目录权限，不靠 777 解决 |
+| 首页或文章 404 | 根目录层级不对、产物缺失或路径大小写不同 | 检查根目录直接含 `index.html`，确认对应文章目录存在 |
+| 本机成功，外部超时 | 安全组、防火墙、转发、运营商限制 | 沿公网入口逐层查，不先改页面代码 |
+| 域名打开别人的页面 | A / AAAA 指错，或虚拟主机接管 | 查两种记录与 Host 匹配，继续看域名专题 |
+| HTTPS 报域名不匹配或不信任 | 访问地址不对、测试证书、错误站点或旧证书 | 查 SNI、证书主体、签发环境与服务日志 |
+| 静态博客出现 502 | 流量被误送反向代理或上游不可用 | 这条主路线不需要上游 Node 进程，检查代理规则 |
+| 家里 Wi-Fi 失败，移动网络正常 | 路由器可能不支持 NAT 回环，或内外 DNS 不同 | 检查分流 DNS / 回环能力，保留外部测试结果 |
+
+“路由不正确”不是一个足以定位原因的结论。记录 **完整错误、访问域名、时间、A / AAAA、外部网络测试与相关日志**，再判断它属于 DNS、网络、站点路由还是证书验证。
+
+## 日常更新、回退与续期
+
+后续每次都用相同正式域名重新构建，发布到新的 `releases/版本名`，验证后切换 `current`。只更新静态文件通常不需要重启 Caddy；修改 Caddyfile 才进行校验与 reload。
+
+需要回退时，确认旧目录仍存在且可读，再把入口切回旧版本：
+
+```bash
+previous=20261020-180000
+sudo -u caddy test -r "/srv/my-blog/releases/$previous/index.html" || exit 1
+sudo ln -sfn "releases/$previous" /srv/my-blog/current.next
+sudo mv -Tf /srv/my-blog/current.next /srv/my-blog/current
+```
+
+这只回退静态内容，不回退 DNS、Caddy 配置或证书。不要在新版本刚发布后立即清空旧目录。对本博客来说还需留意：已经打开的旧页面可能稍后才请求旧哈希资源；单一 `current` 入口切换不能保证这些旧资源一直可用。更新频繁时，可将 `_astro/` 的带哈希文件保存在独立共享目录，累积发布并在旧版本保留期后再清理；不要给文件名固定的图片或 HTML 盲目设置永久缓存。
+
+自动续期还依赖持久化的 Caddy 数据、正常系统时间与可用验证路径。标准 systemd 安装不要随意删除 `/var/lib/caddy`；容器部署则应按官方方案持久化 `/data` 与 `/config`，并保留静态文件卷。**开机自启、证书续期与数据备份是三项独立工作。**
+
+本篇完成的是静态站点发布闭环。接下来阅读 [免费 DuckDNS 域名、动态 IP 与证书排查](/blog/duckdns-domain-https/)，把公网与 HTTPS 的剩余条件逐一补齐。

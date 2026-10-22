@@ -1,0 +1,299 @@
+---
+title: "FastAPI 从零到可维护接口：框架组成、完整示例与测试"
+description: "从 ASGI、路由与 Pydantic 开始，搭建带 SQLite、依赖注入、API Key、分页与 PATCH 的笔记 API，再解释异步、生命周期、测试和部署边界。附完整源码下载。"
+pubDate: 2026-10-21T13:30:00Z
+category: FastAPI 框架实践
+type: learning
+tags: [FastAPI, Python, Web 开发, Pydantic, 数据库, 接口测试]
+readingTime: 42
+draft: false
+cover: /images/journal-river-night.webp
+coverCaption: 框架学习的主题插画；示例是独立的本地教学项目
+summary:
+  - FastAPI 组织 API；Starlette 提供 Web 基础，Pydantic 校验数据，Uvicorn 承接 ASGI，ORM 与数据库另行组合。
+  - 用同一个笔记 API 串起路径、查询、请求体、响应模型、依赖、Session 和增删改查。
+  - PATCH 区分未提交、显式 null 和 false；API Key 只是单用户教学门禁，不是完整登录系统。
+  - 同步数据库操作放在 def 路由中；async 需要配套非阻塞库，不能只改函数关键字。
+  - 完整示例与正文代码同源，测试使用独立临时数据库；上线还需要迁移、授权、备份与监测。
+resources:
+  - title: FastAPI · 首个应用与 OpenAPI
+    url: https://fastapi.tiangolo.com/tutorial/first-steps/
+  - title: FastAPI · 多文件应用与 APIRouter
+    url: https://fastapi.tiangolo.com/tutorial/bigger-applications/
+  - title: FastAPI · 依赖注入
+    url: https://fastapi.tiangolo.com/tutorial/dependencies/
+  - title: FastAPI · 响应模型
+    url: https://fastapi.tiangolo.com/tutorial/response-model/
+  - title: FastAPI · 数据库教程
+    url: https://fastapi.tiangolo.com/tutorial/sql-databases/
+  - title: FastAPI · async 与并发
+    url: https://fastapi.tiangolo.com/async/
+  - title: FastAPI · Lifespan
+    url: https://fastapi.tiangolo.com/advanced/events/
+  - title: FastAPI · CORS
+    url: https://fastapi.tiangolo.com/tutorial/cors/
+  - title: FastAPI · 测试依赖覆盖
+    url: https://fastapi.tiangolo.com/advanced/testing-dependencies/
+  - title: FastAPI · API Key 安全工具
+    url: https://fastapi.tiangolo.com/reference/security/#fastapi.security.APIKeyHeader
+  - title: Pydantic · 配置与环境变量
+    url: https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+  - title: SQLModel · Session 依赖
+    url: https://sqlmodel.tiangolo.com/tutorial/fastapi/session-with-dependency/
+  - title: Uvicorn · 启动参数
+    url: https://uvicorn.dev/settings/
+  - title: FastAPI · GitHub 项目
+    url: https://github.com/fastapi/fastapi
+  - title: FastAPI · 完整应用参考模板
+    url: https://github.com/fastapi/full-stack-fastapi-template
+  - title: 本文 · 完整示例与测试下载
+    url: /examples/fastapi-notes.zip
+---
+
+import {Code} from 'astro:components';
+import GuideDiagram from '../../components/GuideDiagram.astro';
+import configSource from '../../examples/fastapi-notes/app/config.py?raw';
+import modelSource from '../../examples/fastapi-notes/app/models.py?raw';
+import dependencySource from '../../examples/fastapi-notes/app/dependencies.py?raw';
+import routeSource from '../../examples/fastapi-notes/app/routes.py?raw';
+import appSource from '../../examples/fastapi-notes/app/main.py?raw';
+import testSource from '../../examples/fastapi-notes/tests/test_notes.py?raw';
+import requirementsSource from '../../examples/fastapi-notes/requirements.txt?raw';
+
+## 从一个真正能走通的目标开始
+
+这份笔记围绕一个**本地、单用户的学习笔记 API**展开：创建笔记、按主题查询、分页、读取详情、修改完成状态与删除。它有数据库，能拒绝不合法输入，也有覆盖关键行为的测试。沿着这条小链路，可以看清框架各部分为什么存在。
+
+读者需要会 Python 函数、类型注解、模块导入与基本 HTTP；示例要求 Python 3.11 及以上。本文资料核对日期为 **2026 年 10 月 21 日**，采用 Pydantic v2 的 `model_dump` 等写法。依赖兼容范围写在 requirements 中，验证使用的精确版本随下载包记录；不要把官网当前最新版本和某个项目的锁定版本混为一谈。
+
+[下载完整项目与测试](/examples/fastapi-notes.zip)。解压后先进入 `fastapi-notes` 目录；正文展示的 Python 文件直接来自同一份示例源码，按章节阅读后可以对照运行。它没有接入 TaskHub 或真实用户数据。
+
+## FastAPI 由什么组成：先画清职责边界
+
+| 部件 | 它负责什么 | 在示例中怎样出现 |
+| --- | --- | --- |
+| HTTP | 方法、路径、头、状态码和请求 / 响应体 | `POST /notes`、JSON、201、401、422 |
+| ASGI | Python 异步 Web 服务器与应用之间的接口约定 | Uvicorn 调用 FastAPI 应用 |
+| Uvicorn | 监听端口、处理连接、运行 ASGI 应用 | 启动命令与 host / port |
+| Starlette | 路由、中间件、请求响应等 Web 基础能力 | FastAPI 建立在其上，使用 CORS 中间件与测试客户端 |
+| FastAPI | 通过函数签名组织路径操作、依赖、文档与模型 | `FastAPI`、`APIRouter`、`Depends` |
+| Pydantic | 对输入输出建立模型，解析并验证字段 | `NoteCreate`、`NoteRead`、Settings |
+| SQLModel / SQLAlchemy | 将 Python 对象、查询和事务连接到关系数据库 | `Session`、`select`、`commit` |
+| SQLite | 真正持久保存数据的数据库 | 本地 `notes.db` 文件 |
+
+FastAPI 不是数据库，也不会因为写了 `str` 就帮你建立权限系统。Python 的普通类型提示主要帮助工具和开发者；框架拿到请求时，才根据声明执行运行时解析与校验。Pydantic 默认还可能转换某些兼容类型，需要严格拒绝时应显式选择严格约束，并用测试确认。
+
+这里采用 SQLModel，是为了用较小的代码连接模型与 SQLAlchemy。项目也可以直接使用 SQLAlchemy，或使用配套的异步驱动；这是数据访问方案，不是 FastAPI 必须绑定的唯一选择。框架起点与自动文档见[官方第一步](https://fastapi.tiangolo.com/tutorial/first-steps/)，数据库组合见[关系数据库教程](https://fastapi.tiangolo.com/tutorial/sql-databases/)。
+
+<GuideDiagram variant="api" />
+
+## 先定义接口契约，再写实现
+
+把行为列清楚，可以防止“有几个路由”被误当成“接口完成了”。本例所有 `/notes` 接口都需要 `X-API-Key`，而 `/health`、文档与 OpenAPI 是本地学习用的公开入口。
+
+| 方法与路径 | 输入 | 正常结果 | 需要检验的失败 |
+| --- | --- | --- | --- |
+| `POST /notes` | title、可选 body / topic / done | 201 + 新笔记 | 空白标题、未知字段 → 422 |
+| `GET /notes` | 可选 topic、offset、limit | 200 + 有序数组 | limit 超界或类型错误 → 422 |
+| `GET /notes/{note_id}` | 正整数 ID | 200 + 笔记 | 不存在 → 404 |
+| `PATCH /notes/{note_id}` | 至少一个待修改字段 | 200 + 修改后的笔记 | 空对象或显式 null → 422 |
+| `DELETE /notes/{note_id}` | ID | 204，无响应体 | 不存在 → 404 |
+| `GET /health` | 无 | 200 + status | 只证明服务能响应，不检查数据库 |
+
+路径参数标识资源，查询参数表达筛选与分页，请求体承载创建或修改内容，请求头携带门禁凭据。`/notes?topic=web&limit=20` 不会创建笔记；`POST /notes` 也不应靠 URL 拼接一大段正文。
+
+身份不成立与参数格式错误是不同问题。本文的错误顺序不作为承诺：依赖与字段校验可能共同参与请求解析，调用者不应靠“先收到 401 还是 422”推断系统内部结构。
+
+## 环境与目录：每个文件为什么这样分
+
+```text
+fastapi-notes/
+├─ app/
+│  ├─ __init__.py
+│  ├─ config.py          # 环境配置
+│  ├─ models.py          # 表模型与输入输出模型
+│  ├─ dependencies.py    # API Key 与每请求 Session
+│  ├─ routes.py          # 笔记接口
+│  └─ main.py            # 应用组装、生命周期、中间件
+├─ tests/test_notes.py   # 独立数据库的行为测试
+├─ .env.example         # 公开的本地示例配置
+├─ requirements.txt
+├─ requirements-tested.txt
+└─ README.md
+```
+
+小项目不必一开始增加十几层目录，但配置、输入输出、数据连接与路由值得分开。等业务规则变复杂，再把规则移到 service，把可复用查询移到 repository；不要为了目录整齐，让一个只有两行的功能跨五个空壳。
+
+下载目录中的依赖范围如下。若要复现本次记录的环境，可改用 `requirements-tested.txt` 安装；它是验证快照，不代表永久推荐版本。
+
+<Code code={requirementsSource} lang="text" themes={{light:'github-light',dark:'github-dark'}} />
+
+Windows PowerShell：
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Linux / macOS Bash：
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+cp .env.example .env
+```
+
+这些命令在新解压的教学目录执行；已有 `.env` 时先检查并保留自己的配置。显式调用虚拟环境里的 Python，可以避免“装到系统解释器，启动的却是另一个解释器”。
+
+## 配置：把运行环境与代码分开
+
+### app/config.py
+
+<Code code={configSource} lang="python" themes={{light:'github-light',dark:'github-dark'}} />
+
+`Settings` 将 `NOTES_` 前缀环境变量和本地 `.env` 映射成有类型的配置。`api_key` 没有代码默认值；缺失或长度不足时应在启动阶段暴露问题，而不是默默放行。`SecretStr` 降低对象打印时误暴露的机会，但它不加密磁盘上的 `.env`，也不能阻止你主动取出后打印。
+
+模板中的 `local-learning-only-change-this` 是公开示例值，只用于本地跟练。若扩展到别的环境，先换成随机值，保护配置文件与备份，不提交实际凭据。数据库 URL 的相对路径以**进程工作目录**为准，换目录启动可能建立另一份文件；这是“数据突然不见了”的常见原因。[Pydantic Settings 文档](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)说明了配置来源与优先级。
+
+## 数据模型：表、创建、修改与响应分别建模
+
+### app/models.py
+
+<Code code={modelSource} lang="python" themes={{light:'github-light',dark:'github-dark'}} />
+
+四个模型解决不同问题：`Note` 是存储表；`NoteCreate` 限定允许写入的字段；`NotePatch` 表示局部修改；`NoteRead` 决定对外输出。即使字段暂时很相似，也不直接把数据库对象所有属性交给客户端。
+
+`Title` 会去除首尾空白并检查长度，所以 `"   "` 不会作为有效标题写入。`extra="forbid"` 使偷偷添加的 `ownerId` 等字段失败；但这仍不是资源授权，授权必须依据真实用户在服务端判断。`response_model` 会参与输出校验、序列化与字段过滤，详见[响应模型文档](https://fastapi.tiangolo.com/tutorial/response-model/)。
+
+PATCH 尤其容易写错：
+
+| 请求内容 | 本例的含义 | 实现关键 |
+| --- | --- | --- |
+| 没有提供 `done` | 保持旧值 | `exclude_unset=True` |
+| `{"done": false}` | 明确改为未完成 | 不能用 `if value` 跳过 false |
+| `{"done": null}` | 本例不允许清空布尔字段 | 显式 null 校验 |
+| `{}` | 没有任何修改意图 | 路由拒绝空修改 |
+
+`Optional` / `T | None` 只表达可空类型，不自动决定“没传时怎样处理”。本例字段默认 None 用来支持省略，但字段真的被提交为 null 时会拒绝；如果业务允许清空描述，应单独设计这个契约，不能全字段照搬。
+
+## 依赖注入：复用门禁和 Session，而不是复用全局请求状态
+
+### app/dependencies.py
+
+<Code code={dependencySource} lang="python" themes={{light:'github-light',dark:'github-dark'}} />
+
+`Depends` 让框架在调用路径函数之前解析可复用的依赖。`Security(APIKeyHeader)` 从请求头取凭据，并使 OpenAPI 能声明安全方案；`compare_digest` 比较字节值，避免自行写逐字符比较。这个共享 Key 只区分“知道 Key”与“不知道 Key”，没有用户身份、角色或撤销某个用户会话的能力。
+
+`get_session` 每次请求提供自己的 Session。`yield` 之前准备资源，退出时由上下文管理器关闭；异常未提交的事务会在关闭时回滚。**Session 不能放到全局给所有请求共用**，也不应传给后台任务继续使用。连接引擎可以复用，事务与请求工作单元需要独立。机制可对照[依赖注入](https://fastapi.tiangolo.com/tutorial/dependencies/)与 [SQLModel Session 依赖](https://sqlmodel.tiangolo.com/tutorial/fastapi/session-with-dependency/)。
+
+真正的多用户服务还需登录、密码哈希或身份提供商、会话 / Token 校验，以及查询中的 owner 范围。不要把这个公开教学 Key 放进浏览器构建产物后，再宣称 API 被保密。
+
+## 路由：用一个完整 CRUD 看清数据怎样流动
+
+### app/routes.py
+
+<Code code={routeSource} lang="python" themes={{light:'github-light',dark:'github-dark'}} />
+
+`APIRouter` 集中声明前缀、文档标签与所有笔记接口的门禁。请求函数负责 HTTP 边界：解释参数、调用查询、决定 404 / 201 / 204。本例业务很小，因此查询直接放在路由里；业务扩大后再提取，不需要先伪造一层 service。
+
+创建时的 `add → commit → refresh` 分别是加入工作单元、提交事务、读取数据库生成的结果。只执行 `add` 不能保证记录已经持久保存。删除返回 204 时不附一段 JSON“删除成功”，让状态码和响应体约定保持一致。
+
+列表在数据库里按 topic 筛选，再做 `offset / limit`，不会先把整张表读到 Python 内存。固定 `id` 排序让翻页可解释；大量数据与频繁插入下可改游标分页。它返回数组而没有 total，是本文明确的简化；要显示总页数，就另行设计计数与分页响应结构。
+
+写入发生异常时，不能先吞掉错误再返回成功。当前例子保留服务器错误反馈，Session 负责清理；正式服务应将已知冲突映射为稳定业务错误，用请求标识关联日志，避免把数据库细节和密钥直接返回客户端。
+
+## 应用组装与 lifespan：什么时候创建、什么时候释放
+
+### app/main.py
+
+<Code code={appSource} lang="python" themes={{light:'github-light',dark:'github-dark'}} />
+
+应用工厂 `create_app` 接收配置，建立引擎并装配路由。测试可以传临时数据库，运行时则读取自己的环境；不需要为测试导入一个已经连接生产数据库的全局 app。
+
+`lifespan` 在服务启动时为这个新例子建表，在退出时释放引擎。`create_all` 只适合建立初始结构，**不会将旧表自动迁移成新结构**；持续开发应使用迁移工具管理结构变更、回滚与部署顺序。同步建表发生在启动阶段，不在每次请求里执行。生命周期推荐方式见[官方说明](https://fastapi.tiangolo.com/advanced/events/)。
+
+CORS 中间件只允许示例前端来源 `http://localhost:3000`，列出实际使用的 PATCH 与自定义头。`localhost` 和 `127.0.0.1` 是不同主机名，端口不同也是不同 origin；不要看到都是“自己电脑”就以为同源。CORS 是浏览器约束，不是服务器认证机制；curl 不受它保护，仍需 API Key。详见[CORS 文档](https://fastapi.tiangolo.com/tutorial/cors/)。
+
+## 启动与手工验收：观察真实状态码和数据库结果
+
+在项目根目录启动。Windows PowerShell：
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --reload --host 127.0.0.1 --port 8000
+```
+
+Linux / macOS：把解释器换成 `.venv/bin/python`，后续参数相同。`app.main:create_app` 表示模块与工厂函数；`--factory` 让 Uvicorn 调用它得到应用；`--reload` 仅用于开发。参数含义见 [Uvicorn Settings](https://uvicorn.dev/settings/)。
+
+先访问 `http://127.0.0.1:8000/health`；再打开 `/docs`，用 **Authorize** 填入本地配置里的 Key，按契约逐项调用。`/openapi.json` 是机器可读的接口描述，可以用于生成客户端与契约检查，但文档能打开并不表示数据库写入和授权都已验证。
+
+另一窗口用 PowerShell 创建一条记录，保留返回 ID：
+
+```powershell
+$noteHeaders = @{ 'X-API-Key' = 'local-learning-only-change-this' }
+$noteBody = @{ title = '理解依赖注入'; topic = 'web'; done = $true } | ConvertTo-Json
+$savedNote = Invoke-RestMethod 'http://127.0.0.1:8000/notes' -Method Post -Headers $noteHeaders -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($noteBody))
+Invoke-RestMethod "http://127.0.0.1:8000/notes/$($savedNote.id)" -Method Patch -Headers $noteHeaders -ContentType 'application/json' -Body '{"done":false}'
+Invoke-RestMethod 'http://127.0.0.1:8000/notes?topic=web&limit=20' -Headers $noteHeaders
+```
+
+如果改了本地 Key，也同步改这个示例头。应该看到返回 ID、规范化后的标题和 `done=false`；在同一工作目录重启服务后再次查询，数据仍存在。再故意提交空白标题、未知 ID 和错误 Key，确认分别被拒绝，而不是只测试一条理想路径。
+
+## def 与 async def：按调用的库选择，而不是按名字选择
+
+本例使用同步 SQLModel Session，因此路径函数使用普通 `def`，框架会在线程池运行这类路径函数和同步依赖。它减少阻塞事件循环的风险，但线程池仍是有限资源。普通工具函数不会因为被 async 路由调用，就自动搬到线程池。
+
+| 场景 | 合适的起点 | 容易造成的问题 |
+| --- | --- | --- |
+| 同步数据库、同步第三方库 | `def` 路由，或明确的线程卸载 | 在 async 函数中直接执行长时间同步 I/O |
+| 异步数据库驱动、异步 HTTP 客户端 | `async def` 配合 await | 使用 async 外壳却调用阻塞库 |
+| CPU 密集图像处理、大量计算 | 进程、任务队列或独立服务 | 以为 await 能让 CPU 运算自动并行 |
+| 需要可靠重试的长任务 | 持久任务队列与任务状态 | 把响应后的进程内任务当成可靠消息系统 |
+
+并发是多项工作交替推进，并行是同时计算；`async` 主要让等待 I/O 时可以处理别的请求，不会让一条 SQL 自动更快。BackgroundTasks 适合短小的响应后工作，进程退出会影响它；它不保证持久化、重试或跨机器调度。概念与框架线程池行为见[官方并发说明](https://fastapi.tiangolo.com/async/)。
+
+## 自动化测试：让错误路径也有证据
+
+### tests/test_notes.py
+
+<Code code={testSource} lang="python" themes={{light:'github-light',dark:'github-dark'}} />
+
+在同一虚拟环境执行 `python -m pytest -q`。测试为每个用例创建临时 SQLite 文件，并用 `with TestClient(...)` 启动和结束 lifespan；它不调用远端 API，也不读取用户真实数据库。2026 年 10 月 21 日在 Windows / Python 3.12.14 下验证，**10 项测试通过**；精确依赖见下载包的 `requirements-tested.txt`。该版本的 Starlette 对 httpx 测试适配器给出弃用提示，测试仍通过；升级依赖时应按对应版本文档重新核对适配器。若已有应用通过 `Depends` 提供数据库，也可以用[依赖覆盖机制](https://fastapi.tiangolo.com/advanced/testing-dependencies/)替换测试依赖，结束后清理覆盖。
+
+这里验证的是可观察行为：无凭据被拒绝、非法输入没有写入、false 的局部修改不丢失、筛选与分页有确定结果、删除是空 204、CORS 允许配置来源。它比只断言某个函数被调用更能发现实际错误。TestClient 不经过真实 TCP、反向代理或证书，部署网络仍要另做验收。
+
+## 从教学接口到线上服务，还缺哪些环节
+
+| 需要补齐的环节 | 为什么示例还不够 | 可执行的下一步 |
+| --- | --- | --- |
+| 用户与资源授权 | 一个共享 Key 没有 owner 隔离 | 为真实身份建立服务端查询范围，测试跨用户访问 |
+| 数据迁移 | create_all 不升级旧表 | 建立版本迁移，在测试副本演练后部署 |
+| 错误与日志 | 500 不能只留一段终端输出 | 请求标识、结构化日志、脱敏和通知 |
+| 运行与容量 | reload 进程不是运维方案 | 进程管理、超时、负载测试与资源上限 |
+| 备份与恢复 | 单个 SQLite 文件也可能损坏或误删 | 了解 WAL 与一致性备份，演练恢复 |
+| HTTPS 与入口 | API 逻辑正常不等于公网可用 | 反向代理、域名、证书和续期验收 |
+
+多个 worker 不能共享进程内 Map；同步 Session 也不应跨请求共享。选 SQLite 还是服务端数据库取决于写并发、运维与备份需求，不依据“FastAPI 很快”一句话决定。密钥、连接串不能放到浏览器可见变量中。
+
+关于域名和证书，可接着读 [DNS 与 HTTPS 实践](/blog/duckdns-domain-https/)；[服务器部署笔记](/blog/astro-server-deployment/)以静态 Astro 站点为对象，可以复用入口检查思路，但 Python 服务还需要进程和代理配置，不能直接照搬静态文件配置。
+
+## 遇到错误时，先看它属于哪一层
+
+| 现象 | 优先检查 | 不应急着做什么 |
+| --- | --- | --- |
+| `ModuleNotFoundError` | 解释器、虚拟环境、工作目录 | 反复往不同 Python 安装同一依赖 |
+| 启动要求 NOTES_API_KEY | 是否复制模板、变量前缀和长度 | 给代码加一个公开默认生产 Key |
+| `no such table` | 是否启动 lifespan、是否启动了另一份 DB | 删除数据库“重来” |
+| 401 | 是否向正确端口发送 X-API-Key | 通过放宽 CORS 解决身份验证 |
+| 422 | 错误路径、字段类型、空白 / null 约定 | 直接关闭输入校验 |
+| 404 | 路径还是资源不存在，ID 是否正确 | 把未知记录统一返回空的成功对象 |
+| 浏览器失败而 curl 正常 | origin、预检方法 / 头与代理 | 将所有来源无条件放行 |
+| 更新后其他字段被清空 | 是否把未提交字段也写入 | 用默认值覆盖整个对象 |
+
+可以做三个练习检查自己是否理解：给列表增加 done 筛选；允许 body 显式 null 表示清空但标题仍拒绝；增加一个必须两次写入同时成功的操作。每个练习先写输入与失败约定，再补测试，最后改实现。
+
+## 参考资料的阅读顺序
+
+先读 [First Steps](https://fastapi.tiangolo.com/tutorial/first-steps/)理解应用与 OpenAPI，再读 [APIRouter](https://fastapi.tiangolo.com/tutorial/bigger-applications/)和[依赖](https://fastapi.tiangolo.com/tutorial/dependencies/)理解组织方式，随后查[模型](https://fastapi.tiangolo.com/tutorial/response-model/)、[数据库](https://fastapi.tiangolo.com/tutorial/sql-databases/)和[并发](https://fastapi.tiangolo.com/async/)。需要更大应用的架构参考时，再看官方的 [full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template)。模板的数据库、部署和功能范围与本文不同，不要只挑一个文件拼进当前例子就期待整套行为自动成立。
+
+框架知识最终应能回答这几个问题：请求从哪里进入，输入在哪里受约束，依赖什么时候创建，事务何时提交，响应暴露哪些字段，失败之后怎样确认没有留下错误数据。能沿源码和测试回答出来，才有继续扩展的基础。

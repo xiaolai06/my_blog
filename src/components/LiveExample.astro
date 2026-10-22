@@ -1,0 +1,21 @@
+---
+import {Code} from 'astro:components';
+import {retrospectiveDemos,type RetrospectiveDemoId} from '../data/retrospective-demos';
+import '../styles/live-example.css';
+interface Props {demo:RetrospectiveDemoId}
+const {demo:id}=Astro.props;
+const demo=retrospectiveDemos[id];
+const url=`/examples/retrospectives/${id}.html`;
+---
+<section class="live-example" data-live-example data-example-id={id} aria-label={`${demo.title}，交互样例`}>
+ <header class="live-example-heading"><span class="live-example-label">交互样例</span><strong>{demo.title}</strong></header>
+ <p class="live-example-note">{demo.note}</p>
+ <details class="live-example-preview" data-demo-preview>
+  <summary>预览效果<span aria-hidden="true">↗</span></summary>
+  <div class="live-example-tools"><span data-demo-status role="status" aria-live="polite">展开后加载样例</span><button type="button" data-demo-reset>重新演示</button></div>
+  <iframe data-demo-frame data-src={url} title={`${demo.title}：独立预览`} sandbox="allow-scripts" loading="lazy" referrerpolicy="no-referrer" style={`--demo-height:${demo.height}px`}></iframe>
+  <noscript><p>可<a href={url} data-astro-reload>打开独立样例</a>，阅读样式与静态内容。</p></noscript>
+ </details>
+ <details class="live-example-source"><summary>查看完整代码<span>HTML / CSS / JavaScript</span></summary><Code code={demo.source.trim()} lang="html" themes={{light:'github-light',dark:'github-dark'}}/></details>
+ <footer class="live-example-evidence">{'referenceLabel' in demo?demo.referenceLabel:'对照源码'}：<code>{demo.evidence}</code></footer>
+</section>

@@ -4,7 +4,11 @@
 :root[data-theme=dark]{--bg:#1b1d23;--surface:#23262d;--text:#ede9e5;--muted:#b5afb7;--accent:#e2a594;--accent-foreground:#2c1f1c;--line:#373941;--soft:#332b30;--decorative-text:#c7a99e;--border-hover:#7c625d;--card-shadow:#0000000a;--hover-shadow:#00000026;--footer-exposure:brightness(.72) saturate(.95);--footer-tone:#17243b73;color-scheme:dark}
 
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:35px}
+/* The document owns scrolling. Decorative motion must not widen its viewport;
+   clip keeps sticky readers working without creating a nested scroll container. */
+html{inline-size:100%;min-inline-size:0;min-block-size:100%;overflow-x:clip;scrollbar-gutter:stable;scroll-behavior:smooth;scroll-padding-top:35px}
+/* The immersive room has no document scrollbar or reserved paper-colored edge. */
+html:has(body.music-mode){scrollbar-gutter:auto}
 /* Keep the page edge quiet while preserving a visible, usable scroll thumb. */
 html{background:var(--bg);scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--muted) 42%,transparent) var(--bg)}
 @supports selector(::-webkit-scrollbar){
@@ -16,7 +20,7 @@ html{background:var(--bg);scrollbar-width:thin;scrollbar-color:color-mix(in srgb
  ::-webkit-scrollbar-button{display:none;width:0;height:0}
  ::-webkit-scrollbar-corner{background:var(--bg)}
 }
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.75 var(--sans);-webkit-font-smoothing:antialiased}
+body{inline-size:100%;min-inline-size:0;margin:0;background:var(--bg);color:var(--text);font:14px/1.75 var(--sans);-webkit-font-smoothing:antialiased}
 button,input{font:inherit;color:inherit}
 button,a,input{-webkit-tap-highlight-color:transparent}
 button{cursor:pointer;border:0;background:none}

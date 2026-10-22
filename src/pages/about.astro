@@ -6,7 +6,7 @@ import { profile, skills, education, honors, experiences, strengths, interests }
 import '../styles/about.css';
 const emailHref = `mailto:${profile.email}`;
 ---
-<SiteLayout aboutPage title="关于我" image="/images/scenes-v2/about-hero-dusk-desktop-2172.webp" description="赖沛盛的个人简介与求职作品集：深圳职业技术大学计算机应用技术在校生，关注 Python、视觉数据、具身智能与 AI 应用开发。">
+<SiteLayout aboutPage title="关于我" image="/images/scenes-v2/about-hero-dusk-desktop-2172.webp" description="赖沛盛的个人简介与求职作品集：深圳职业技术大学计算机应用技术在校生，分享软件开发、数据与智能技术实践，以及学习、责任心和团队协作中的成长。">
  <link slot="head" rel="preload" href="/fonts/ma-shan-zheng-about.woff2" as="font" type="font/woff2" crossorigin/>
  <main id="main-content" class="container inner-main about-content">
   <h1 class="about-print-title">{profile.name} · 开发者简历</h1>
@@ -21,14 +21,14 @@ const emailHref = `mailto:${profile.email}`;
     <p class="about-eyebrow"><span></span> PERSONAL PROFILE / 个人简介</p>
     <h2 id="hello-title">你好，我是 <span>{profile.name}</span><span class="about-heading-dot">。</span></h2>
     <div class="about-career" aria-labelledby="career-label"><p id="career-label" class="about-career-label"><Icon name="code" size={16}/>求职意向</p><ul class="about-career-roles">{profile.jobInterests.map(job => <li><span>{job.title}</span>{job.method && <small lang="en">{job.method}</small>}</li>)}</ul></div>
-    <p class="about-intro-lead">从数据与模型出发，把想法做成可用的应用。</p>
-    <p>我就读于深圳职业技术大学计算机应用技术专业。主要使用 Python 处理数据、编写自动化脚本与开展视觉应用实践，也使用 TypeScript、React 和后端框架完成 Web 应用开发。</p>
-    <p>在四足机器人、视觉模型与 AI Agent 项目中，积累了感知数据处理、模型训练、端侧部署和工具调用实践。希望从应用开发岗位切入，参与从需求分析、开发联调到测试部署的完整过程。</p>
-    <div class="about-intro-note"><span><Icon name="check" size={20}/></span><p>习惯先明确需求，再拆分任务和验证结果；开发中重视代码检查、异常处理与过程记录，遇到问题及时沟通并持续跟进。</p></div>
+    <p class="about-intro-lead">保持广泛的兴趣，把学习落到具体的实现。</p>
+    <p>我就读于深圳职业技术大学计算机应用技术专业，在项目中接触并使用过多种编程语言、前后端框架、数据库和 AI 开发工具，也尝试过数据处理与机器人相关实践。希望通过不同类型的任务，逐步建立对完整开发过程的理解。</p>
+    <p>我倾向于全面发展的开发路线，愿意参与需求梳理、界面与功能实现、联调测试和部署维护。对新技术先了解原理与适用场景，再按实际需要深入，在动手解决问题的过程中拓宽能力范围。</p>
+    <div class="about-intro-note"><span><Icon name="check" size={20}/></span><p><strong>我的做事方式</strong>先理解需求，再动手验证；主动同步进展，认真对待反馈，把负责的事情跟进到有结果。</p></div>
     <dl class="about-resume-facts">
-     <div><dt>实践重点</dt><dd>感知数据 · 模型应用 · 工程实现</dd></div>
+     <div><dt>发展目标</dt><dd>综合型开发者</dd></div>
      <div><dt>所在地</dt><dd>{profile.location}</dd></div>
-     <div><dt>主要技术</dt><dd>{profile.primaryStack}</dd></div>
+     <div><dt>学习方式</dt><dd>广泛了解 · 按需深入</dd></div>
      <div><dt>当前身份</dt><dd>计算机应用技术 · 在校生</dd></div>
     </dl>
     <div class="about-intro-actions"><a class="button about-project-button" href="/projects/">查看我的作品<Icon name="arrow-up-right" size={18}/></a><a class="about-text-link" href={profile.github} target="_blank" rel="noopener noreferrer" aria-label="访问 GitHub 主页（新窗口）"><Icon name="github" size={18}/>GitHub 主页<Icon name="arrow-up-right" size={15}/></a></div>
@@ -82,8 +82,8 @@ const emailHref = `mailto:${profile.email}`;
   </section>
 
   <section id="assessment" class="about-section" aria-labelledby="strengths-title">
-   <header class="about-section-heading"><div><p class="about-eyebrow">04 / SELF-ASSESSMENT</p><h2 id="strengths-title">自我评价<span>重视执行、验证与团队协作。</span></h2></div></header>
-   <p class="about-assessment-lead">我重视把需求落到实际结果，也愿意承担数据整理、问题排查和功能完善等基础工作。遇到新任务会主动学习、先做验证，协作中及时同步进展与困难；希望在具身智能、AI 应用或全栈开发岗位中持续积累工程经验，交付清晰、可靠且便于维护的成果。</p>
+   <header class="about-section-heading"><div><p class="about-eyebrow">04 / SELF-ASSESSMENT</p><h2 id="strengths-title">自我评价<span>在学习、做事与合作中持续成长。</span></h2></div></header>
+   <p class="about-assessment-lead">我希望成长为知识面较广、能够参与完整开发过程的开发者。对多种技术保持好奇，愿意根据任务持续学习和深入实践；也重视责任心、执行力与团队合作，认真对待分工和反馈，在解决具体问题的过程中逐步积累能力。</p>
    <div class="about-strengths-grid">{strengths.map(item => <article class="about-strength-card"><span class="about-detail-icon"><Icon name={item.icon} size={23}/></span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
   </section>
 

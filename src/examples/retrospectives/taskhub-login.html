@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TaskHub 登录 · 教学样例</title>
+<style>
+:root {
+  --bg:#f4f3fc;
+  --surface:#fff;
+  --ink:#252437;
+  --muted:#68677b;
+  --line:#dedde9;
+  --accent:#6557cb;
+  color-scheme:light
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  padding:22px 16px;
+  background:radial-gradient(ellipse at 10% 0%,#afa4f130,transparent 70%),var(--bg);
+  color:var(--ink);
+  font:14px/1.7 system-ui,sans-serif
+}
+.card {
+  max-width:380px;
+  margin:auto;
+  padding:24px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:var(--surface)
+}
+h1 {
+  font-size:23px;
+  margin:0
+}
+p {
+  font-size:12px;
+  color:var(--muted);
+  margin:5px 0 18px
+}
+label {
+  display:block;
+  font-size:13px;
+  margin:12px 0 5px;
+  font-weight:600
+}
+input,select,button {
+  font:inherit;
+  color:inherit
+}
+input,select {
+  width:100%;
+  min-height:42px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px 11px;
+  background:var(--surface)
+}
+input[aria-invalid=true] {
+  border-color:#c55252
+}
+button {
+  cursor:pointer;
+  min-height:44px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px 12px;
+  background:var(--surface)
+}
+button:disabled {
+  opacity:.6;
+  cursor:wait
+}
+.captcha {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 110px;
+  gap:9px
+}
+.captcha button {
+  font:italic 700 22px/1 Georgia,serif;
+  letter-spacing:4px;
+  background:var(--bg);
+  color:var(--accent)
+}
+.submit {
+  width:100%;
+  background:var(--accent);
+  color:white;
+  border:0;
+  margin-top:18px
+}
+#feedback {
+  min-height:40px;
+  margin:12px 0 0;
+  font-size:12px;
+  color:var(--muted)
+}
+:focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:3px
+}
+.note {
+  font-size:11px;
+  margin-top:12px
+}
+html[data-theme=dark] {
+  --bg:#1e1d29;
+  --surface:#292837;
+  --ink:#efedf8;
+  --muted:#c0bccf;
+  --line:#484558;
+  --accent:#9985ed;
+  color-scheme:dark
+}
+</style>
+<main class="card">
+<h1>欢迎回到 TaskHub</h1>
+<p>教学样例，不连接账号系统，请勿输入真实凭据。</p>
+<form>
+<label for="email">邮箱</label>
+<input id="email" type="email" value="reader@example.com" autocomplete="off" required>
+<label for="password">密码</label>
+<input id="password" type="password" value="demo-only-123" autocomplete="off" required>
+<label for="captcha">图形验证码</label>
+<div class="captcha">
+<input id="captcha" placeholder="输入右侧演示字符" autocomplete="off" aria-describedby="feedback" required>
+<button id="refresh" type="button" aria-label="刷新演示验证码">K7MA</button>
+</div>
+<label for="scenario">演示服务结果</label>
+<select id="scenario">
+<option value="success">登录成功</option>
+<option value="limited">请求过于频繁</option>
+<option value="network">网络暂时不可用</option>
+</select>
+<button class="submit" type="button">演示登录反馈</button>
+<p id="feedback" role="status" aria-live="polite">输入验证码后查看反馈，点击字符可刷新。</p>
+</form>
+<p class="note">实际接口会在服务端校验，前端的演示逻辑不提供安全保护。</p>
+</main>
+<script>
+document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light';
+const form=document.querySelector('form'),input=document.querySelector('#captcha'),refresh=document.querySelector('#refresh'),submit=document.querySelector('.submit'),feedback=document.querySelector('#feedback');
+const codes=['K7MA','R2UX','H8NP'];let index=0;
+refresh.addEventListener('click',()=>{index=(index+1)%codes.length;refresh.textContent=codes[index];input.value='';input.removeAttribute('aria-invalid');feedback.textContent='演示验证码已刷新';});
+// No form submission is allowed in the preview sandbox. Enter uses the same
+// local button action; a real implementation would call its authentication API.
+form.addEventListener('submit',event=>event.preventDefault());
+form.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();if(!submit.disabled)submit.click();}});
+submit.addEventListener('click',async()=>{
+ if(!form.reportValidity())return;
+ submit.disabled=true;refresh.disabled=true;submit.textContent='正在验证…';input.removeAttribute('aria-invalid');
+ const correct=input.value.trim().toUpperCase()===codes[index],scenario=document.querySelector('#scenario').value;
+ await new Promise(resolve=>setTimeout(resolve,500));
+ if(!correct){input.setAttribute('aria-invalid','true');feedback.textContent='验证码错误，已换一张。请重新输入。';index=(index+1)%codes.length;refresh.textContent=codes[index];input.value='';input.focus();}
+ else feedback.textContent={success:'演示验证通过；没有创建真实登录会话。',limited:'演示：请求过于频繁，请稍后重试。',network:'演示：网络暂时不可用，输入内容已保留。'}[scenario];
+ submit.disabled=false;refresh.disabled=false;submit.textContent='演示登录反馈';
+});
+</script>
+</html>

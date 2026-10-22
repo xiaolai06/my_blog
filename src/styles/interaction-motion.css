@@ -2,26 +2,47 @@
 .motion-card{position:relative;isolation:isolate}
 .motion-card:before{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;background:radial-gradient(280px circle at var(--pointer-x,50%) var(--pointer-y,0%),color-mix(in srgb,var(--accent) 9%,transparent),transparent 72%);opacity:0;transition:opacity .25s ease}
 .project-card .project-art>img{transform:translate3d(var(--art-x,0px),var(--art-y,0px),0) scale(1.015);transition:transform .45s cubic-bezier(.23,1,.32,1)}
-.project-card .project-open svg,.profile-more svg{transition:transform .24s cubic-bezier(.23,1,.32,1)}
+.project-card .project-open svg,.project-card .project-name svg,.profile-more svg{transition:transform .2s cubic-bezier(.23,1,.32,1)}
 .filter-button{transition:background .2s ease,color .2s ease,border-color .2s ease,transform .18s ease}
 .hero-buttons .button>svg{transition:transform .24s cubic-bezier(.23,1,.32,1)}
 .text-link{transition:color .18s ease}
+.text-link:hover{gap:10px}
 .text-link>svg{transition:transform .24s var(--ease)}
 .icon-button{transition:transform .18s var(--ease),background .18s ease,color .18s ease}
 .icon-button:active{transform:scale(.92)}
 .reader-related-card{transition:translate .24s var(--ease),border-color .24s ease,background .24s ease}
 @media(hover:hover) and (pointer:fine){
  .motion-card:hover:before{opacity:1}
- .project-card:hover{transform:translateY(-5px);box-shadow:0 16px 35px var(--hover-shadow)}
- .project-card:hover .project-art>img{transform:translate3d(var(--art-x,0px),var(--art-y,0px),0) scale(1.045)}
+ :root .motion-card.project-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px var(--hover-shadow)}
+ .project-card:hover .project-art>img{transform:translate3d(var(--art-x,0px),var(--art-y,0px),0) scale(1.035)}
  .project-card:hover .project-open svg,.profile-more:hover svg{transform:translate(3px,-3px)}
  .hero-buttons .button:hover>svg{transform:translateX(4px)}
  .calendar-days button:hover{transform:translateY(-2px)}
  .filter-button:hover{transform:translateY(-2px)}
- .text-link:hover{gap:10px}
  .text-link:hover>svg{transform:translateX(4px)}
  .reader-related-card:hover{translate:0 -3px}
 }
+/* Absolute selection layers preserve the existing button dimensions and spacing. */
+[data-selection-motion]{position:relative;isolation:isolate}
+[data-selection-motion]>button{position:relative;z-index:1}
+.selection-indicator{position:absolute;z-index:0;pointer-events:none;transform-origin:0 0;background:var(--accent);border:1px solid var(--accent)}
+:root [data-selection-motion]>.filter-button.active{background:transparent}
+:root [data-selection-motion]>.filter-button:is(:hover,:active){transform:none}
+.work-view-controls>.selection-indicator{background:var(--surface);border-color:var(--line);box-shadow:0 2px 5px #30282008}
+:root .work-view-controls[data-selection-motion]>button[aria-selected=true]{background:transparent;box-shadow:none}
+:root .archive-types>.selection-indicator{top:auto!important;bottom:-1px;height:2px!important;border:0;border-radius:0!important}
+:root .archive-types[data-selection-motion]>button:after{display:none}
+.music-library-tabs>.selection-indicator{background:#db9a8270;border-color:#ffe7db1a}
+:root .music-library-tabs[data-selection-motion]>button[aria-pressed=true]{background:transparent;box-shadow:none}
+.music-completion-petal{position:absolute;left:50%;top:50%;width:6px;height:10px;border-radius:80% 15% 80% 15%;background:var(--music-accent,#ffb5a0);pointer-events:none;z-index:2}
+.work-lightbox[open]::backdrop{animation:viewer-backdrop-in 220ms ease-out both}
+.work-lightbox[data-closing]::backdrop{animation:viewer-backdrop-out 200ms ease-in both}
+@keyframes viewer-backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes viewer-backdrop-out{from{opacity:1}to{opacity:0}}
+:root[data-motion=off] .work-lightbox::backdrop{animation:none}
+@media(prefers-reduced-motion:reduce){.work-lightbox::backdrop{animation:none!important}}
+:root[data-motion=off] .motion-card.project-card:hover{transform:none!important}
+@media(prefers-reduced-motion:reduce){:root .motion-card.project-card:hover{transform:none!important}}
 .filter-button:active,.calendar-days button:active{transform:scale(.94)}
 .motion-card:focus-within{border-color:var(--border-hover)}
 :root[data-motion=off] :is(.motion-card,.motion-card:before,.project-card img,.project-open svg,.profile-more svg,.filter-button,.calendar-days button,.hero-buttons .button>svg){transition:none}
@@ -30,6 +51,7 @@
 :root[data-motion=off] .project-card .project-art>img{transform:none!important}
 :root[data-motion=off] :is(.text-link>svg,.icon-button){transition:none;transform:none!important}
 :root[data-motion=off] .reader-related-card{transition:none;translate:none}
+:root[data-motion=off] .project-card .project-name>svg{transition:none;transform:none!important}
 @media(prefers-reduced-motion:reduce){
  .motion-card:before{display:none}
  .project-card .project-art>img{transform:none!important;transition:none}
@@ -37,4 +59,5 @@
  :is(.motion-card,.filter-button,.calendar-days button,.project-open svg,.profile-more svg,.hero-buttons .button>svg){transition:none}
  :is(.text-link>svg,.icon-button){transition:none;transform:none!important}
  .reader-related-card{transition:none;translate:none}
+ .project-card .project-name>svg{transition:none;transform:none!important}
 }

@@ -1,0 +1,255 @@
+---
+title: "TaskHub 复盘：从一张验证码到邮件找回密码"
+description: "沿真实源码追踪图形验证码、重置码、两套 SMTP 配置与登录会话，说明界面反馈、实现取舍及尚需补齐的安全边界。"
+pubDate: 2026-10-21
+category: TaskHub 实现复盘
+type: project
+relatedProject: taskhub
+summary:
+  - 图形验证码与邮件重置码是两套机制：前者限制自动请求，后者用于验证找回密码时的邮箱控制权。
+  - 当前找回密码读后端环境变量，通知测试还会读取数据库里的系统级和用户级邮件设置。
+  - Cookie 属性、限频和删除会话记录各有边界，必须追到服务端验证路径才知道保护是否成立。
+  - 登录反馈与邮箱配置提供独立教学预览，模拟结果明确标注，不连接真实账户或邮件服务。
+tags: [TaskHub, 项目复盘, 验证码, 邮件, 安全设计, UI 设计]
+readingTime: 16
+draft: false
+cover: /images/taskhub.webp
+coverCaption: TaskHub 项目主题插画；下文交互预览为教学样例，非真实登录页面
+resources:
+  - title: "svg-captcha · 项目与 API"
+    url: https://github.com/produck/svg-captcha
+  - title: "Nodemailer · SMTP transport"
+    url: https://nodemailer.com/smtp
+  - title: "OWASP · Forgot Password Cheat Sheet"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html
+  - title: "OWASP · Session Management Cheat Sheet"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+  - title: "OWASP · CSRF Prevention Cheat Sheet"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+  - title: "Base UI · 设计与组件定位"
+    url: https://base-ui.com/react/overview/about
+---
+
+import LiveExample from '../../components/LiveExample.astro';
+
+## 先限定复盘范围：实现、示例与建议分别说明
+
+TaskHub（智汇轻营）是项目、任务与经营记录工作台。本文从一个小流程开始：用户打开登录页，填写图形验证码；忘记密码时，通过邮件收到重置码，再设置新密码。比“接入认证与邮件”一句话更值得解释的，是每个状态放在哪里、失败后界面如何恢复，以及哪些保护实际上还没有闭环。
+
+本文依据 **2026 年 10 月 21 日的 TaskHub 本地源码**静态检查，入口是 Next.js 前端与 Express 后端。没有读取实际密钥、客户数据或邮箱收件箱，没有对线上账户进行测试；因此能确认代码路径，不能据此宣称真实邮件已经送达或系统通过安全审计。
+
+下文的预览根据真实流程制作，使用示例字符和模拟结果。后台建议没有在这一轮博客内容修改中应用到 TaskHub。
+
+## 一条登录请求经过哪些模块
+
+前端使用 Next.js App Router、React、Tailwind 与项目内的 UI 组件。`components/ui/button.tsx` 实际基于 `@base-ui/react/button`；登录页直接位于 `app/auth-pages/login/page.tsx`。名为 `features/auth/LoginForm.tsx` 的文件目前只是占位，不能仅凭文件名把它写成实际入口。
+
+后端由 Express 路由接收请求，Zod 校验输入，认证服务执行验证码与密码检查，Prisma 负责用户及会话数据。博客与 TaskHub 的技术栈在这里有明确区别。
+
+```text
+登录页
+  ├─ GET /api/auth/captcha
+  │    └─ svg-captcha → captcha-store → 返回 captchaId + SVG
+  └─ POST /api/auth/login
+       ├─ loginLimit
+       ├─ validate(loginSchema)
+       └─ authService.login
+            ├─ verifyCaptcha(captchaId, input)
+            ├─ 查询用户 + comparePassword
+            └─ 签发 JWT、写会话记录、设置 Cookie
+```
+
+顺序有实际意义：后端不能因为前端显示“验证码正确”就放行，也不能把验证码答案与图片一起返回给浏览器。输入校验、挑战校验、密码校验分别解决格式、自动化请求成本和身份验证问题，不能相互替代。
+
+## 图形验证码：答案留在服务端，一次尝试后失效
+
+`backend/src/routes/auth.routes.ts` 调用 `svgCaptcha.create`，当前是四个字符，排除 `0OolI1` 等易混淆字符，绘制一条干扰线。`svg-captcha` 返回图形和答案，具体字段由[项目 API](https://github.com/produck/svg-captcha)说明。
+
+TaskHub 把答案交给 `captcha-store.ts`，用随机 UUID 标识挑战，保存到进程内的 Map 中，五分钟过期。接口只返回 `captchaId` 与 SVG，设置 `Cache-Control: no-store`。它还对生成的 SVG 做了有限的防御性处理；这不应被推广为可以安全接收任意外来 SVG 的通用净化器。
+
+下面摘录当前校验函数的核心顺序，省略类型声明：
+
+```ts
+const entry = store.get(captchaId);
+if (!entry) return false;
+
+store.delete(captchaId); // 无论答对答错，先消费掉本次挑战
+if (entry.expiresAt < Date.now()) return false;
+
+return entry.text === input.toLowerCase().trim();
+```
+
+这是“一次尝试”，不是“答对才删除”。验证码错误后必须刷新图片与标识，避免用户反复提交已经消费的挑战。即使图形验证码通过，密码错误也不意味着同一个挑战还能再次使用。
+
+这种内存实现容易理解，适合单进程演示，但进程重启会丢失挑战，多副本也不会自动共享状态。若要多实例部署，需要带 TTL、容量约束与原子消费的共享存储。图形识别也不能替代限频或成为唯一的反自动化措施；对无法识别图像的用户，还需要其他可访问的验证路径。
+
+## 登录界面：先讲清错误，再考虑光效
+
+真实登录页在请求新验证码前中止旧请求，并比较当前 AbortController，避免慢响应覆盖最新图片；收到 `CAPTCHA_INVALID` 时清理缓存并刷新挑战。当前密码错误等其他失败没有走同一刷新分支，但服务端已经消费了挑战，这部分还应补齐恢复逻辑。按钮的忙碌状态由请求生命周期决定，而不是只播放一个固定时长的动画。
+
+界面可以分成四个层次：品牌说明；邮箱、密码与验证码；提交与找回密码入口；局部错误和请求反馈。TaskHub 的 `auth-pages/layout.tsx` 在卡片外叠加渐变、光斑与网格，卡片本身保持清晰边界。光效属于背景，不应影响输入文字或错误信息的对比度。
+
+| 状态 | 应让用户看到什么 | 这一层反馈解决什么 |
+| --- | --- | --- |
+| 邮箱格式不正确 | 输入附近的提示与错误状态 | 哪个字段要改 |
+| 验证码加载 | 图片位置的加载反馈 | 正在等待哪一步 |
+| 提交中 | 禁止重复提交，保留已有输入 | 请求是否已经发出 |
+| 验证码失效 | 解释需重新输入，并刷新挑战 | 为什么旧字符不能再用 |
+| 限频 / 网络错误 | 请求级说明与可恢复入口 | 是否应该稍后重试 |
+
+前两列是从实际流程整理出的界面规范，不代表现有页面的每一种异常都已完整验收。下面是用于阅读文章的简化样例，可测试错误、忙碌和恢复状态。
+
+<LiveExample demo="taskhub-login" />
+
+样例只比较本地演示字符，**不能用来实现安全验证**。真实后端要消费挑战、校验密码并签发会话；前端与源码一起公开是正常情况，安全不能依靠把这些判断藏在 JavaScript 中。
+
+## 邮件重置码：它和图形验证码不是同一个东西
+
+图形验证码用于为请求增加自动化成本；邮件码用来证明当前操作能访问目标邮箱。TaskHub 的重置路径是：
+
+```text
+POST /api/auth/forgot-password
+  → 图形验证码校验
+  → 查询邮箱
+  → createResetCode(email)
+  → sendResetCode(email, code)
+
+POST /api/auth/reset-password
+  → Zod 输入校验
+  → verifyResetCode(email, code)
+  → hashPassword(newPassword)
+  → 更新用户密码
+  → 删除该用户 Session 记录
+```
+
+`reset-store.ts` 使用 Node `crypto.randomInt` 生成六位数字，十分钟有效，记录尝试次数，六十秒重发冷却。验证成功后立即删除；错误尝试受五次计数阈值限制。它同样保存在进程内存中，不是持久化的分布式重置服务。
+
+重新发送的路由不要求再次提交图形验证码，而是使用冷却和限频。冷却期内可能返回成功而没有重发，因此“请求返回成功”与“又发出了一封新邮件”不能画等号。界面中的倒计时只是帮助用户理解，服务端仍必须执行冷却。
+
+当前重置码先消费，之后才更新密码与清理会话。这使重用被阻止，但数据库写入失败时用户需要重新申请；这段流程也没有把密码更新和会话清理包进同一事务。后续应该围绕失败恢复、并发请求和原子性单独验证。
+
+[OWASP 的找回密码指南](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)强调随机、有效期、一次使用、限频与一致响应。它是一份核对原则，不能因为使用了“六位码”就推导出整个认证流程安全。
+
+## SMTP 配置：为什么设置页能发信，找回密码仍可能失败
+
+源码里存在两条邮件路径。这是复盘中最应该明确的配置边界，而不是把它们合并成一句“填写邮箱即可”。
+
+| 用途 | 配置来源与实现 | 配置生效方式 |
+| --- | --- | --- |
+| 登录找回密码 | `config.ts` 的 `SMTP_*` → `utils/email.ts` | 后端进程读取环境变量，首次使用时创建并缓存 transporter |
+| 通知及设置页测试邮件 | `notification.service.ts` | 在基础配置上读取数据库系统级 EMAIL 设置，再用当前用户设置覆盖 |
+
+`EmailTab.tsx` 通过 `/settings/batch` 保存主机、端口、用户名、密码、发件地址和 secure 选项；通过 `/settings/email/test` 调用通知邮件服务。用户级配置不能在当前找回密码路径里自动生效，因为未登录的找回请求并没有沿这条通知配置解析路径走。
+
+系统级环境变量的形状如下，值全部是占位符：
+
+```dotenv
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=mailer@example.com
+SMTP_PASS=replace-with-your-provider-credential
+```
+
+应在服务端配置这些值，不放到 `NEXT_PUBLIC_*`、文章代码仓库或前端构建产物。授权方式以邮件服务商文档为准，SMTP 凭据不必等于网页登录密码。环境变量变更后需按部署方式重启进程；当前找回邮件工具缓存了初始化结果，不能期待在网页点一次保存就重新读取它。
+
+后端找回工具的核心配置摘录如下：
+
+```ts
+nodemailer.createTransport({
+  host: smtp.host,
+  port: smtp.port,
+  secure: smtp.port === 465,
+  auth: { user: smtp.user, pass: smtp.pass },
+  pool: true,
+  maxConnections: 3,
+  maxMessages: 100,
+});
+```
+
+按 [Nodemailer 的 SMTP 文档](https://nodemailer.com/smtp)，465 通常从连接开始使用 TLS；587 常以 `secure: false` 建立连接，再按服务器能力升级 STARTTLS。`secure: false` 不等于“邮件完全不加密”；如果部署要求强制 TLS，应额外配置并验证相应策略，不能通过关闭证书验证来掩盖配置错误。
+
+## 邮箱设置 UI：保存、连接和送达要分开表达
+
+现有 `EmailTab.tsx` 已有保存和测试入口，也区分密码显示与隐藏。更清楚的界面应明确标记“此处配置个人通知邮件”，并把系统找回密码的配置位置另作说明，避免用户在错误的位置反复更换授权码。
+
+下面的样例是**改进方案**：将连接检查与测试投递分开，端口变化时解释 TLS 方式，失败后保留字段。它没有向 TaskHub 增加新接口，所有结果均为模拟。
+
+<LiveExample demo="email-settings" />
+
+真实实现时，可以先在服务端构造 transporter，再使用以下独立诊断步骤。这是建议代码，当前设置页没有单独的 `verify` 接口：
+
+```ts
+// 建议的服务端连接检查，不发送邮件。
+await transporter.verify();
+
+// 随后的测试投递应使用经过校验的收件地址。
+await transporter.sendMail({
+  from: configuredSender,
+  to: validatedRecipient,
+  subject: 'TaskHub 邮件测试',
+  text: '这是一封用于检查投递路径的测试邮件。',
+});
+```
+
+`verify()` 检查连接、TLS 与认证等条件，不验证某个发件地址一定可用；SMTP 接受消息后，也不能保证收件箱已经收到。这一区别来自 [Nodemailer 的验证说明](https://nodemailer.com/smtp#verifying-the-configuration)。验收要继续看实际收件箱、服务商投递记录及域名认证配置，不能把“配置已保存”显示成“邮件已送达”。
+
+## 安全边界：不能把注释当作已经生效的保护
+
+静态检查能确认一些机制已经写入代码，也能看到需要补齐的路径。下面只陈述本地版本的事实和建议，不推断线上部署状态。
+
+| 主题 | 源码中可确认的部分 | 需要补充或验证的边界 |
+| --- | --- | --- |
+| 密码保存 | `hash.ts` 使用 bcryptjs，工作因子为 10 | 结合部署资源评估策略；不能称为可逆加密 |
+| Cookie | HttpOnly；Secure 由 `COOKIE_SECURE` 控制；SameSite 随配置变化 | HttpOnly 限制脚本读 Cookie，不会阻止所有 XSS；HTTPS 部署要核实 Secure |
+| CSRF | SameSite 提供部分约束 | 还需结合部署验证来源、跨站请求与敏感操作保护，不能只凭属性宣称已全面防护 |
+| 限频 | 登录、注册、重发等路由接入内存计数 | 当前算法按重置时间计数，属于固定窗口；各实例不共享，且可通过配置关闭 |
+| 邮箱存在性 | 找回接口的消息文本采用条件式提示 | `emailSent` 字段仍区分情况，另有公开邮箱可用性查询；不能写成已彻底消除账号枚举 |
+| 会话撤销 | 登录写 Session，重置密码删除该用户记录 | 认证中间件校验 JWT，但未查询 Session 是否仍存在，不能据删除记录承诺旧 JWT 立即失效 |
+
+限频文件的注释称为“滑动窗口”，但实现把第一次请求后的 `resetTime` 固定下来。实际算法应按代码描述；此外默认键使用 IP，多个限频器共用计数 Map，后续还应明确各路由的命名空间与代理 IP 信任范围。
+
+会话是另一个容易写错的点。`auth.service.ts` 记录令牌哈希并支持删除会话，`middleware/auth.ts` 当前主要验证 JWT 的签名和有效期。由此推断，单独删除数据库记录不足以撤销仍有效的令牌。要完善退出登录与改密后的撤销，应让认证路径实际检查会话或用户版本，或设计并验证其他撤销策略；不能只修改说明文案。
+
+[OWASP 的会话指南](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)与 [CSRF 指南](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)适合作为后续验证依据。这一轮修改的是博客文章，没有替 TaskHub 完成这些修复。
+
+## UI 选型：工作台与博客的需求为什么不同
+
+博客主要呈现内容，TaskHub 则需要输入表单、筛选、设置、任务列表和多个业务视图。前端的 Button 基于 Base UI，Tailwind 负责样式，React 组织状态；这和博客用 Astro 输出内容、局部脚本增强的方案各有适用场景。
+
+[Base UI 的说明](https://base-ui.com/react/overview/about)强调可组合的无外观组件。它可以提供交互基础，但不会替项目设计字段名称、错误恢复、接口权限或 SMTP 配置范围。这里的紫色强调色与柔和卡片应帮助识别主操作，不应把“测试发送”“删除配置”和“保存”做成同样强的视觉按钮。
+
+一个可执行的取舍是：登录页只保留完成身份验证所需的信息；设置页再展示服务商配置与诊断；项目工作台优先呈现任务和经营数据。动画用于显示请求与切换状态，装饰背景降低运动幅度并尊重减少动态效果偏好。密钥字段也不应为了演示方便，把真实值写进预览或截图。
+
+## 如何验证这条链路，而不是只看成功提示
+
+下表是下一次运行 TaskHub 时的验收计划，**不是本次已经执行的后台测试结果**。真实邮件与账号测试应使用隔离的测试账号和邮箱。
+
+| 检查 | 预期结果 |
+| --- | --- |
+| 连续刷新验证码，让旧请求慢于新请求 | 显示最新图片与对应标识，提交不混用旧答案 |
+| 同一个图形挑战再次提交 | 后端拒绝，前端刷新挑战并说明原因 |
+| 错误重置码、过期码、成功后重复使用 | 分别按规则拒绝，成功码不能复用 |
+| 冷却期内重发 | 不重复投递，界面准确解释等待 |
+| 修改系统 SMTP 与用户 EMAIL 设置 | 分别验证找回邮件与个人通知，不能互相代替 |
+| 超时、认证失败与收件延迟 | 状态可恢复，日志不包含明文密码与重置码 |
+| 退出、撤销会话或修改密码后使用旧会话 | 修复后应拒绝旧凭证；当前代码不能先承诺已满足 |
+| 两个服务副本处理同一挑战 | 共享存储方案应保证有效期与一次消费的一致性 |
+
+## 源码索引与可以继续写的小专题
+
+以下路径相对于 TaskHub 仓库，可复核本文判断：
+
+| 主题 | 文件 |
+| --- | --- |
+| 真实登录入口与请求取消 | `frontend/src/app/auth-pages/login/page.tsx` |
+| 登录外壳与背景层 | `frontend/src/app/auth-pages/layout.tsx` |
+| UI 原语 | `frontend/src/components/ui/button.tsx` |
+| 邮箱设置保存与测试 | `frontend/src/components/features/settings/tabs/EmailTab.tsx` |
+| 图形验证码接口、Cookie、找回路由 | `backend/src/routes/auth.routes.ts` |
+| 输入格式与密码规则 | `backend/src/validators/auth.schema.ts` |
+| 图形挑战与重置码存储 | `backend/src/utils/captcha-store.ts`、`reset-store.ts` |
+| 系统邮件与 SMTP 字段 | `backend/src/utils/email.ts`、`backend/src/config.ts` |
+| 用户通知配置与测试投递 | `backend/src/services/notification.service.ts`、`routes/setting.routes.ts` |
+| 密码、会话与限频边界 | `backend/src/services/auth.service.ts`、`middleware/auth.ts`、`middleware/rateLimit.ts` |
+
+接下来值得分开记录的题目包括：将一次性挑战迁移到共享存储、让会话撤销进入认证路径、统一邮件配置解析、给邮件投递增加可追踪但不泄露敏感信息的结果记录。完成一项再写一项，把改动前后的行为与验收证据留下来，复盘才会随着项目变得更可信。

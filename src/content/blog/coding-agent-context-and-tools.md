@@ -10,7 +10,7 @@ summary:
   - 通过博客分页的完整推演理解工作闭环，再阅读 Aider 的仓库地图与 SWE-agent 的操作接口。
 tags: [Coding Agent, Python, 开源阅读, 工程实践]
 readingTime: 18
-draft: false
+draft: true
 cover: /images/journal-writing.webp
 resources:
   - title: "Aider · Repository map"
@@ -204,7 +204,7 @@ return progress_and_blocker
 
 ## 怎样选择自己的下一步
 
-如果你刚学 Python，先完成 [手记索引工具](/blog/python-asyncio-task-boundaries/)，理解确定的输入、规则和输出。这个基础会让你更容易识别 Agent 到底改变了哪一部分：不是替代语言，而是在不确定任务中参与行动选择。
+如果你刚学 Python，可以先完成 [FastAPI 笔记接口](/blog/fastapi-from-zero/)，理解确定的输入、规则和输出。这个基础会让你更容易识别 Agent 到底改变了哪一部分：不是替代语言，而是在不确定任务中参与行动选择。
 
 如果你已经在使用 Coding Agent，可以拿一项小型仓库任务做记录：给出具体目标，补齐相关入口，要求可定位的工具反馈，准备至少一个能揭露错误实现的反例。能稳定地解释一次失败，往往比增加更多工具更有价值。
 

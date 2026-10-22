@@ -1,5 +1,5 @@
 /* The date chooser is separate from the reading layout and the applied query. */
-:root.journal-date-open{overflow:hidden;scrollbar-gutter:stable}
+:root.journal-date-open{overflow:hidden}
 :root .diary-date-dialog{width:min(736px,calc(100vw - 40px));max-height:calc(100dvh - 48px);margin:auto;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);box-shadow:0 24px 90px #17131a38;overflow:auto;overscroll-behavior:contain;font-family:var(--sans)}
 :root .diary-date-dialog[open]{display:flex;flex-direction:column;animation:date-dialog-in .2s var(--ease)}
 :root .diary-date-dialog::backdrop{background:#14121c66;backdrop-filter:blur(3px);animation:date-backdrop-in .16s ease-out}

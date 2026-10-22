@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>博客结构 · 简化样例</title>
+<style>
+:root {
+  color-scheme:light;
+  --bg:#f8f6f2;
+  --ink:#302d30;
+  --accent:#a65347
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  font:14px/1.8 system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--bg)
+}
+.wrap {
+  width:min(760px,calc(100% - 40px));
+  margin-inline:auto
+}
+.hero {
+  position:relative;
+  isolation:isolate;
+  color:white;
+  background:linear-gradient(90deg,#12243ca8,#12243c10),var(--scene-image,linear-gradient(#486d8e,#978397)) center/cover
+}
+.hero:after {
+  content:'';
+  position:absolute;
+  inset:auto 0 0;
+  height:60px;
+  background:linear-gradient(transparent,var(--bg));
+  pointer-events:none
+}
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding-block:18px
+}
+nav {
+  display:flex;
+  gap:16px
+}
+button {
+  font:inherit;
+  cursor:pointer;
+  border:0;
+  background:none;
+  color:inherit;
+  min-height:40px;
+  padding:4px 0
+}
+button[aria-pressed=true] {
+  text-decoration:underline;
+  text-underline-offset:7px
+}
+.intro {
+  padding:28px 0 70px
+}
+h1 {
+  font:600 clamp(25px,5vw,40px)/1.5 Georgia,serif;
+  margin:0 0 8px
+}
+.intro p {
+  margin:0;
+  color:#fff8f0
+}
+main {
+  padding-block:18px
+}
+main p {
+  margin:5px 0;
+  font-size:13px
+}
+main strong {
+  color:var(--accent)
+}
+footer {
+  height:100px;
+  background:linear-gradient(var(--bg),transparent 55%),var(--scene-image,linear-gradient(#978397,#486d8e)) center 75%/cover
+}
+:focus-visible {
+  outline:2px solid currentColor;
+  outline-offset:5px
+}
+html[data-theme=dark] {
+  --bg:#1b1d23;
+  --ink:#ede9e5;
+  --accent:#e2a594;
+  color-scheme:dark
+}
+@media(max-width:420px) {
+  header {
+    align-items:flex-start;
+    flex-direction:column;
+    gap:2px
+  }
+  .intro {
+    padding-top:16px
+  }
+}
+</style>
+<section class="hero">
+<header class="wrap">
+<strong>落樱小筑</strong>
+<nav aria-label="样例导航">
+<button aria-pressed="true" data-page="首页">首页</button>
+<button aria-pressed="false" data-page="项目">项目</button>
+<button aria-pressed="false" data-page="手记">手记</button>
+</nav>
+</header>
+<div class="wrap intro">
+<h1>循着热爱，记录与创造。</h1>
+<p>上层是可读内容，下层是图片、遮罩与渐隐。</p>
+</div>
+</section>
+<main class="wrap">
+<strong id="current" role="status">首页 · 内容区域</strong>
+<p>Header 组织导航，Hero 建立氛围，Footer 收束风景；共享容器维持对齐。</p>
+</main>
+<footer aria-label="风景页脚">
+</footer>
+<script>
+document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')||'light';
+// A standalone page loads its public image directly. Inside the article's
+// sandbox, the host transfers only that public WebP; no storage/API access.
+if(window===window.top){
+ document.documentElement.style.setProperty('--scene-image','url("/images/scenes-v2/home-hero-dusk-desktop-1280.webp")');
+}else{
+ window.addEventListener('message',event=>{
+  if(event.source!==parent||event.data?.type!=='blog-demo-scene')return;
+  const image=event.data.image;
+  if(typeof image!=='string'||!/^data:image\/webp;base64,[A-Za-z0-9+/=]+$/.test(image))return;
+  document.documentElement.style.setProperty('--scene-image',`url("${image}")`);
+ });
+}
+document.querySelectorAll('[data-page]').forEach(button=>button.addEventListener('click',()=>{
+ document.querySelectorAll('[data-page]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+ document.querySelector('#current').textContent=button.dataset.page+' · 内容区域';
+}));
+</script>
+</html>

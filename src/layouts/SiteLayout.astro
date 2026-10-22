@@ -14,12 +14,12 @@ const { title = SITE_TITLE, description = SITE_DESCRIPTION, hero = false, image,
 const scenicPage = !projectDetail && !journalDetail;
 const pageTransition = {
   forwards: {
-    old: { name: 'page-leave', duration: '180ms', easing: 'ease-in', fillMode: 'both' as const },
-    new: { name: 'page-enter', duration: '320ms', easing: 'cubic-bezier(.23,1,.32,1)', fillMode: 'both' as const },
+    old: { name: 'page-leave', duration: '160ms', easing: 'ease-in', fillMode: 'both' as const },
+    new: { name: 'page-enter', duration: '260ms', easing: 'cubic-bezier(.23,1,.32,1)', fillMode: 'both' as const },
   },
   backwards: {
-    old: { name: 'page-leave', duration: '180ms', easing: 'ease-in', fillMode: 'both' as const },
-    new: { name: 'page-enter', duration: '320ms', easing: 'cubic-bezier(.23,1,.32,1)', fillMode: 'both' as const },
+    old: { name: 'page-leave', duration: '160ms', easing: 'ease-in', fillMode: 'both' as const },
+    new: { name: 'page-enter', duration: '260ms', easing: 'cubic-bezier(.23,1,.32,1)', fillMode: 'both' as const },
   },
 };
 ---

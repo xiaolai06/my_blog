@@ -1,0 +1,39 @@
+---
+interface Props {variant:'delivery'|'network'|'challenge'|'dns'|'lifecycle'|'recovery'|'api'|'webstack'|'dataflow'}
+const {variant}=Astro.props;
+const diagrams={
+ api:{label:'FastAPI 请求路径',title:'一个请求，要经过类型约束、依赖和持久化',steps:[['ASGI 与中间件','Uvicorn → FastAPI / Starlette'],['路由与输入','路径 / 查询 / Body 校验'],['依赖与业务','API Key · Session · CRUD'],['响应与清理','输出模型 → JSON · 释放 Session']],caption:'这是阅读代码时的职责划分，不表示所有校验严格按图中串行执行。依赖在调用路径函数前解析；依赖也能声明自己的输入约束。'},
+ webstack:{label:'TaskHub Web 分层',title:'页面框架与业务后端，组成可协作的应用',steps:[['页面与交互','Next.js · React · Base UI'],['请求与缓存','API client · TanStack Query'],['接口与业务','Express · Zod · Service'],['数据与约束','Prisma 6 · SQLite']],caption:'开发环境由 Next.js rewrite 将 /api 转到 Express。数据库访问和用户数据范围在后端处理，浏览器只接收 API 返回的结果。'},
+ dataflow:{label:'一次任务写入',title:'保存成功后，页面还需要得到新的服务端状态',steps:[['提交意图','表单 → mutation'],['校验与授权','用户身份 → 项目归属'],['持久保存','Service → Prisma → SQLite'],['同步视图','响应 → 缓存失效 → 重查']],caption:'创建、更新、状态切换的缓存策略不同。乐观更新还需要失败回滚和最终重查；按钮变色不等于数据库已经提交。'},
+ dns:{label:'DNS 查询与缓存',title:'同一个域名，为什么有人已经更新，有人还看到旧地址？',steps:[['本机与浏览器','先检查自己的缓存'],['递归解析器','缓存命中就直接回答'],['权威 DNS','DuckDNS 发布当前记录'],['缓存答案','在剩余 TTL 内复用']],caption:'缓存未命中时，递归解析器可经根、.org 等委派找到权威服务器；已有委派缓存时会跳过部分查询。更新权威记录不会主动清空所有访问者的缓存。'},
+ lifecycle:{label:'证书生命周期',title:'自动续期完成于新证书被实际提供的那一刻',steps:[['首次签发','证明域名控制权'],['安装与加载','证书链 + 对应私钥'],['提前检查','按客户端策略重新申请'],['外部验收','确认远端新证书与告警']],caption:'续期签发的是一张新证书，旧证书的到期时间不会被延长。Caddy 内部管理加载；acme.sh 等独立客户端还需要证书部署和服务重载。'},
+ recovery:{label:'过期恢复路径',title:'先找出哪一段失败，再恢复证书链路',steps:[['确认现场','远端证书、域名、时间'],['修复根因','验证 / 任务 / 权限'],['签发与部署','沿原来的管理方式恢复'],['外网复查','A / AAAA 与每个入口']],caption:'磁盘里已有新证书时，先检查服务是否加载、CDN 或另一台节点是否仍提供旧证书；不需要为此反复申请。'},
+ delivery:{label:'部署路径',title:'从本地项目，到一份可访问的静态网站',steps:[['本地源码','Astro / MDX / 本地资源'],['构建产物','dist · HTML / CSS / JS'],['版本目录','releases → current'],['Web 服务','Caddy → 浏览器']],caption:'源码在本地构建；服务器读取 current 指向的版本。更新与回退都围绕这一个入口进行。'},
+ network:{label:'公网访问路径',title:'解析到地址，只是请求的第一站',steps:[['域名查询','DuckDNS → A / AAAA'],['公网入口','云主机 IP / 家庭 WAN'],['网络放行','安全组 / 防火墙 / 转发'],['站点响应','Caddy · TCP 80 / 443']],caption:'家庭网络还需要将公网端口转发到内网主机；云服务器通常检查安全组与系统防火墙。DNS 不代替其中任何一层。'},
+ challenge:{label:'证书验证路径',title:'两条验证路线，证明同一件事：你控制这个域名',steps:[['HTTP-01','CA → 公网 TCP 80'],['读取挑战内容','/.well-known/acme-challenge/'],['DNS-01','客户端 → DuckDNS API'],['查询 TXT 记录','CA → 权威 DNS']],caption:'HTTP 的两步与 DNS 的两步分别组成一条验证路线。DNS 验证通过后，访问网站仍需单独打通 HTTPS 入口。'},
+};
+const diagram=diagrams[variant];
+---
+<figure class:list={['guide-diagram',{'guide-diagram-pairs':variant==='challenge'}]} aria-label={diagram.title}>
+ <div class="guide-diagram-heading"><span>{diagram.label}</span><strong>{diagram.title}</strong></div>
+ <ol>
+  {diagram.steps.map(([title,detail],index)=><li><span class="guide-diagram-number" aria-hidden="true">{variant==='challenge'?(index<2?'HTTP':'DNS'):String(index+1).padStart(2,'0')}</span><strong>{title}</strong><small>{detail}</small></li>)}
+ </ol>
+ <figcaption>{diagram.caption}</figcaption>
+</figure>
+<style>
+ :global(.reader-prose .guide-diagram){margin:30px 0;padding:24px;border:1px solid var(--line);border-radius:22px;background:var(--surface);font-family:var(--sans);min-width:0}
+ .guide-diagram-heading{display:grid;gap:8px}
+ .guide-diagram-heading>span{font-size:11px;letter-spacing:.13em;color:var(--entry-ink)}
+ .guide-diagram-heading>strong{font-size:17px;line-height:1.7}
+ :global(.reader-prose .guide-diagram ol){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));list-style:none;padding:0;margin:22px 0;gap:22px}
+ :global(.reader-prose .guide-diagram li){position:relative;display:flex;flex-direction:column;gap:8px;margin:0;padding:15px 12px;border:1px solid var(--line);border-radius:14px;min-width:0;background:var(--bg)}
+ li:not(:last-child):after{content:'→';position:absolute;inset-inline-start:calc(100% + 5px);top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+ .guide-diagram-number{font:600 10px/1.4 var(--sans);letter-spacing:.06em;color:var(--entry-ink)}
+ li>strong{font-size:14px;line-height:1.7}
+ li>small{font-size:12px;line-height:1.8;color:var(--muted);overflow-wrap:anywhere}
+ :global(.reader-prose .guide-diagram figcaption){margin:0;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font:12px/1.9 var(--sans)}
+ :global(.reader-prose .guide-diagram-pairs ol){grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 28px}
+ .guide-diagram-pairs li:nth-child(2):after{display:none}
+ @media(max-width:650px){:global(.reader-prose .guide-diagram){padding:20px 16px}:global(.reader-prose .guide-diagram ol){grid-template-columns:1fr;gap:23px}:global(.reader-prose .guide-diagram li){padding:14px 16px;gap:4px}li:not(:last-child):after{content:'↓';inset-inline-start:50%;top:calc(100% + 1px);transform:translateX(-50%)}.guide-diagram-pairs li:nth-child(2){margin-bottom:12px}.guide-diagram-heading>strong{font-size:16px}}
+</style>

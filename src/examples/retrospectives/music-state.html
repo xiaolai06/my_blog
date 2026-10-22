@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>音乐模式 · 状态演示</title>
+<style>
+:root {
+  --bg:#f8f6f2;
+  --surface:#fffdfb;
+  --ink:#302d30;
+  --muted:#706a70;
+  --line:#e8e2dc;
+  --accent:#a65347;
+  color-scheme:light
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  padding:28px 20px;
+  background:var(--bg);
+  color:var(--ink);
+  font:14px/1.8 system-ui,sans-serif
+}
+.player {
+  max-width:460px;
+  margin:auto;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:24px
+}
+.track {
+  display:flex;
+  align-items:center;
+  gap:18px
+}
+h1 {
+  margin:0;
+  font-size:18px
+}
+p {
+  margin:5px 0;
+  color:var(--muted);
+  font-size:13px
+}
+.bars {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  width:66px;
+  height:66px;
+  border-radius:16px;
+  background:var(--bg);
+  color:var(--accent)
+}
+.bars i {
+  height:25px;
+  width:4px;
+  border-radius:4px;
+  background:currentColor;
+  transform:scaleY(.35);
+  animation:beat 780ms ease-in-out infinite alternate;
+  animation-play-state:paused
+}
+.bars i:nth-child(2) {
+  animation-delay:-250ms
+}
+.bars i:nth-child(3) {
+  animation-delay:-500ms
+}
+.player[data-state=playing] .bars i {
+  animation-play-state:running
+}
+.controls {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:22px
+}
+button {
+  font:inherit;
+  min-height:44px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:8px 14px;
+  background:var(--bg);
+  color:var(--ink);
+  cursor:pointer
+}
+button[aria-pressed=true] {
+  border-color:var(--accent);
+  color:var(--accent)
+}
+button:focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:3px
+}
+#status {
+  min-height:24px;
+  margin-top:14px
+}
+@keyframes beat {
+  to {
+    transform:scaleY(1)
+  }
+}
+html[data-theme=dark] {
+  --bg:#1b1d23;
+  --surface:#23262d;
+  --ink:#ede9e5;
+  --muted:#b5afb7;
+  --line:#373941;
+  --accent:#e2a594;
+  color-scheme:dark
+}
+@media(prefers-reduced-motion:reduce) {
+  .bars i {
+    animation:none
+  }
+}
+html[data-motion=off] .bars i {
+  animation:none
+}
+</style>
+<section class="player" data-state="paused">
+<div class="track">
+<div class="bars" aria-hidden="true">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</div>
+<div>
+<h1>一段安静的旋律</h1>
+<p>视觉状态样例 · 没有音频播放</p>
+</div>
+</div>
+<div class="controls" role="group" aria-label="模拟播放状态">
+<button data-state="playing" aria-pressed="false">播放</button>
+<button data-state="buffering" aria-pressed="false">缓冲</button>
+<button data-state="paused" aria-pressed="true">暂停</button>
+</div>
+<p id="status" role="status" aria-live="polite">已暂停 · 跳动条停止</p>
+</section>
+<script>
+const params=new URLSearchParams(location.search);document.documentElement.dataset.theme=params.get('theme')||'light';document.documentElement.dataset.motion=params.get('motion')||'on';
+const player=document.querySelector('.player'),labels={playing:'播放中 · 跳动条表示播放状态',buffering:'缓冲中 · 保留信息，等待音频可用',paused:'已暂停 · 跳动条停止'};
+document.querySelectorAll('button[data-state]').forEach(button=>button.addEventListener('click',()=>{
+ player.dataset.state=button.dataset.state;document.querySelector('#status').textContent=labels[button.dataset.state];
+ document.querySelectorAll('button[data-state]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+}));
+document.addEventListener('visibilitychange',()=>player.querySelectorAll('i').forEach(bar=>bar.style.animationPlayState=document.hidden?'paused':''));
+</script>
+</html>

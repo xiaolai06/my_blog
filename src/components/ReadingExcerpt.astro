@@ -1,0 +1,9 @@
+---
+interface Props {quote:string;translation:string;author:string;url:string;section:string}
+const {quote,translation,author,url,section}=Astro.props;
+---
+<figure class="reading-excerpt" data-reading-excerpt>
+ <figcaption><span>原文短摘</span><a href={url}>{author} · {section}</a></figcaption>
+ <blockquote cite={url} lang="en"><p>{quote}</p></blockquote>
+ <div class="reading-translation"><span>中文译意 · 本站整理</span><p>{translation}</p></div>
+</figure>

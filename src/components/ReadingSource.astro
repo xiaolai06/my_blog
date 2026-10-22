@@ -1,0 +1,13 @@
+---
+import type {CollectionEntry} from 'astro:content';
+import {journalDate} from '../data/journal';
+type Reading=NonNullable<CollectionEntry<'blog'>['data']['reading']>;
+interface Props {source:Reading}
+const {source}=Astro.props;
+---
+<aside class="reading-source" aria-label="原文来源与批注说明" data-reading-source>
+ <div class="reading-source-heading"><span>原文档案</span><a href={source.originalUrl} target="_blank" rel="noopener noreferrer">阅读原文 <span aria-hidden="true">↗</span><span class="sr-only">（新窗口）</span></a></div>
+ <p class="reading-source-title" lang="en">{source.originalTitle}</p>
+ <dl><div><dt>原作者</dt><dd><a href={source.authorUrl}>{source.author}</a></dd></div><div><dt>原文发布</dt><dd><time datetime={source.originalDate.toISOString()}>{journalDate(source.originalDate)}</time></dd></div><div><dt>资料核对</dt><dd><time datetime={source.checkedDate.toISOString()}>{journalDate(source.checkedDate)}</time></dd></div></dl>
+ <p class="reading-source-note">引文保留英文，中文译意由本站整理；“本站批注”是延伸分析，不代表原作者观点。{source.aiAssisted&&'本文使用 AI 协助检索、翻译与起草批注；例子为本站教学分析，实测结果另行注明。'}</p>
+</aside>

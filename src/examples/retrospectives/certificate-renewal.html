@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>证书续期与恢复 · 教学练习</title>
+<style>
+ :root{--bg:#f1f4f3;--surface:#fffefa;--ink:#273732;--muted:#5c6c66;--line:#d5dfd9;--accent:#356a55;--soft:#e5eee7;--warn:#80511c;--bad:#9e3832;color-scheme:light}
+ *{box-sizing:border-box}body{margin:0;padding:22px 16px;background:var(--bg);color:var(--ink);font:14px/1.8 system-ui,sans-serif}main{max-width:680px;margin:auto}h1{font-size:20px;margin:0 0 5px}p{margin:0 0 14px}.intro,.disclaimer{font-size:12px;color:var(--muted)}label{display:block;font-weight:600;font-size:13px;margin-bottom:7px}select,button{font:inherit;min-height:44px;border-radius:12px}select{width:100%;padding:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}button{border:0;padding:10px 18px;background:var(--accent);color:white;font-weight:600;cursor:pointer;margin:14px 0 18px}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+ .evidence{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}.card{padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}.card small{display:block;color:var(--muted);font-size:12px}.card strong{font-size:17px}.card[data-state="fail"] strong{color:var(--bad)}.card[data-state="warn"] strong{color:var(--warn)}.card[data-state="pass"] strong{color:var(--accent)}ol{padding:0;list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 18px}li{padding:12px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}li b{display:block;font-size:12px}li span{display:block;font-size:12px;color:var(--muted)}li[data-state="fail"]{border-color:var(--bad)}li[data-state="fail"] span{color:var(--bad)}li[data-state="pass"] span{color:var(--accent)}.explain{padding:17px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:16px;background:var(--surface)}.explain h2{font-size:15px;margin:0 0 8px}.explain p{font-size:13px;margin:0 0 10px}.explain p:last-child{margin-bottom:0}.disclaimer{margin:14px 0 0}code{font:12px ui-monospace,monospace;overflow-wrap:anywhere}
+ :root[data-theme="dark"]{--bg:#1c2523;--surface:#25322d;--ink:#e8f0e9;--muted:#b2c4b9;--line:#44574d;--accent:#a5d5b7;--soft:#334a3e;--warn:#f0cb8b;--bad:#ffb8ac;color-scheme:dark}:root[data-theme="dark"] button{background:#387155;color:#fff}
+ @media(max-width:450px){body{padding:18px 12px}h1{font-size:18px}ol{grid-template-columns:1fr 1fr}.evidence{grid-template-columns:1fr}.card{padding:13px 15px}}
+</style>
+<main>
+ <h1>为什么“续期成功”后，网站还会过期？</h1>
+ <p class="intro">选择一个维护情景，对比磁盘与远端，再找出生命周期停在哪一步。</p>
+ <label for="scenario">固定故障情景</label>
+ <select id="scenario"><option value="healthy">正常：已续期，服务也已加载</option><option value="token">验证失败：DuckDNS Token 已失效</option><option value="scheduler">任务停跑：签发后移除了计划任务</option><option value="stale">部署失败：文件已更新，服务仍用旧证书</option><option value="expired">已经过期：DNS-01 一直被旧 TXT 阻塞</option><option value="edge">入口不同：源站已更新，边缘节点没更新</option></select>
+ <button id="run" type="button">分析这个情景</button>
+ <div id="result" role="status" aria-live="polite" aria-atomic="true">
+  <div class="evidence"><div class="card" id="disk"><small>签发 / 部署文件的剩余有效期</small><strong>等待分析</strong></div><div class="card" id="remote"><small>访客实际收到的证书剩余有效期</small><strong>等待分析</strong></div></div>
+  <ol aria-label="续期链路"><li><b>01 任务检查</b><span>等待分析</span></li><li><b>02 域名验证</b><span>等待分析</span></li><li><b>03 新证书</b><span>等待分析</span></li><li><b>04 入口加载</b><span>等待分析</span></li></ol>
+  <div class="explain"><h2 id="verdict">先看证据，再决定是否需要重新签发</h2><p id="reason">磁盘文件和网站提供的证书是两个观察点。这里的天数都是预设数据，不表示真实证书默认有效期。</p><p id="action" hidden></p></div>
+ </div>
+ <p class="disclaimer">离线教学模型，不查询服务器、不读取凭据、不签发或续期证书。通过表示此情景中的预设结果，实际操作还需检查域名、证书链、时间与所有入口。</p>
+</main>
+<script>
+ document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')==='dark'?'dark':'light';
+ const cases={
+  healthy:{disk:58,remote:58,steps:['pass','pass','pass','pass'],title:'续期、部署与外部验收一致',reason:'示例中客户端已取得新证书，访客也收到它。正常运行不需要为了“确认”再强制签发一次。',action:'下一步：继续保留定时检查、失败通知和独立 HTTPS 探测。'},
+  token:{disk:6,remote:6,steps:['pass','fail','pending','pending'],title:'旧证书暂时可用，下一轮续期已受阻',reason:'任务确实运行，但 DNS API 拒绝凭据，无法完成本轮控制权验证。进程 active 并不能证明证书健康。',action:'下一步：更新实际服务或 ACME 账户保存的 Token，确认权限与所属子域名，恢复原客户端的续期流程，再查外部证书。'},
+  scheduler:{disk:3,remote:3,steps:['fail','pending','pending','pending'],title:'没有人运行检查，后续步骤根本没开始',reason:'首次签发成功后移除了计划任务。本例是独立 ACME 客户端；Caddy 则应检查常驻服务是否仍正常运行。',action:'下一步：恢复原账户的 cron / timer，核对客户端 home，运行一次普通检查；随后确认自动部署和下一次任务。'},
+  stale:{disk:58,remote:-1,steps:['pass','pass','pass','fail'],title:'新证书已经存在，先修部署与加载',reason:'文件还有 58 天有效期，访客收到的旧证书却已过期 1 天。再次签发不会自动修复失败的 reload hook。',action:'下一步：核对实际 TLS 终止服务的路径、读取权限与配置，验证后重载；再比对远端日期与指纹。'},
+  expired:{disk:-1,remote:-1,steps:['pass','fail','pending','pending'],title:'验证阻塞持续到过期，需要先修 DNS-01',reason:'本例两个客户端覆盖同一 TXT，导致验证总读到错误值。过期不等于域名失效，也不能延长原证书日期。',action:'下一步：确定唯一签发管理者，核对本轮权威 TXT、处理传播与并发，遵守 CA 重试限制，再正常续期、部署并外部验收。'},
+  edge:{disk:58,remote:-1,steps:['pass','pass','pass','fail'],title:'源站与边缘是不同的证书维护入口',reason:'示例中源站已经更新，但访客连接的是仍提供旧证书的 CDN / 反向代理。只看源站文件会漏掉这个问题。',action:'下一步：识别访客实际连接的 TLS 终止点，按边缘平台方式更新证书；检查所有节点和 A / AAAA，再复查公开 URL。'}
+ };
+ const labels={pass:'✓ 通过',fail:'! 在此受阻',pending:'— 本轮未推进'};
+ function reset(){for(const id of ['disk','remote']){const card=document.getElementById(id);delete card.dataset.state;card.querySelector('strong').textContent='等待分析';}document.querySelectorAll('ol li').forEach(node=>{delete node.dataset.state;node.querySelector('span').textContent='等待分析';});document.getElementById('verdict').textContent='情景已切换，请重新分析';document.getElementById('reason').textContent='先比对文件与远端，再判断问题位于任务、验证、签发还是入口加载。';document.getElementById('action').hidden=true;}
+ document.getElementById('scenario').addEventListener('change',reset);
+ document.getElementById('run').addEventListener('click',()=>{const c=cases[document.getElementById('scenario').value];for(const id of ['disk','remote']){const days=c[id],card=document.getElementById(id);card.dataset.state=days<0?'fail':days<=7?'warn':'pass';card.querySelector('strong').textContent=days<0?`已过期 ${Math.abs(days)} 天（模拟）`:`剩余 ${days} 天（模拟）`;}document.querySelectorAll('ol li').forEach((node,index)=>{node.dataset.state=c.steps[index];node.querySelector('span').textContent=labels[c.steps[index]];});document.getElementById('verdict').textContent=c.title;document.getElementById('reason').textContent=c.reason;const action=document.getElementById('action');action.textContent=c.action;action.hidden=false;});
+ if(parent!==window)new ResizeObserver(()=>parent.postMessage({type:'blog-demo-resize',height:Math.ceil(document.body.getBoundingClientRect().height)+2},'*')).observe(document.body);
+</script>
+</html>
