@@ -1,0 +1,114 @@
+/* A complete landscape and comfortable controls for narrow, touch screens. */
+@media (max-width: 760px) {
+  html { scrollbar-gutter: auto; }
+
+  :root body {
+    --mobile-edge-left: max(18px, env(safe-area-inset-left));
+    --mobile-edge-right: max(18px, env(safe-area-inset-right));
+  }
+
+  :root body .site-header,
+  :root body .site-header.header-overlay {
+    height: calc(76px + env(safe-area-inset-top));
+  }
+
+  :root body .site-header .header-inner.container,
+  :root body .site-header.header-overlay .header-inner.container {
+    width: calc(100% - var(--mobile-edge-left) - var(--mobile-edge-right));
+    max-width: none;
+    gap: 8px;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  :root body .site-header .header-actions {
+    flex-shrink: 0;
+    gap: 0;
+  }
+
+  :root body .site-header .header-actions .icon-button {
+    width: 44px;
+    height: 44px;
+    touch-action: manipulation;
+  }
+
+  :root body .site-header .mobile-nav {
+    top: calc(100% - 4px);
+    left: var(--mobile-edge-left);
+    right: var(--mobile-edge-right);
+    max-height: calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  :root body .site-header .mobile-nav a {
+    min-height: 48px;
+    align-items: center;
+    touch-action: manipulation;
+  }
+
+  /* The panoramic artwork stays proportional and fully visible below the copy.
+     A softened continuation fills the space above it without stretching it. */
+  :root body.home-page .hero,
+  :root body .project-hero,
+  :root body .project-hero.project-hero--compact {
+    height: auto;
+    min-height: 0;
+  }
+
+  :root body.home-page .hero-content,
+  :root body .project-hero .project-hero-content {
+    width: calc(100% - var(--mobile-edge-left) - var(--mobile-edge-right));
+    padding: calc(108px + env(safe-area-inset-top)) 0 clamp(150px, 39vw, 300px);
+  }
+
+  :root body .project-hero--compact .project-hero-content {
+    padding-top: calc(104px + env(safe-area-inset-top));
+  }
+
+  :root body :is(.hero, .project-hero) .image-scene-frame::before {
+    content: '';
+    position: absolute;
+    inset: -24px;
+    background: linear-gradient(#10192d77, #10192d44), var(--scene-image) center / cover;
+    filter: blur(18px);
+    transform: scale(1.04);
+  }
+
+  :root body :is(.hero, .project-hero) .image-scene-art {
+    inset: auto 0 0;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center bottom;
+    mask-image: linear-gradient(transparent, #000 10%);
+    -webkit-mask-image: linear-gradient(transparent, #000 10%);
+  }
+
+  :root body.home-page .hero-shade,
+  :root body .project-hero::before {
+    background: linear-gradient(180deg, #10182799 0%, #1018279c 38%, #10182730 76%, transparent 100%);
+  }
+
+  :root body.home-page .hero-blend,
+  :root body .project-hero::after,
+  :root body .project-hero--compact::after {
+    height: 26px;
+  }
+
+  :root body .project-hero-description > span + span { display: block; }
+  :root body.home-page .hero-buttons { flex-wrap: wrap; }
+  :root body.home-page .hero .button { min-height: 48px; }
+}
+
+@media (max-width: 360px) {
+  :root body {
+    --mobile-edge-left: max(14px, env(safe-area-inset-left));
+    --mobile-edge-right: max(14px, env(safe-area-inset-right));
+  }
+
+  :root body .site-header a.brand { gap: 7px; }
+  :root body .site-header .brand .brand-emblem { width: 34px; height: 34px; flex-basis: 34px; }
+  :root body .site-header .brand-emblem .sakura-mark { width: 26px; height: 26px; }
+  :root body .site-header .brand .brand-name { font-size: 21px; }
+  :root body .site-header .brand-wordmark small { font-size: 6px; letter-spacing: 1.8px; }
+}

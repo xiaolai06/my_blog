@@ -5,9 +5,10 @@ interface Props { family?: SceneFamily; kind: 'hero' | 'footer'; imageClass?: st
 const {family='journal',kind,imageClass='',priority=false}=Astro.props;
 const assets=Object.fromEntries((['dawn','day','dusk','night'] as const).map(phase=>[phase,sceneAsset(family,kind,phase)]));
 const asset=assets.dusk;
+const backdrop=asset.srcset.split(',')[0].trim().split(/\s+/)[0] || asset.poster;
 ---
 <div class="image-scene" data-image-scene data-kind={kind} data-poster={asset.poster} data-phase="dusk" data-ready="false">
- <div class="image-scene-frame" style={`--scene-image:url("${asset.poster}")`}>
+ <div class="image-scene-frame" style={`--scene-image:url("${backdrop}")`}>
   <img class:list={['image-scene-art',imageClass]} src={asset.poster} srcset={asset.srcset} sizes={kind==='footer'?'(min-width: 761px) 50vw, 100vw':'100vw'} width={asset.width || 2172} height={asset.height || 724} alt="" aria-hidden="true" loading={priority?'eager':'lazy'} decoding="async" fetchpriority={priority?'high':'auto'}/>
  </div>
 </div>
@@ -19,7 +20,8 @@ const asset=assets.dusk;
   let phase=hour>=5&&hour<9?'dawn':hour>=9&&hour<16?'day':hour>=16&&hour<19?'dusk':'night';
   try{const saved=JSON.parse(localStorage.getItem('sakura-scene-'+kind)??localStorage.getItem('sakura-scene-preference')??'null');if(saved&&['dawn','day','dusk','night'].includes(saved.choice)&&saved.expiresAt>Date.now())phase=saved.choice;}catch{}
   const asset=assets[phase],img=host.querySelector('img');
-  host.querySelector('.image-scene-frame').style.setProperty('--scene-image','url("'+asset.poster+'")');
+  const backdrop=asset.srcset?.split(',')[0].trim().split(/\s+/)[0]||asset.poster;
+  host.querySelector('.image-scene-frame').style.setProperty('--scene-image','url("'+backdrop+'")');
   img.srcset=asset.srcset||'';img.src=asset.poster;
   host.dataset.poster=asset.poster;host.dataset.phase=phase;
  })();

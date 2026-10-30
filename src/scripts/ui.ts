@@ -67,6 +67,11 @@ function renderSearch(){
 }
 function closeSearch(){searchMotion.setOpen(false);}
 function openSearch(){if(dialog&&!searchMotion.isOpen()){closeMenu();renderSearch();searchMotion.setOpen(true);search?.focus({preventScroll:true});}}
+// A navigation should capture the page, not an open menu or search overlay.
+listen(document,'astro:before-preparation',()=>{
+ if(menuMotion.isOpen()){closeMenu();menuMotion.finish();}
+ if(searchMotion.isOpen()){closeSearch();searchMotion.finish();}
+});
 document.querySelectorAll('.search-trigger').forEach(b=>b.addEventListener('click',openSearch,{signal}));
 dialog?.querySelector('.search-close')?.addEventListener('click',closeSearch,{signal});
 dialog?.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeSearch();}},{signal});

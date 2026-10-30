@@ -9,7 +9,9 @@ export function setupPageTransitions(){
   clear();
   restorePosition=event.navigationType==='traverse'&&Number.isFinite(history.state?.scrollY)?{x:history.state.scrollX||0,y:history.state.scrollY}:undefined;
   restoreFilter=event.navigationType==='traverse'?history.state?.sakuraProjectFilter:undefined;
-  if(!document.startViewTransition||matchMedia('(prefers-reduced-motion: reduce)').matches||document.documentElement.dataset.motion==='off')return;
+  // A small screen has little room for a shared title to travel; keep its
+  // transition as part of the page crossfade instead.
+  if(!document.startViewTransition||matchMedia('(max-width: 760px)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches||document.documentElement.dataset.motion==='off')return;
   if(!/^\/(projects|blog)\/[^/]+\/$/.test(event.to.pathname))return;
   const link=event.sourceElement?.closest('a')||Array.from(document.querySelectorAll<HTMLAnchorElement>('main a[href]')).find(anchor=>anchor.pathname===event.to.pathname&&anchor.getClientRects().length);
   const title=link?.querySelector<HTMLElement>('h3');

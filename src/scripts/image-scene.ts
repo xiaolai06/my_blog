@@ -1,5 +1,6 @@
 /** Decode first, then dissolve; rapid choices share a bounded two-picture stage. */
 type Picture = { poster: string; phase: string; srcset?: string; duration?: number };
+const backdropFor = (scene: Picture) => scene.srcset?.split(',')[0].trim().split(/\s+/)[0] || scene.poster;
 const mounted = new WeakSet<HTMLElement>();
 export function setupImageScenes() {
  document.querySelectorAll<HTMLElement>('[data-image-scene]').forEach(host => {
@@ -23,7 +24,7 @@ export function setupImageScenes() {
     host.dataset.loading = 'true';
     const nextFrame = frame.cloneNode(true) as HTMLElement;
     const next = nextFrame.querySelector<HTMLImageElement>('img')!;
-    nextFrame.style.setProperty('--scene-image',`url("${scene.poster}")`);
+    nextFrame.style.setProperty('--scene-image',`url("${backdropFor(scene)}")`);
     next.loading = 'eager';
     next.fetchPriority = 'auto';
     next.srcset = scene.srcset || '';
@@ -32,6 +33,9 @@ export function setupImageScenes() {
      await next.decode();
      if (abort.signal.aborted) break;
      if (wanted && wanted.poster !== scene.poster) continue;
+     // Reuse the decoded responsive image for the softened mobile backdrop.
+     const backdrop = next.currentSrc || backdropFor(scene);
+     nextFrame.style.setProperty('--scene-image',`url("${backdrop}")`);
      host.dataset.loading = 'false';
      host.dataset.error = 'false';
      const changed = image.getAttribute('src') !== scene.poster;
@@ -47,7 +51,7 @@ export function setupImageScenes() {
       nextFrame.style.opacity = '1';
       frame.remove(); frame = nextFrame; image = next;
       fade.cancel(); fade = undefined;
-     } else { frame.style.setProperty('--scene-image',`url("${scene.poster}")`); image.srcset = scene.srcset || ''; image.src = scene.poster; }
+     } else { frame.style.setProperty('--scene-image',`url("${backdrop}")`); image.srcset = scene.srcset || ''; image.src = scene.poster; }
      host.dataset.poster = scene.poster;
      host.dataset.phase = scene.phase;
      host.dataset.ready = 'true';

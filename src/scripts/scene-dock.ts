@@ -61,6 +61,12 @@ export function setupSceneDock(){
  const motions=new Map<Element,ReturnType<typeof animate>>(),generations=new WeakMap<Element,number>();
  let open=false,branch:Branch|undefined,x=0,y=0,ax=0,ay=0,startAngle=180,radius=336,version=0,suppressClick=false;
  let drag:{id:number;sx:number;sy:number;x:number;y:number;active:boolean}|undefined;
+ let safe={top:MARGIN,right:MARGIN,bottom:MARGIN,left:MARGIN};
+ const updateSafeArea=()=>{
+  const style=getComputedStyle(dock);
+  const edge=(side:string)=>Math.max(MARGIN,parseFloat(style.getPropertyValue(`--dock-safe-${side}`))||0);
+  safe={top:edge('top'),right:edge('right'),bottom:edge('bottom'),left:edge('left')};
+ };
  const viewport=()=>({width:document.documentElement.clientWidth,height:window.visualViewport?.height||innerHeight});
  const clamp=(n:number,min:number,max:number)=>Math.min(Math.max(n,min),Math.max(min,max));
  const owner=(region:SceneRegion)=>document.querySelector<HTMLElement>(`[data-scene-region="${region}"]`);
@@ -87,12 +93,12 @@ export function setupSceneDock(){
   });
  }
  function layout(animated=false){
-  const v=viewport();radius=Math.min(336,v.width-SIZE/2-MARGIN*2,v.height-SIZE/2-MARGIN*2);
+  const v=viewport();radius=Math.min(336,v.width-SIZE/2-safe.left-safe.right,v.height-SIZE/2-safe.top-safe.bottom);
   dock!.toggleAttribute('data-compact',radius<300);
   const left=x+SIZE/2>=v.width/2,up=y+SIZE/2>=v.height/2;
   startAngle=up?(left?180:270):(left?90:0);
-  const cx=left?clamp(x+SIZE/2,radius+MARGIN,v.width-SIZE/2-MARGIN):clamp(x+SIZE/2,SIZE/2+MARGIN,v.width-radius-MARGIN);
-  const cy=up?clamp(y+SIZE/2,radius+MARGIN,v.height-SIZE/2-MARGIN):clamp(y+SIZE/2,SIZE/2+MARGIN,v.height-radius-MARGIN);
+  const cx=left?clamp(x+SIZE/2,radius+safe.left,v.width-SIZE/2-safe.right):clamp(x+SIZE/2,SIZE/2+safe.left,v.width-radius-safe.right);
+  const cy=up?clamp(y+SIZE/2,radius+safe.top,v.height-SIZE/2-safe.bottom):clamp(y+SIZE/2,SIZE/2+safe.top,v.height-radius-safe.bottom);
   const dx=ax+SIZE/2-cx,dy=ay+SIZE/2-cy;
   anchor(cx-SIZE/2,cy-SIZE/2,animated);
   fan.style.left=`${cx-CENTER}px`;fan.style.top=`${cy-CENTER}px`;
@@ -100,12 +106,12 @@ export function setupSceneDock(){
   const rootOuter=Math.min(224,radius*.55+40),ringGap=radius<300?10:28;
   layoutGroup(roots,Math.max(72,radius*.25),rootOuter);groups.forEach(g=>layoutGroup(g,rootOuter+ringGap,radius));
  }
- function place(nx:number,ny:number){const v=viewport();x=clamp(nx,MARGIN,v.width-SIZE-MARGIN);y=clamp(ny,MARGIN,v.height-SIZE-MARGIN);if(open)layout();else anchor(x,y);}
- function save(){const v=viewport();try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:(x-MARGIN)/Math.max(1,v.width-SIZE-MARGIN*2),y:(y-MARGIN)/Math.max(1,v.height-SIZE-MARGIN*2)}));}catch{}}
+ function place(nx:number,ny:number){const v=viewport();x=clamp(nx,safe.left,v.width-SIZE-safe.right);y=clamp(ny,safe.top,v.height-SIZE-safe.bottom);if(open)layout();else anchor(x,y);}
+ function save(){const v=viewport();try{localStorage.setItem(POSITION_KEY,JSON.stringify({x:(x-safe.left)/Math.max(1,v.width-SIZE-safe.left-safe.right),y:(y-safe.top)/Math.max(1,v.height-SIZE-safe.top-safe.bottom)}));}catch{}}
  function restore(){
   const v=viewport();let saved;try{saved=JSON.parse(localStorage.getItem(POSITION_KEY)||'null');}catch{}
-  if(saved&&Number.isFinite(saved.x)&&Number.isFinite(saved.y))place(MARGIN+clamp(saved.x,0,1)*(v.width-SIZE-MARGIN*2),MARGIN+clamp(saved.y,0,1)*(v.height-SIZE-MARGIN*2));
-  else place(v.width-SIZE-24,v.height-SIZE-28);
+  if(saved&&Number.isFinite(saved.x)&&Number.isFinite(saved.y))place(safe.left+clamp(saved.x,0,1)*(v.width-SIZE-safe.left-safe.right),safe.top+clamp(saved.y,0,1)*(v.height-SIZE-safe.top-safe.bottom));
+  else place(v.width-SIZE-Math.max(24,safe.right),v.height-SIZE-Math.max(28,safe.bottom));
  }
  function showGroup(group:HTMLElement,keyboard=false){
   generations.set(group,(generations.get(group)||0)+1);stop(group);group.hidden=false;group.inert=false;group.style.opacity='1';
@@ -174,6 +180,7 @@ export function setupSceneDock(){
  },{signal});
  dock.querySelector<HTMLButtonElement>('[data-dock-reset]')!.addEventListener('click',()=>{close(false,true);try{localStorage.removeItem(POSITION_KEY);}catch{}restore();trigger.focus({preventScroll:true});status.textContent='樱花按钮已回到右下角';},{signal});
  document.addEventListener('pointerdown',event=>{if(open&&!dock.contains(event.target as Node))close();},{signal});
+ document.addEventListener('astro:before-preparation',()=>close(false,true),{signal});
  document.addEventListener('keydown',event=>{
   if(event.key!=='Escape'||!open)return;event.preventDefault();
   if(branch){const previous=branch;selectBranch(undefined,true);parents.find(b=>b.dataset.fanBranch===previous)?.focus({preventScroll:true});}else close(true);
@@ -196,12 +203,12 @@ export function setupSceneDock(){
  },{signal});
  function finishDrag(event:PointerEvent){if(!drag||drag.id!==event.pointerId)return;if(drag.active){suppressClick=true;save();}drag=undefined;delete dock!.dataset.dragging;if(trigger.hasPointerCapture(event.pointerId))trigger.releasePointerCapture(event.pointerId);}
  trigger.addEventListener('pointerup',finishDrag,{signal});trigger.addEventListener('pointercancel',finishDrag,{signal});
- window.addEventListener('resize',restore,{signal});window.visualViewport?.addEventListener('resize',()=>place(x,y),{signal});
+ window.addEventListener('resize',()=>{updateSafeArea();restore();},{signal});window.visualViewport?.addEventListener('resize',()=>place(x,y),{signal});
  document.addEventListener('sakura:scene-state',sync,{signal});document.addEventListener('sakura:music-state',()=>{sync();if(open)layout();},{signal});document.addEventListener('visibilitychange',()=>{if(document.hidden)close(false,true);},{signal});
  reduced.addEventListener('change',sync,{signal});
  const observer=new MutationObserver(sync);observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-motion']});
  const unsubHero=subscribeScenePreference(sync,'hero'),unsubFooter=subscribeScenePreference(sync,'footer');
- restore();sync();dock.hidden=false;
+ updateSafeArea();restore();sync();dock.hidden=false;
  document.fonts.ready.then(()=>{if(open&&!signal.aborted)layout();});
  document.addEventListener('astro:before-swap',()=>{unsubHero();unsubFooter();observer.disconnect();motions.forEach(m=>m.stop());abort.abort();},{once:true,signal});
 }

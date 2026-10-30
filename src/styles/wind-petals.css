@@ -18,7 +18,7 @@
 .wind-petal[data-depth="0"]{filter:blur(.25px)}
 .wind-petals--footer{mask-image:linear-gradient(transparent,#000 17%,#000 85%,transparent)}
 .hero .hero-content{position:relative;z-index:2}
-@media(max-width:760px){.wind-petals--hero .wind-petal:nth-child(n+61),.wind-petals--footer .wind-petal:nth-child(n+45){display:none}}
+@media(max-width:760px){.wind-petals--hero .wind-petal:nth-child(n+29),.wind-petals--footer .wind-petal:nth-child(n+21){display:none}.wind-petal[data-depth="0"]{filter:none}}
 @media(prefers-reduced-motion:reduce){.wind-petals{display:none}}
 @media(scripting:none){.wind-petals{display:none}}
 

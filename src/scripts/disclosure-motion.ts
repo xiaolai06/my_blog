@@ -36,5 +36,5 @@ export function createDisclosureMotion(element:HTMLElement|null,reduced:MediaQue
  reduced.addEventListener('change',sync,{signal});
  document.addEventListener('visibilitychange',sync,{signal});
  signal.addEventListener('abort',()=>{cancel();observer.disconnect();},{once:true});
- return {setOpen,isOpen:()=>desired};
+ return {setOpen,finish:()=>{cancel();settle();},isOpen:()=>desired};
 }
